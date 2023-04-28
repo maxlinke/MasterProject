@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace MasterProject {
 
-    internal abstract class Game {
+    public abstract class Game {
+
+        // what exactly is this?
+        // does it PRODUCE a match?
+        // what is a match?
+        // is THIS a match?
+        // can game states just be the entire thing and someone just needs to create an initial gamestate?
+        // but then who decides about nondeterministic things?
+        // i guess that'd be the match
+        // and it'd keep track of the chain of gamestates
 
     }
 
