@@ -9,7 +9,7 @@ namespace MasterProject {
 
     }
 
-    public abstract class Move<T, U> where T : GameState<U, T> where U : Move<T, U> {
+    public abstract class Move<TGameState, TMove> where TGameState : GameState<TGameState, TMove> where TMove : Move<TGameState, TMove> {
 
     }
 }

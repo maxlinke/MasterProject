@@ -1,0 +1,18 @@
+﻿so, there may be a need for playerstates
+because at least there's the info whether a player has won, lost or drawn
+so playerstate either has bool hasWon, hasDrawn, hasLost or a separate data structure. i think the three bools are nicer
+separate gamestate.isover? or is that implicit from the player states? if none have any of the three true, then the game is still ongoing
+
+but also, the interfaces are nice for the code side but less so for the serialized json-side
+because that stuff gets visualized and it'd be nice if that had a common ground too
+
+on the other hand, i don't want all that do be mutable from the outside
+which it would need to be if it was a separate class from gamestate
+so in theory gamestate could HAVE that data and playerstates are just interfaces? 
+
+about json
+https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/how-to?pivots=dotnet-6-0
+stuff can be awaited
+utf-8 serialization is a bit faster and gives a byte-array directly
+public { get; set; } gets serialized automatically
+otherwise there's [JsonInclude]
