@@ -47,6 +47,8 @@ namespace MasterProject.TicTacToe {
             return output;
         }
 
+        // TODO test this
+
         void CheckBoard () {
             int newWinner;
             if(CheckStraights(out newWinner, (i, j) => ((i * BOARD_SIZE) + j))) {       // straights in one direction

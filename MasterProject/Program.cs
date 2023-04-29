@@ -6,7 +6,16 @@ using System.Text.Json.Serialization;
 
 public class Program {
 
+    public static string GetProjectPath () {
+        var binPath = Environment.CurrentDirectory;
+        if (binPath.Contains("\\bin\\Debug\\")) {
+            return binPath.Substring(0, binPath.LastIndexOf("\\bin\\Debug\\") + 1);
+        }
+        return binPath;
+    }
+
     public static void Main (string[] args) {
+        Console.WriteLine(GetProjectPath());
         //Console.WriteLine("Hello, world!");
         //var input = Console.ReadLine();
         //Console.WriteLine($"You said \"{input}\"");
@@ -19,7 +28,8 @@ public class Program {
         var objs = new List<object>() {
             new IntClass(7),
             new StringClass("lmao"),
-            new ComplexClass(new Class2(3, "hehe"))
+            //new ComplexClass(new Class2(3, "hehe"))
+            new ComplexClass(new Class2(3){myString = "hehe" })
             //new Class2(),
             //new Class2() { myInts = new int[] { 3, 5, 7 } }
         };
@@ -96,9 +106,9 @@ public class Program {
     }
 
     public class Class2 {
-        public Class2 (int myInt, string myString) {
+        public Class2 (int myInt /* , string myString */ ) {
             this.myInt = myInt;
-            this.myString = myString;
+            //this.myString = myString;
         }
         [JsonInclude] public int myInt;
         [JsonInclude] public string myString;

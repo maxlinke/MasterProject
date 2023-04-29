@@ -8,17 +8,25 @@ namespace MasterProject {
 
     public abstract class Game {
 
-        // what exactly is this?
-        // does it PRODUCE a match?
-        // what is a match?
-        // is THIS a match?
-        // can game states just be the entire thing and someone just needs to create an initial gamestate?
-        // but then who decides about nondeterministic things?
-        // i guess that'd be the match
-        // and it'd keep track of the chain of gamestates
+        // all the types
+            // gamestate -> playerstate
+            // playerstate
+            // move
+            // the whole "possibility" thing (move -> possibilities -> gamestate + likelyhood) this is just a wrapper so probably doesn't need its own type
+            // agents -> game and everything
 
-        // whatever i do
-        // someone initializes the gamestate, asks whatever agent's turn it is for their move and updates the gamestate, rinse and repeat until finished
+        // ... this isn't too bad?
+
+        // more types (minmax)
+            // ratingfunctions -> gamestate and everything
+
+        // THIS CLASS KEEPS ALL THE GAMESTATES THAT HAVE PASSED
+        // THIS CLASS ASKS THE AGENTS TO DECIDE ON A MOVE
+        // THIS CLASS IS SERIALIZABLE?
+        //      -> gamestates
+        //      -> chosen moves
+        //      -> agent ids
+        //      -> start/end time
 
     }
 

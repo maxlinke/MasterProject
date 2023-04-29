@@ -17,5 +17,42 @@ utf-8 serialization is a bit faster and gives a byte-array directly
 public { get; set; } gets serialized automatically
 otherwise there's [JsonInclude]
 generics work just fine BUT
-either the parameters in the constructor must have the same name as the fields they map to
+either the parameters in the constructor must have the same name as the fields they map to (but not all fields must be present)
 OR i can only have a parameterless constructor
+
+tic tac toe ais
+- random
+- choose line, when that fails, fall back to random
+- choose line, when that fails, choose a different line, fall back to random if none possible
+- alpha beta minmaxer (ignore symmetries for now) (there should only be 9! possibilities, which isn't that much... 362880...)
+- "optimal" manually programmed strategy (should be fairly simple, right?)
+- human, with a nice console print of the board and possible moves and console.readline input
+
+where is the border from all the generic stuff that only works in c# to the fairly straightforward classes that can be exported to json
+what even needs to be exported
+
+when the game asks an agent to decide on a move, await that with a timeout just to ensure the program doesn't crash
+
+for games, be able to specify a console-output-verbosity-level
+- none
+- finish
+- roundwise (new round, finished)
+- debug
+
+each match
+- an id
+- a timecode 
+	-> can i decode the output of System.DateTime.Now.ToBinary() in javascript?
+	-> https://stackoverflow.com/questions/64698870/comparing-the-binary-representation-of-datetime-in-c-sharp
+		ticks is easier
+- every gamestate until the end
+- of course the agents who played (ids)
+
+agents
+- an id
+- custom data (for neural agents maybe)
+- how does elo ranking work?
+	-> https://en.wikipedia.org/wiki/Elo_rating_system
+	-> by taking the opponent's current scores and doing stuff with that
+	-> IMPORTANT: when doing ranked matches, a given agent-id can only be in one game at any given time!
+		-> so when doing a tournament, that'll be interesting
