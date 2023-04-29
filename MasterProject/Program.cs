@@ -13,19 +13,20 @@ public class Program {
         //IReadOnlyList<int> ints = new List<int>() { 1, 2, 3 };
         //ints[2] = 5;
 
-        var gs1 = new TestGS(3);
-        var gs2 = new TestGS(gs1);
+        //var gs1 = new TestGS(3);
+        //var gs2 = new TestGS(gs1);
 
         var objs = new List<object>() {
-            new Class1(),
-            new Class1(new int[] { 2, 4, 6 }),
+            new IntClass(7),
+            new StringClass("lmao"),
+            new ComplexClass(new Class2(3, "hehe"))
             //new Class2(),
             //new Class2() { myInts = new int[] { 3, 5, 7 } }
         };
 
         var json = new List<string>();
 
-        for(int i=0; i<objs.Count; i++) {
+        for (int i = 0; i < objs.Count; i++) {
             json.Add(JsonSerializer.Serialize(objs[i]));
             Console.WriteLine($"{i}: ");
             Console.WriteLine(json[i]);
@@ -33,44 +34,79 @@ public class Program {
 
         Console.WriteLine();
 
-        var clones = new List<object>();
+        var clones = new object[objs.Count];
+        clones[0] = JsonSerializer.Deserialize<IntClass>(json[0]);
+        clones[1] = JsonSerializer.Deserialize<StringClass>(json[1]);
+        clones[2] = JsonSerializer.Deserialize<ComplexClass>(json[2]);
 
-        for(int i=0; i<json.Count; i++) {
-            clones.Add(JsonSerializer.Deserialize<Class1>(json[i]));
+        for (int i = 0; i < clones.Length; i++) {
             Console.WriteLine($"{i}: ");
-            Console.WriteLine(clones[i].ToString());
+            Console.WriteLine(clones[i]);
         }
+
+        //var intThing = new IntClass(4);
+        //Console.WriteLine(intThing);
+        //var json = JsonSerializer.Serialize(intThing);
+        //Console.WriteLine(json);
+        //var clone = JsonSerializer.Deserialize<IntClass>(json);
+        //Console.WriteLine(clone);
+
     }
+
+
 
     static string ListElements<T> (IEnumerable<T> objs) {
         var sb = new System.Text.StringBuilder();
-        foreach(var obj in objs) {
+        foreach (var obj in objs) {
             sb.Append($"{obj}, ");
         }
-        if(sb.Length > 0) {
+        if (sb.Length > 0) {
             sb.Remove(sb.Length - 2, 2);
         }
         return sb.ToString();
     }
 
-    public class Class1 {
+    public abstract class Class1<T> {
 
-        public Class1 () {
-            myInts = null;
+        //[JsonConstructor]
+        //private Class1 () { }
+
+        public Class1(T myField) {
+            this.myField = myField;
         }
 
-        public Class1 (int[] src) {
-            myInts = src;
-        }
-
-        [JsonInclude]
-        public int[]? myInts { get; private set; }
+        [JsonInclude] public T myField;
 
         public override string ToString () {
-            return myInts == null ? "<null>" : ListElements(myInts);
+            return myField == null ? "<null>" : myField.ToString();
         }
 
     }
+
+    public class IntClass : Class1<int> {
+        public IntClass (int myField) : base(myField) { }
+    }
+
+    public class StringClass : Class1<string> {
+        public StringClass (string myField) : base(myField) { }
+    }
+
+    public class ComplexClass : Class1<Class2> {
+        public ComplexClass (Class2 myField) : base(myField) { }
+    }
+
+    public class Class2 {
+        public Class2 (int myInt, string myString) {
+            this.myInt = myInt;
+            this.myString = myString;
+        }
+        [JsonInclude] public int myInt;
+        [JsonInclude] public string myString;
+        public override string ToString () {
+            return $"{myInt}, {myString}";
+        }
+    }
+
 
     class TestGS : GameState<TestGS, TestMove> {
         public TestGS (int playerCount) : base(playerCount) {

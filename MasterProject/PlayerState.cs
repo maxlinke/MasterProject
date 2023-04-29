@@ -15,5 +15,10 @@ namespace MasterProject {
         // so player states could POTENTIALLY be a per-game thing
         // and i can delete this again
 
+        // more thoughts
+        // this can totally be a struct
+        // but add an additional typed variant for additional data
+        // then a gamestate can have playerstates and they can be public and have public fields and stuff, but being structs, only the gamestate can mutate its own playerstates
+
     }
 }

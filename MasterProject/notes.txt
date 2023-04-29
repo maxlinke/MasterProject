@@ -16,3 +16,6 @@ stuff can be awaited
 utf-8 serialization is a bit faster and gives a byte-array directly
 public { get; set; } gets serialized automatically
 otherwise there's [JsonInclude]
+generics work just fine BUT
+either the parameters in the constructor must have the same name as the fields they map to
+OR i can only have a parameterless constructor

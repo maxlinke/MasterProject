@@ -17,6 +17,9 @@ namespace MasterProject {
         // i guess that'd be the match
         // and it'd keep track of the chain of gamestates
 
+        // whatever i do
+        // someone initializes the gamestate, asks whatever agent's turn it is for their move and updates the gamestate, rinse and repeat until finished
+
     }
 
 }
