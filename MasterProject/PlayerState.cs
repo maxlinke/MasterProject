@@ -5,20 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MasterProject {
+
     public class PlayerState {
 
-        // now THIS can really be a struct, right? as long as they can inherit... 
-        // on the other hand, does every game have a player state?
-        // probably not
-        // at least xoxo doesn't
-        // neither does chess really?
-        // so player states could POTENTIALLY be a per-game thing
-        // and i can delete this again
-
-        // more thoughts
-        // this can totally be a struct
-        // but add an additional typed variant for additional data
-        // then a gamestate can have playerstates and they can be public and have public fields and stuff, but being structs, only the gamestate can mutate its own playerstates
+        public bool HasWon { get; set; }
+        public bool HasLost { get; set; }
+        public bool HasDrawn { get; set; }
 
     }
+
 }

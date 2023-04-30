@@ -117,18 +117,5 @@ public class Program {
         }
     }
 
-
-    class TestGS : GameState<TestGS, TestMove> {
-        public TestGS (int playerCount) : base(playerCount) {
-        }
-
-        public TestGS (GameState<TestGS, TestMove> source) : base(source) {
-        }
-    }
-
-    class TestMove : Move <TestGS, TestMove> {
-
-    }
-
 }
 

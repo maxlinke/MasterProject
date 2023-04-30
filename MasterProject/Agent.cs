@@ -6,12 +6,23 @@ using System.Threading.Tasks;
 
 namespace MasterProject {
 
-    public abstract class Agent {
+    public abstract class Agent { }
 
-        // what does this do exactly?
-        // it just acts, right? it just analyzes a gamestate
-        // these don't have health, cards, whatever
-        // these have nothing, just knowledge which playerstate in a gamestate is them
+    public abstract class Agent<TGame, TGameState, TPlayerState, TMove, TAgent> : Agent
+        where TGame : Game<TGame, TGameState, TPlayerState, TMove, TAgent>
+        where TGameState : GameState<TGameState, TPlayerState, TMove>
+        where TPlayerState : PlayerState
+        where TMove : Move<TGameState, TPlayerState, TMove>
+        where TAgent: Agent<TGame, TGameState, TPlayerState, TMove, TAgent>
+    {
+
+        protected TGame? Game { get; private set; }
+
+        public virtual void OnGameStarted (TGame game) {
+            this.Game = game;
+        }
+
+        public abstract int GetMoveIndex (IReadOnlyList<TMove> moves);
 
     }
 
