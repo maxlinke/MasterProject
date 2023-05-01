@@ -18,6 +18,8 @@ namespace MasterProject {
 
         protected TGame? Game { get; private set; }
 
+        public abstract string Id { get; }
+
         public virtual void OnGameStarted (TGame game) {
             this.Game = game;
         }

@@ -15,107 +15,35 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        Console.WriteLine(GetProjectPath());
-        //Console.WriteLine("Hello, world!");
-        //var input = Console.ReadLine();
-        //Console.WriteLine($"You said \"{input}\"");
-        //IReadOnlyList<int> ints = new List<int>() { 1, 2, 3 };
-        //ints[2] = 5;
-
-        //var gs1 = new TestGS(3);
-        //var gs2 = new TestGS(gs1);
-
-        var objs = new List<object>() {
-            new IntClass(7),
-            new StringClass("lmao"),
-            //new ComplexClass(new Class2(3, "hehe"))
-            new ComplexClass(new Class2(3){myString = "hehe" })
-            //new Class2(),
-            //new Class2() { myInts = new int[] { 3, 5, 7 } }
-        };
-
-        var json = new List<string>();
-
-        for (int i = 0; i < objs.Count; i++) {
-            json.Add(JsonSerializer.Serialize(objs[i]));
-            Console.WriteLine($"{i}: ");
-            Console.WriteLine(json[i]);
-        }
-
-        Console.WriteLine();
-
-        var clones = new object[objs.Count];
-        clones[0] = JsonSerializer.Deserialize<IntClass>(json[0]);
-        clones[1] = JsonSerializer.Deserialize<StringClass>(json[1]);
-        clones[2] = JsonSerializer.Deserialize<ComplexClass>(json[2]);
-
-        for (int i = 0; i < clones.Length; i++) {
-            Console.WriteLine($"{i}: ");
-            Console.WriteLine(clones[i]);
-        }
-
-        //var intThing = new IntClass(4);
-        //Console.WriteLine(intThing);
-        //var json = JsonSerializer.Serialize(intThing);
-        //Console.WriteLine(json);
-        //var clone = JsonSerializer.Deserialize<IntClass>(json);
-        //Console.WriteLine(clone);
-
+        Console.WriteLine("Main started!");
+        new Thread(Countdown).Start(10);
+        Console.WriteLine("Main finished!");
     }
 
-
-
-    static string ListElements<T> (IEnumerable<T> objs) {
-        var sb = new System.Text.StringBuilder();
-        foreach (var obj in objs) {
-            sb.Append($"{obj}, ");
+    static void Countdown (object? data) {
+        data ??= 0;
+        int seconds = (int)data;
+        Console.WriteLine("Countdown started!");
+        while (seconds > 0) {
+            Console.WriteLine($"{seconds} seconds left!");
+            seconds--;
+            Thread.Sleep(1000);
         }
-        if (sb.Length > 0) {
-            sb.Remove(sb.Length - 2, 2);
-        }
-        return sb.ToString();
+        Console.WriteLine("Countdown finished!");
     }
 
-    public abstract class Class1<T> {
+    // TODO figure out the await with timeout thing in here. 
+    // convert the countdown thing into a task or whatever
+    // https://stackoverflow.com/questions/4238345/asynchronously-wait-for-taskt-to-complete-with-timeout
+    // https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
+    // https://stackoverflow.com/questions/35645899/awaiting-task-with-timeout
+    // https://learn.microsoft.com/de-de/dotnet/csharp/language-reference/operators/await
 
-        //[JsonConstructor]
-        //private Class1 () { }
-
-        public Class1(T myField) {
-            this.myField = myField;
-        }
-
-        [JsonInclude] public T myField;
-
-        public override string ToString () {
-            return myField == null ? "<null>" : myField.ToString();
-        }
-
-    }
-
-    public class IntClass : Class1<int> {
-        public IntClass (int myField) : base(myField) { }
-    }
-
-    public class StringClass : Class1<string> {
-        public StringClass (string myField) : base(myField) { }
-    }
-
-    public class ComplexClass : Class1<Class2> {
-        public ComplexClass (Class2 myField) : base(myField) { }
-    }
-
-    public class Class2 {
-        public Class2 (int myInt /* , string myString */ ) {
-            this.myInt = myInt;
-            //this.myString = myString;
-        }
-        [JsonInclude] public int myInt;
-        [JsonInclude] public string myString;
-        public override string ToString () {
-            return $"{myInt}, {myString}";
-        }
-    }
+    // i guess that means game.run needs to be a task too? or at least async void?
+    // but those can't be abstract, i think...
+    // also how do exceptions work there?
+    // i mean, i can also just ditch the timeout thing
+    // not like it really matters
 
 }
 

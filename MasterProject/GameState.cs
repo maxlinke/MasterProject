@@ -21,10 +21,6 @@ namespace MasterProject {
 
         public int CurrentPlayerIndex { get; }
 
-        // init and copy
-        // init does not always need playercount, because for some games it's fixed
-        // init gamestate can probably go into game/match...
-
         public abstract IReadOnlyList<TPlayerState> PlayerStates { get; }
 
         public abstract IReadOnlyList<TMove> GetPossibleMovesForCurrentPlayer ();

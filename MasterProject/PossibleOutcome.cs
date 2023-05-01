@@ -10,7 +10,7 @@ namespace MasterProject {
 
         public float Probability { get; set; }
 
-        public T Outcome { get; set; }
+        public T? Outcome { get; set; }
 
     }
 
