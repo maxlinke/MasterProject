@@ -11,21 +11,27 @@ namespace MasterProject {
 
         public abstract bool GameOver { get; }
 
-    }
-
-    public abstract class GameState<TGameState, TPlayerState, TMove> : GameState
-        where TGameState : GameState<TGameState, TPlayerState, TMove>
-        where TPlayerState: PlayerState
-        where TMove : Move<TGameState, TPlayerState, TMove> 
-    {
-
         public int CurrentPlayerIndex { get; }
 
-        public abstract IReadOnlyList<TPlayerState> PlayerStates { get; }
+    }
+
+    public abstract class GameState<TGameState, TMove> : GameState
+        where TGameState : GameState<TGameState, TMove>
+    {
 
         public abstract IReadOnlyList<TMove> GetPossibleMovesForCurrentPlayer ();
 
         public abstract IReadOnlyList<PossibleOutcome<TGameState>> GetPossibleOutcomesForMove (TMove move);
 
     }
+
+    public abstract class GameState<TGameState, TMove, TPlayerState> : GameState<TGameState, TMove>
+        where TGameState : GameState<TGameState, TMove, TPlayerState>
+        where TPlayerState : PlayerState
+    {
+
+        public abstract IReadOnlyList<TPlayerState> PlayerStates { get; }
+
+    }
+
 }

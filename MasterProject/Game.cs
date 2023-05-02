@@ -12,10 +12,10 @@ namespace MasterProject {
 
         [Flags]
         public enum ConsoleOutputs {
-            Nothing  = 0,
+            Nothing = 0,
             GameOver = 1,
-            Move     = 2,
-            Debug    = 4,
+            Move = 2,
+            Debug = 4,
             Everything = -1
         }
 
@@ -29,10 +29,6 @@ namespace MasterProject {
 
         public ConsoleOutputs AllowedConsoleOutputs { get; set; } = ConsoleOutputs.Nothing;
 
-        public abstract void Run ();
-
-        public abstract GameRecord GetRecord ();
-
         protected void TryLog (ConsoleOutputs logLevel, object message) {
             if ((this.AllowedConsoleOutputs & logLevel) == logLevel) {
                 Console.WriteLine($"{this.HumanReadableId}: {message}");
@@ -43,18 +39,21 @@ namespace MasterProject {
             TryLog(ConsoleOutputs.Debug, message);
         }
 
+        public abstract void Run ();
+
+        public abstract GameRecord GetRecord ();
+
     }
 
-    public abstract class Game<TGame, TGameState, TPlayerState, TMove, TAgent> : Game
-        where TGame : Game<TGame, TGameState, TPlayerState, TMove, TAgent>
-        where TGameState : GameState<TGameState, TPlayerState, TMove>
-        where TPlayerState : PlayerState
-        where TMove : Move<TGameState, TPlayerState, TMove>
-        where TAgent : Agent<TGame, TGameState, TPlayerState, TMove, TAgent>
+    public abstract class Game<TGame, TGameState, TMove, TAgent> : Game
+        where TGame : Game<TGame, TGameState, TMove, TAgent>
+        where TGameState : GameState<TGameState, TMove>
+        where TAgent : Agent<TGame, TMove>
     {
 
         public TGameState? CurrentGameState { get; private set; }
 
+        private bool hasRun = false;
         private readonly List<TAgent> agents = new();
         private readonly List<TGameState> gameStates = new();
         private readonly List<int> moveDurationsMillis = new();
@@ -62,6 +61,8 @@ namespace MasterProject {
         protected abstract TGameState GetInitialGameState ();
 
         protected abstract int MinimumNumberOfAgentsRequired { get; }
+
+        protected abstract int MaximumNumberOfAgentsAllowed { get; }
 
         private int _moveLimit = int.MaxValue;
         public int MoveLimit { get => _moveLimit; set => _moveLimit = Math.Max(value, 0); }
@@ -76,17 +77,36 @@ namespace MasterProject {
             agents.AddRange(agentsToSet);
         }
 
-        public override void Run () {
-            if(agents.Count < MinimumNumberOfAgentsRequired) {
+        private void VerifyOnlyOneRun () {
+            if (hasRun) {
+                throw new NotSupportedException($"Running a game multiple times is not allowed!");
+            }
+        }
+
+        private void VerifyNumberOfAgents () {
+            if (agents.Count < MinimumNumberOfAgentsRequired) {
                 throw new NotSupportedException($"{MinimumNumberOfAgentsRequired} Agents required, but got only {agents.Count}!");
             }
-            var rng = new Random();
-            var sw = new Stopwatch();
+            if (agents.Count > MaximumNumberOfAgentsAllowed) {
+                throw new NotSupportedException($"{agents.Count} Agents are set, but the maximum allowed is {MaximumNumberOfAgentsAllowed}!");
+            }
+        }
+
+        public override void Run () {
+            VerifyOnlyOneRun();
+            VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
             foreach (var agent in agents) {
                 agent.OnGameStarted((TGame)this);
             }
-            while (!CurrentGameState.GameOver && MoveLimit > 0) {
+            var rng = new Random();
+            var sw = new Stopwatch();
+            var moveCounter = 0;
+            hasRun = true;
+            while (!CurrentGameState.GameOver) {
+                if (moveCounter >= MoveLimit) {
+                    throw new Exception($"Move limit reached after {moveCounter} moves!");
+                }
                 TryLog(ConsoleOutputs.Move, $"Move {gameStates.Count}");
                 var moves = CurrentGameState.GetPossibleMovesForCurrentPlayer();
                 sw.Restart();
@@ -106,10 +126,7 @@ namespace MasterProject {
                 }
                 gameStates.Add(CurrentGameState);
                 CurrentGameState = possibleOutcomes[newGameStateIndex].Outcome;
-                MoveLimit--;
-            }
-            if (MoveLimit <= 0) {
-                throw new Exception($"Move limit reached after {gameStates.Count} moves!");
+                moveCounter++;
             }
             gameStates.Add(CurrentGameState);
             TryLog(ConsoleOutputs.GameOver, "Game Over");

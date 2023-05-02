@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace MasterProject.TicTacToe {
 
-    public class Move {
+    public abstract class TTTAgent : Agent<TTTGame, TTTMove> {
 
-        public int fieldIndex;
+        // child classes do the implementations
 
     }
 

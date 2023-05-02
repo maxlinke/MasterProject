@@ -6,23 +6,23 @@ using System.Threading.Tasks;
 
 namespace MasterProject {
 
-    public abstract class Agent { }
+    // TODO agentrecord
+    // for rating, number of games played and all that
+    // use a single db-file for all agents?
+    // pros: easy loading in web visulization
+    // pros: only one read and all agents are in memory
+    // cons: probably bad in terms of writing time
+    // cons: easy to corrupt? (version control at least prevents really bad stuff)
 
-    public abstract class Agent<TGame, TGameState, TPlayerState, TMove, TAgent> : Agent
-        where TGame : Game<TGame, TGameState, TPlayerState, TMove, TAgent>
-        where TGameState : GameState<TGameState, TPlayerState, TMove>
-        where TPlayerState : PlayerState
-        where TMove : Move<TGameState, TPlayerState, TMove>
-        where TAgent: Agent<TGame, TGameState, TPlayerState, TMove, TAgent>
-    {
+    public abstract class Agent {
 
-        protected TGame? Game { get; private set; }
+        public virtual string Id => $"{this.GetType().FullName}";
 
-        public abstract string Id { get; }
+    }
 
-        public virtual void OnGameStarted (TGame game) {
-            this.Game = game;
-        }
+    public abstract class Agent<TGame, TMove> : Agent {
+
+        public abstract void OnGameStarted (TGame game);
 
         public abstract int GetMoveIndex (IReadOnlyList<TMove> moves);
 

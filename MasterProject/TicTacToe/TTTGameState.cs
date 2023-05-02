@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MasterProject.TicTacToe {
     
-    public class GameState {
+    public class TTTGameState : GameState<TTTGameState, TTTMove, PlayerState> {
 
         public const int BOARD_SIZE = 3;
         public const int BOARD_FIELD_COUNT = BOARD_SIZE * BOARD_SIZE;
@@ -17,6 +17,30 @@ namespace MasterProject.TicTacToe {
         public int winnerIndex;
         public bool gameOver;
         public int[] board;
+        private PlayerState[] playerStates;
+
+        public override IReadOnlyList<PlayerState> PlayerStates => playerStates;
+
+        public override bool GameOver => gameOver;
+
+        public override IReadOnlyList<TTTMove> GetPossibleMovesForCurrentPlayer () {
+            var output = new List<TTTMove>();
+            for (int i = 0; i < BOARD_FIELD_COUNT; i++) {
+                if (board[i] == EMPTY_FIELD) {
+                    output.Add(new TTTMove() { fieldIndex = i });
+                }
+            }
+            return output;
+        }
+
+        public override IReadOnlyList<PossibleOutcome<TTTGameState>> GetPossibleOutcomesForMove (TTTMove move) {
+            var output = new List<PossibleOutcome<TTTGameState>>();
+            output.Add(new PossibleOutcome<TTTGameState>() {
+                Probability = 1,
+                Outcome = this.GetResultOfMove(move)
+            });
+            return output;
+        }
 
         // 0 1 2
         // 3 4 5
@@ -24,6 +48,7 @@ namespace MasterProject.TicTacToe {
 
         public void Initialize () {
             board = new int[BOARD_FIELD_COUNT];
+            playerStates = new PlayerState[PLAYER_COUNT];
             Array.Fill(board, EMPTY_FIELD);
             currentPlayerIndex = 0;
             winnerIndex = -1;
@@ -31,14 +56,14 @@ namespace MasterProject.TicTacToe {
         }
 
         // this won't work with godfield and other nondeterministic games, as there maybe multiple possible outcomes for a given move and it's not the gamestate's job to decide which one to choose
-        public GameState ApplyMove (Move move) {
+        public TTTGameState GetResultOfMove (TTTMove move) {
             if (gameOver) {
-                throw new System.Exception("game is already over");
+                throw new Exception("game is already over");
             }
             if (board[move.fieldIndex] != EMPTY_FIELD) {
-                throw new System.Exception("illegal move");
+                throw new Exception("illegal move");
             }
-            var output = new GameState();
+            var output = new TTTGameState();
             output.board = new int[BOARD_FIELD_COUNT];
             Array.Copy(this.board, output.board, BOARD_FIELD_COUNT);
             output.board[move.fieldIndex] = currentPlayerIndex;
@@ -120,7 +145,6 @@ namespace MasterProject.TicTacToe {
                 return true;
             }
         }
-
     }
 
 }
