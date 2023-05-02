@@ -23,6 +23,8 @@ namespace MasterProject {
 
         public abstract IReadOnlyList<PossibleOutcome<TGameState>> GetPossibleOutcomesForMove (TMove move);
 
+        public abstract TGameState GetVisibleGameStateForPlayer (int playerIndex);
+
     }
 
     public abstract class GameState<TGameState, TMove, TPlayerState> : GameState<TGameState, TMove>

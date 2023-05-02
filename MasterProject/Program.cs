@@ -15,9 +15,15 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        Console.WriteLine("Main started!");
-        new Thread(Countdown).Start(3);
-        Console.WriteLine("Main finished!");
+        var test0 = new Test();
+        var test1 = new Test<int>();
+        var test2 = new Test<float>();
+        Console.WriteLine(test0.GetType().FullName);
+        Console.WriteLine(test1.GetType().FullName);
+        Console.WriteLine(test2.GetType().FullName);
+        //Console.WriteLine("Main started!");
+        //new Thread(Countdown).Start(3);
+        //Console.WriteLine("Main finished!");
     }
 
     static void Countdown (object? data) {
@@ -31,6 +37,10 @@ public class Program {
         }
         Console.WriteLine("Countdown finished!");
     }
+
+    class Test { }
+
+    class Test<T> { }
 
     // TODO figure out the await with timeout thing in here. 
     // convert the countdown thing into a task or whatever

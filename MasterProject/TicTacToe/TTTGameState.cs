@@ -23,6 +23,10 @@ namespace MasterProject.TicTacToe {
 
         public override bool GameOver => gameOver;
 
+        public override TTTGameState GetVisibleGameStateForPlayer (int playerIndex) {
+            return this;
+        }
+
         public override IReadOnlyList<TTTMove> GetPossibleMovesForCurrentPlayer () {
             var output = new List<TTTMove>();
             for (int i = 0; i < BOARD_FIELD_COUNT; i++) {

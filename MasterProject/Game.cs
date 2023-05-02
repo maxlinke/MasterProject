@@ -51,7 +51,7 @@ namespace MasterProject {
         where TAgent : Agent<TGame, TMove>
     {
 
-        public TGameState? CurrentGameState { get; private set; }
+        protected TGameState? CurrentGameState { get; private set; }
 
         private bool hasRun = false;
         private readonly List<TAgent> agents = new();
@@ -75,6 +75,10 @@ namespace MasterProject {
                 throw new NotSupportedException("Agents have already been set!");
             }
             agents.AddRange(agentsToSet);
+        }
+
+        public TGameState GetCurrentGameStateVisibleForAgent (TAgent agent) {
+            return CurrentGameState.GetVisibleGameStateForPlayer(agents.IndexOf(agent));
         }
 
         private void VerifyOnlyOneRun () {
