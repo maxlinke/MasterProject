@@ -72,9 +72,7 @@ namespace MasterProject.TicTacToe {
             return output;
         }
 
-        // TODO test this
-
-        void CheckBoard () {
+        public void CheckBoard () {
             int newWinner;
             if(CheckStraights(out newWinner, (i, j) => ((i * BOARD_SIZE) + j))) {       // straights in one direction
                 gameOver = true;
@@ -105,7 +103,7 @@ namespace MasterProject.TicTacToe {
                 for (int i = 0; i < BOARD_SIZE; i++) {
                     int? latest = null;
                     var matching = true;
-                    for (int j = 0; j < BOARD_FIELD_COUNT; j++) {
+                    for (int j = 0; j < BOARD_SIZE; j++) {
                         var pos = getPos(i, j);
                         var curr = board[pos];
                         matching &= ((latest ?? curr) == curr);

@@ -14,4 +14,20 @@ namespace MasterProject {
 
     }
 
+    public static class PossibleOutcomeExtensions {
+
+        public static void NormalizeProbabilities<T> (this IEnumerable<PossibleOutcome<T>> possibleOutcomes) {
+            var sum = 0f;
+            foreach (var possibleOutcome in possibleOutcomes) {
+                sum += Math.Max(0, possibleOutcome.Probability);
+            }
+            if (sum > 0) {
+                foreach (var possibleOutcome in possibleOutcomes) {
+                    possibleOutcome.Probability = Math.Max(0, possibleOutcome.Probability / sum);
+                }
+            }
+        }
+
+    }
+
 }

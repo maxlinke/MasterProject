@@ -16,7 +16,7 @@ public class Program {
 
     public static void Main (string[] args) {
         Console.WriteLine("Main started!");
-        new Thread(Countdown).Start(10);
+        new Thread(Countdown).Start(3);
         Console.WriteLine("Main finished!");
     }
 
