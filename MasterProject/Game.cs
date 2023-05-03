@@ -39,7 +39,7 @@ namespace MasterProject {
             TryLog(ConsoleOutputs.Debug, message);
         }
 
-        public abstract void Run ();
+        public abstract Task Run ();
 
         public abstract GameRecord GetRecord ();
 
@@ -48,6 +48,7 @@ namespace MasterProject {
     public abstract class Game<TGame, TGameState, TMove, TAgent> : Game
         where TGame : Game<TGame, TGameState, TMove, TAgent>
         where TGameState : GameState<TGameState, TMove>
+        where TMove : class
         where TAgent : Agent<TGame, TMove>
     {
 
@@ -56,7 +57,7 @@ namespace MasterProject {
         private bool hasRun = false;
         private readonly List<TAgent> agents = new();
         private readonly List<TGameState> gameStates = new();
-        private readonly List<int> moveDurationsMillis = new();
+        private readonly List<MoveRecord> moveRecords = new();
 
         protected abstract TGameState GetInitialGameState ();
 
@@ -67,8 +68,8 @@ namespace MasterProject {
         private int _moveLimit = int.MaxValue;
         public int MoveLimit { get => _moveLimit; set => _moveLimit = Math.Max(value, 0); }
 
-        private int _agentMoveTimeoutSeconds = int.MaxValue;
-        public int AgentMoveTimeoutSeconds { get => _agentMoveTimeoutSeconds; set => _agentMoveTimeoutSeconds = Math.Max(value, 0); }
+        private int _agentMoveTimeoutMilliseconds = int.MaxValue;
+        public int AgentMoveTimeoutMilliseconds { get => _agentMoveTimeoutMilliseconds; set => _agentMoveTimeoutMilliseconds = Math.Max(value, 0); }
 
         public void SetAgents (IEnumerable<TAgent> agentsToSet) {
             if (agents.Count > 0) {
@@ -96,7 +97,12 @@ namespace MasterProject {
             }
         }
 
-        public override void Run () {
+        private async Task<int> PerformAgentTimeoutDelay () {
+            await Task.Delay(AgentMoveTimeoutMilliseconds);
+            return default;
+        }
+
+        public override async Task Run () {
             VerifyOnlyOneRun();
             VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
@@ -111,13 +117,44 @@ namespace MasterProject {
                 if (moveCounter >= MoveLimit) {
                     throw new Exception($"Move limit reached after {moveCounter} moves!");
                 }
-                TryLog(ConsoleOutputs.Move, $"Move {gameStates.Count}");
+                TryLog(ConsoleOutputs.Move, $"Move {moveCounter}");
+                var currentAgent = agents[CurrentGameState.CurrentPlayerIndex];
                 var moves = CurrentGameState.GetPossibleMovesForCurrentPlayer();
-                sw.Restart();
-                // TODO await this with a timeout
-                var moveIndex = agents[CurrentGameState.CurrentPlayerIndex].GetMoveIndex(moves);
-                sw.Stop();
-                moveDurationsMillis.Add((int)sw.ElapsedMilliseconds);
+                int moveIndex;
+                bool moveTimeout; 
+                if (moves.Count > 1) {
+                    sw.Restart();
+                    var agentTask = currentAgent.GetMoveIndex(moves);
+                    if (AgentMoveTimeoutMilliseconds < int.MaxValue) {
+                        var timeoutTask = PerformAgentTimeoutDelay();
+                        var resultTask = await Task.WhenAny(agentTask, timeoutTask);
+                        if (resultTask == agentTask) {
+                            moveIndex = agentTask.Result;
+                            moveTimeout = false;
+                        } else {
+                            moveIndex = rng.Next(0, moves.Count);
+                            moveTimeout = true;
+                        }
+                    } else {
+                        moveIndex = await agentTask;
+                        moveTimeout = false;
+                    }
+                    sw.Stop();
+                } else {
+                    sw.Reset();
+                    moveIndex = 0;
+                    moveTimeout = false;
+                }
+                if (moveTimeout) {
+                    TryLog(ConsoleOutputs.Move, $"Agent {currentAgent.Id} timed out after {sw.ElapsedMilliseconds}ms");
+                }
+                if (moveIndex < 0 || moveIndex >= moves.Count) {
+                    if (moves.Count < 1) {
+                        throw new NotSupportedException("A gamestate must provide at least one move!");
+                    } else {
+                        throw new NotSupportedException($"Invalid move index \"{moveIndex}\" chosen by agent \"{currentAgent.Id}\"!");
+                    }
+                }
                 var possibleOutcomes = CurrentGameState.GetPossibleOutcomesForMove(moves[moveIndex]);
                 var p = rng.NextDouble();
                 var newGameStateIndex = -1;
@@ -128,6 +165,12 @@ namespace MasterProject {
                         break;
                     }
                 }
+                moveRecords.Add(new MoveRecord() {
+                    AvailableMoves = moves.ToArray(),
+                    ChosenMoveIndex = moveIndex,
+                    MoveChoiceDurationMillis = sw.ElapsedMilliseconds,
+                    MoveChoiceTimedOut = moveTimeout
+                });
                 gameStates.Add(CurrentGameState);
                 CurrentGameState = possibleOutcomes[newGameStateIndex].Outcome;
                 moveCounter++;
@@ -140,10 +183,11 @@ namespace MasterProject {
             return new GameRecord() {
                 GameType = this.GetType().FullName,
                 GameId = this.Guid,
+                Completed = this.CurrentGameState?.GameOver,
                 Timestamp = DateTime.Now.Ticks,
                 AgentIds = new List<string>(this.agents.Select(agent => agent.Id)).ToArray(),
                 GameStates = this.gameStates.ToArray(),
-                MoveDurationsMillis = this.moveDurationsMillis.ToArray()
+                Moves = this.moveRecords.ToArray()
             };
         }
 

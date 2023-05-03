@@ -56,3 +56,24 @@ agents
 	-> by taking the opponent's current scores and doing stuff with that
 	-> IMPORTANT: when doing ranked matches, a given agent-id can only be in one game at any given time!
 		-> so when doing a tournament, that'll be interesting
+
+does the current way of doing it with each gamestate having a current player work with godfield?
+because of the percentage weapons
+say it's a 25% weapon
+and say it's a 4 player round with players A, B, C and D
+so player A plays it
+now there's a 25% chance B will get hit and will have to defend which then leads to further gamestates
+and there's a 75% chance that B will not be hit
+which means a 25% chance for C to get hit, which has the overall likelihood from the initial move of 18.75%
+which leaves 56.25% that B and C will be missed
+and so on
+and that's a lot of possibilities and quite annoying to calculate
+and it'd be easier if each step could just be the two possibilities hit or miss
+now, there are two options
+a) an invalid player index and game knows what to do with that
+b) an empty set of moves or a "do nothing" move which gets applied to the gamestate which is cleaner
+   so if game gets just one move, it'll auto-apply that. that sounds good.
+   only if there's a choice will the agent be asked
+   anything else is a move by default
+   and that means the gamestate can even give null as a move
+   nobody will question it other than the gamestate itself

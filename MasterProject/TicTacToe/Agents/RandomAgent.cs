@@ -14,7 +14,7 @@ namespace MasterProject.TicTacToe.Agents {
             rng = new Random();
         }
 
-        public override int GetMoveIndex (IReadOnlyList<TTTMove> moves) {
+        public override async Task<int> GetMoveIndex (IReadOnlyList<TTTMove> moves) {
             return rng.Next(0, moves.Count);
         }
 
