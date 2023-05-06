@@ -22,7 +22,7 @@ namespace MasterProject.TicTacToe.Agents {
             this.game = game;
         }
 
-        public override async Task<int> GetMoveIndex (IReadOnlyList<TTTMove> moves) {
+        public override int GetMoveIndex (IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
             for(int i=0; i<moves.Count; i++){
                 var moveResult = gs.GetResultOfMove(moves[i]);
@@ -30,7 +30,7 @@ namespace MasterProject.TicTacToe.Agents {
                     return i;
                 }
             }
-            return await base.GetMoveIndex(moves);
+            return base.GetMoveIndex(moves);
         }
 
     }

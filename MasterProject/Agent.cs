@@ -18,13 +18,21 @@ namespace MasterProject {
 
         public virtual string Id => $"{this.GetType().FullName}";
 
+        private static readonly Random globalRng = new();
+
+        public static int GetRandomMoveIndex<TMove> (IReadOnlyList<TMove> moves) {
+            return globalRng.Next(moves.Count);
+        }
+
     }
 
     public abstract class Agent<TGame, TMove> : Agent {
 
+        protected readonly Random rng = new();
+
         public abstract void OnGameStarted (TGame game);
 
-        public abstract Task<int> GetMoveIndex (IReadOnlyList<TMove> moves);
+        public abstract int GetMoveIndex (IReadOnlyList<TMove> moves);
 
     }
 

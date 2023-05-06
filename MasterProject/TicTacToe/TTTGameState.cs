@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MasterProject.TicTacToe {
     
-    public class TTTGameState : GameState<TTTGameState, TTTMove, PlayerState> {
+    public class TTTGameState : GameState<TTTGameState, TTTMove> {
 
         public const int BOARD_SIZE = 3;
         public const int BOARD_FIELD_COUNT = BOARD_SIZE * BOARD_SIZE;
@@ -17,9 +17,6 @@ namespace MasterProject.TicTacToe {
         public int winnerIndex;
         public bool gameOver;
         public int[] board;
-        private PlayerState[] playerStates;
-
-        public override IReadOnlyList<PlayerState> PlayerStates => playerStates;
 
         public override bool GameOver => gameOver;
 
@@ -52,7 +49,6 @@ namespace MasterProject.TicTacToe {
 
         public void Initialize () {
             board = new int[BOARD_FIELD_COUNT];
-            playerStates = new PlayerState[PLAYER_COUNT];
             Array.Fill(board, EMPTY_FIELD);
             currentPlayerIndex = 0;
             winnerIndex = -1;

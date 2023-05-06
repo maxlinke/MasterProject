@@ -98,6 +98,11 @@ namespace MasterProject {
         }
 
         // https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
+
+        private async Task<int> GetAgentMoveIndex (TAgent agent, IReadOnlyList<TMove> moves) {
+            return await Task.Run(() => agent.GetMoveIndex(moves));
+        }
+
         private async Task<int> PerformAgentTimeoutDelay () {
             await Task.Delay(AgentMoveTimeoutMilliseconds);
             return default;
@@ -125,19 +130,19 @@ namespace MasterProject {
                 bool moveTimeout; 
                 if (moves.Count > 1) {
                     sw.Restart();
-                    var agentTask = currentAgent.GetMoveIndex(moves);
                     if (AgentMoveTimeoutMilliseconds < int.MaxValue) {
+                        var agentTask = GetAgentMoveIndex(currentAgent, moves);
                         var timeoutTask = PerformAgentTimeoutDelay();
                         var resultTask = await Task.WhenAny(agentTask, timeoutTask);
                         if (resultTask == agentTask) {
                             moveIndex = agentTask.Result;
                             moveTimeout = false;
                         } else {
-                            moveIndex = rng.Next(0, moves.Count);
+                            moveIndex = Agent.GetRandomMoveIndex(moves);
                             moveTimeout = true;
                         }
                     } else {
-                        moveIndex = await agentTask;
+                        moveIndex = currentAgent.GetMoveIndex(moves);
                         moveTimeout = false;
                     }
                     sw.Stop();

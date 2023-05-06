@@ -15,45 +15,47 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        var test0 = new Test();
-        var test1 = new Test<int>();
-        var test2 = new Test<float>();
-        Console.WriteLine(test0.GetType().FullName);
-        Console.WriteLine(test1.GetType().FullName);
-        Console.WriteLine(test2.GetType().FullName);
-        //Console.WriteLine("Main started!");
-        //new Thread(Countdown).Start(3);
-        //Console.WriteLine("Main finished!");
+        DoSyncAsyncTest().GetAwaiter().GetResult();
     }
 
-    static void Countdown (object? data) {
-        data ??= 0;
-        int seconds = (int)data;
-        Console.WriteLine("Countdown started!");
-        while (seconds > 0) {
-            Console.WriteLine($"{seconds} seconds left!");
-            seconds--;
-            Thread.Sleep(1000);
+    static Random rng = new();
+
+    static async Task DoSyncAsyncTest () {
+        var sw = new System.Diagnostics.Stopwatch();
+        var itCount = 10000;
+        for (int i = 0; i < 5; i++) {
+            sw.Restart();
+            var synced = GetRngThingSynced(itCount);
+            sw.Stop();
+            Console.WriteLine($"Synced got value {synced} in {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
+            var asynced = await GetRngThingAsync(itCount);
+            sw.Stop();
+            Console.WriteLine($"Async got value {asynced} in {sw.ElapsedMilliseconds}ms");
         }
-        Console.WriteLine("Countdown finished!");
     }
 
-    class Test { }
+    static int GetRngThingSynced (int count) {
+        count = Math.Max(0, count);
+        var output = 0;
+        for (int i = 0; i < count; i++) {
+            output ^= rng.Next();
+        }
+        return output;
+    }
 
-    class Test<T> { }
+    static async Task<int> GetRngThingAsync (int count) {
+        count = Math.Max(0, count);
+        var output = 0;
+        for (int i = 0; i < count; i++) {
+            output ^= await GetSingleRngValueAsTask();
+        }
+        return output;
+    }
 
-    // TODO figure out the await with timeout thing in here. 
-    // convert the countdown thing into a task or whatever
-    // https://stackoverflow.com/questions/4238345/asynchronously-wait-for-taskt-to-complete-with-timeout
-    // https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
-    // https://stackoverflow.com/questions/35645899/awaiting-task-with-timeout
-    // https://learn.microsoft.com/de-de/dotnet/csharp/language-reference/operators/await
-
-    // i guess that means game.run needs to be a task too? or at least async void?
-    // but those can't be abstract, i think...
-    // also how do exceptions work there?
-    // i mean, i can also just ditch the timeout thing
-    // not like it really matters
+    static async Task<int> GetSingleRngValueAsTask () {
+        return await Task.Run(() => rng.Next());
+    }
 
 }
 
