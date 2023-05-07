@@ -1,0 +1,18 @@
+﻿- run a bunch of games of ttt with the two agent variants and see if it actually works what i've built so far
+
+- a way to run a lot of games and get the results
+- a start of the web-visualizer (can i easily read a bunch of files?)
+	- i think i can just put the .json things as scripts into the main visualizer script then it's automatic
+	- how does that break if those scripts get removed?
+	- check how we did it in visualization
+- the datasaver
+	- agent rankings
+	- the "database"?
+	- could make it so all data is just cached and manually has to be written
+	- with an automatic write on program exit
+- ranked and unranked games
+- automatically shuffling the agent orders around
+	- random is simple
+	- how many different games would there need to be if we tried to get perfect coverage?
+		- is that even necessary, considering the random nature of some agents?
+		- in the end, with rankings it'll average out anyways

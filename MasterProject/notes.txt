@@ -1,16 +1,4 @@
-﻿so, there may be a need for playerstates
-because at least there's the info whether a player has won, lost or drawn
-so playerstate either has bool hasWon, hasDrawn, hasLost or a separate data structure. i think the three bools are nicer
-separate gamestate.isover? or is that implicit from the player states? if none have any of the three true, then the game is still ongoing
-
-but also, the interfaces are nice for the code side but less so for the serialized json-side
-because that stuff gets visualized and it'd be nice if that had a common ground too
-
-on the other hand, i don't want all that do be mutable from the outside
-which it would need to be if it was a separate class from gamestate
-so in theory gamestate could HAVE that data and playerstates are just interfaces? 
-
-about json
+﻿about json
 https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/how-to?pivots=dotnet-6-0
 stuff can be awaited
 utf-8 serialization is a bit faster and gives a byte-array directly
@@ -27,26 +15,6 @@ tic tac toe ais
 - alpha beta minmaxer (ignore symmetries for now) (there should only be 9! possibilities, which isn't that much... 362880...)
 - "optimal" manually programmed strategy (should be fairly simple, right?)
 - human, with a nice console print of the board and possible moves and console.readline input
-
-where is the border from all the generic stuff that only works in c# to the fairly straightforward classes that can be exported to json
-what even needs to be exported
-
-when the game asks an agent to decide on a move, await that with a timeout just to ensure the program doesn't crash
-
-for games, be able to specify a console-output-verbosity-level
-- none
-- finish
-- roundwise (new round, finished)
-- debug
-
-each match
-- an id
-- a timecode 
-	-> can i decode the output of System.DateTime.Now.ToBinary() in javascript?
-	-> https://stackoverflow.com/questions/64698870/comparing-the-binary-representation-of-datetime-in-c-sharp
-		ticks is easier
-- every gamestate until the end
-- of course the agents who played (ids)
 
 agents
 - an id

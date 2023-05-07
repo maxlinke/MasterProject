@@ -39,7 +39,11 @@ namespace MasterProject {
             TryLog(ConsoleOutputs.Debug, message);
         }
 
-        public abstract Task Run ();
+        public void RunSynced () {
+            RunAsync().GetAwaiter().GetResult();
+        }
+
+        public abstract Task RunAsync ();
 
         public abstract GameRecord GetRecord ();
 
@@ -108,7 +112,7 @@ namespace MasterProject {
             return default;
         }
 
-        public override async Task Run () {
+        public override async Task RunAsync () {
             VerifyOnlyOneRun();
             VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
