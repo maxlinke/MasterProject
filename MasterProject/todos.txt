@@ -1,4 +1,6 @@
 ﻿- run a bunch of games of ttt with the two agent variants and see if it actually works what i've built so far
+	- only when i have the game tree agent (who should never lose) will i see if it actually works
+	  because it's a little suspect that the line builder performs so bad when he's player two
 
 - a way to run a lot of games and get the results
 - a start of the web-visualizer (can i easily read a bunch of files?)

@@ -60,6 +60,16 @@ namespace MasterProject.TicTacToe.Tests {
                 -1, -1, -1,
                  0,  0,  0,
             }, 0, true);
+            TestBoardState(new int[]{
+                 0,  0, -1,
+                 1,  1,  1,
+                -1, -1, -1,
+            }, 1, true);
+            TestBoardState(new int[]{
+                -1, -1, -1,
+                -1, -1, -1,
+                 1,  1,  1,
+            }, 1, true);
         }
 
         [Test]

@@ -31,6 +31,7 @@ namespace MasterProject.TicTacToe {
         public bool gameOver;
         public int[] board;
 
+        public override int CurrentPlayerIndex => currentPlayerIndex;
         public override bool GameOver => gameOver;
 
         public override TTTGameState GetVisibleGameStateForPlayer (int playerIndex) {
@@ -119,6 +120,40 @@ namespace MasterProject.TicTacToe {
                 return true;
             }
         }
+
+        public string GetPrintableBoardWithXsAndOs () {
+            return GetPrintableBoard((i) => board[i] == EMPTY_FIELD ? ' ' : GetSymbolForPlayer(board[i]));
+        }
+
+        public string GetPrintableBoard (System.Func<int, char> getFieldSymbol) {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    var s = getFieldSymbol((3 * i) + j);
+                    sb.Append($" {s} ");
+                    if (j + 1 < 3) {
+                        sb.Append('|');
+                    }
+                }
+                sb.AppendLine();
+                if (i + 1 < 3) {
+                    sb.AppendLine("---+---+---");
+                }
+            }
+            return sb.ToString();
+        }
+
+        public static char GetSymbolForPlayer (int playerIndex) {
+            switch (playerIndex) {
+                case 0:
+                    return 'X';
+                case 1:
+                    return 'O';
+                default:
+                    return '?';
+            }
+        }
+
     }
 
 }

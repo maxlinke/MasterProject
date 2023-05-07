@@ -58,6 +58,13 @@ namespace MasterProject {
 
         protected TGameState? CurrentGameState { get; private set; }
 
+        public TGameState? GetFinalGameState () {
+            if (CurrentGameState == null || !CurrentGameState.GameOver) {
+                return null;
+            }
+            return CurrentGameState;
+        }
+
         private bool hasRun = false;
         private readonly List<TAgent> agents = new();
         private readonly List<TGameState> gameStates = new();
@@ -129,6 +136,7 @@ namespace MasterProject {
                 }
                 TryLog(ConsoleOutputs.Move, $"Move {moveCounter}");
                 var currentAgent = agents[CurrentGameState.CurrentPlayerIndex];
+                TryLog(ConsoleOutputs.Move, $"Turn of player {CurrentGameState.CurrentPlayerIndex} ({currentAgent.GetType()})");
                 var moves = CurrentGameState.GetPossibleMovesForCurrentPlayer();
                 int moveIndex;
                 bool moveTimeout; 

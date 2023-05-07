@@ -11,7 +11,7 @@ namespace MasterProject {
 
         public abstract bool GameOver { get; }
 
-        public int CurrentPlayerIndex { get; }
+        public abstract int CurrentPlayerIndex { get; }
 
     }
 

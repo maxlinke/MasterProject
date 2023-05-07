@@ -16,9 +16,21 @@ public class Program {
 
     // TODO try running each config asynchronously and compare that to the runtime of the serial synced version
 
+    // TODO
+    public IEnumerable<IEnumerable<TObj>> GetPermutations<TObj> (int groupSize, params System.Type[] types) where TObj : new() {
+        return null;
+    }
+
     const int gameCountPerAgentConfig = 100000;
 
     public static void Main (string[] args) {
+        //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
+        //MasterProject.TicTacToe.TTTGame.PlayAgainstBot(
+        //    new MasterProject.TicTacToe.Agents.RandomAgent(), 
+        //    new System.Random().NextDouble() < 0.5d, 
+        //    Game.ConsoleOutputs.Everything    
+        //);
+
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.RandomAgent(),
@@ -33,12 +45,8 @@ public class Program {
                 new MasterProject.TicTacToe.Agents.RandomAgent(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-                new MasterProject.TicTacToe.Agents.LineBuilder(),
-            },
-            new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.LineBuilder(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
+                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
@@ -47,10 +55,16 @@ public class Program {
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.LineBuilder(),
                 new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
             },
         };
         var sb = new System.Text.StringBuilder();
-        foreach(var agents in agentConfigs){
+        for(int c=0; c<agentConfigs.Count; c++){
+            Console.WriteLine($"Run {c + 1} of {agentConfigs.Count}");
+            var agents = agentConfigs[c];
             var wins = new int[agents.Count];
             var draws = 0;
             for (int i = 0; i < gameCountPerAgentConfig; i++) {
@@ -58,8 +72,7 @@ public class Program {
                 game.SetAgents(agents);
                 game.AllowedConsoleOutputs = Game.ConsoleOutputs.Nothing;
                 game.RunSynced();
-                var record = game.GetRecord();
-                var finalState = record.GameStates[record.GameStates.Length - 1] as MasterProject.TicTacToe.TTTGameState;
+                var finalState = game.GetFinalGameState();
                 if (finalState.winnerIndex < 0) {
                     draws++;
                 } else {
