@@ -32,7 +32,7 @@ namespace MasterProject {
 
         public abstract void OnGameStarted (TGame game);
 
-        public abstract int GetMoveIndex (IReadOnlyList<TMove> moves);
+        public abstract int GetMoveIndex (TGame game, IReadOnlyList<TMove> moves);
 
     }
 

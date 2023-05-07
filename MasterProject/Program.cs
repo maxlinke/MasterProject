@@ -31,7 +31,23 @@ public class Program {
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
                 new MasterProject.TicTacToe.Agents.RandomAgent(),
-            }
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+            },
         };
         var sb = new System.Text.StringBuilder();
         foreach(var agents in agentConfigs){

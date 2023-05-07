@@ -8,6 +8,19 @@ namespace MasterProject.TicTacToe {
     
     public class TTTGameState : GameState<TTTGameState, TTTMove> {
 
+        static readonly int[][] _lines = new int[][]{
+            new int[]{0, 1, 2 },
+            new int[]{3, 4, 5 },
+            new int[]{6, 7, 8 },
+            new int[]{0, 3, 6 },
+            new int[]{1, 4, 7 },
+            new int[]{2, 5, 8 },
+            new int[]{0, 4, 8 },
+            new int[]{2, 4, 6 }
+        };
+
+        public static IReadOnlyList<IReadOnlyList<int>> lines => _lines;
+
         public const int BOARD_SIZE = 3;
         public const int BOARD_FIELD_COUNT = BOARD_SIZE * BOARD_SIZE;
         public const int EMPTY_FIELD = -1;
@@ -73,66 +86,29 @@ namespace MasterProject.TicTacToe {
         }
 
         public void CheckBoard () {
-            int newWinner;
-            if(CheckStraights(out newWinner, (i, j) => ((i * BOARD_SIZE) + j))) {       // straights in one direction
-                gameOver = true;
-                winnerIndex = newWinner;
-                return;
+            foreach (var line in lines) {
+                if (CheckLine(line, out var newWinner)) {
+                    gameOver = true;
+                    winnerIndex = newWinner;
+                    return;
+                }
             }
-            if (CheckStraights(out newWinner, (i, j) => (i + (j * BOARD_SIZE)))) {      // straights in the other direction
-                gameOver = true;
-                winnerIndex = newWinner;
-                return;
-            }
-            if(CheckDiagonal(out newWinner, (i) => (i * (BOARD_SIZE + 1)))) {   // one diagonal
-                gameOver = true;
-                winnerIndex = newWinner;
-                return;
-            }
-            if (CheckDiagonal(out newWinner, (i) => (2 + i * (BOARD_SIZE - 1)))) {   // the other diagonal
-                gameOver = true;
-                winnerIndex = newWinner;
-                return;
-            }
-            if (CheckAllFieldsFilled()) {   // draw
+            if (CheckAllFieldsFilled()) {
                 gameOver = true;
                 winnerIndex = -1;
             }
 
-            bool CheckStraights (out int winner, System.Func<int, int, int> getPos) {
-                for (int i = 0; i < BOARD_SIZE; i++) {
-                    int? latest = null;
-                    var matching = true;
-                    for (int j = 0; j < BOARD_SIZE; j++) {
-                        var pos = getPos(i, j);
-                        var curr = board[pos];
-                        matching &= ((latest ?? curr) == curr);
-                        latest = curr;
-                    }
-                    if (matching && latest.Value != EMPTY_FIELD) {
-                        winner = latest.Value;
-                        return true;
+            bool CheckLine (IReadOnlyList<int> line, out int winner) {
+                var prev = board[line[0]];
+                for (int i = 1; i < line.Count; i++) {
+                    var curr = board[line[i]];
+                    if (curr != prev) {
+                        winner = default;
+                        return false;
                     }
                 }
-                winner = -1;
-                return false;
-            }
-
-            bool CheckDiagonal (out int winner, System.Func<int, int> getPos) {
-                int? latest = null;
-                var matching = true;
-                for(int i=0; i<BOARD_SIZE; i++) {
-                    var pos = getPos(i);
-                    var curr = board[pos];
-                    matching &= ((latest ?? curr) == curr);
-                    latest = curr;
-                }
-                if(matching && latest.Value != EMPTY_FIELD) {
-                    winner = latest.Value;
-                    return true;
-                }
-                winner = -1;
-                return false;
+                winner = prev;
+                return winner != EMPTY_FIELD;
             }
 
             bool CheckAllFieldsFilled () {

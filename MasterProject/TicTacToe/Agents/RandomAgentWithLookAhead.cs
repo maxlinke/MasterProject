@@ -15,14 +15,7 @@ namespace MasterProject.TicTacToe.Agents {
         // also depending on how i save the agent data, if i do it by namespace, then only the proper implementation have those
         // and of course this would need to analyze the possible outcomes and take the winning outcome with the highest probability rather than the ttt-specific thing
 
-        private TTTGame game;
-
-        public override void OnGameStarted (TTTGame game) {
-            base.OnGameStarted(game);
-            this.game = game;
-        }
-
-        public override int GetMoveIndex (IReadOnlyList<TTTMove> moves) {
+        public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
             for(int i=0; i<moves.Count; i++){
                 var moveResult = gs.GetResultOfMove(moves[i]);
@@ -30,7 +23,7 @@ namespace MasterProject.TicTacToe.Agents {
                     return i;
                 }
             }
-            return base.GetMoveIndex(moves);
+            return base.GetMoveIndex(game, moves);
         }
 
     }
