@@ -10,8 +10,7 @@ namespace MasterProject.TicTacToe.Agents {
 
         // uses negamax
 
-        public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
-            var gs = game.GetCurrentGameStateVisibleForAgent(this);
+        public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             var ownIndex = gs.CurrentPlayerIndex;
             var bestMoveIndex = -1;
             var bestScore = float.NegativeInfinity;

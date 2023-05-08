@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MasterProject.TicTacToe {
 
-    public abstract class TTTAgent : Agent<TTTGame, TTTMove> {
+    public abstract class TTTAgent : Agent<TTTGameState, TTTMove> {
 
         // child classes do the implementations
 

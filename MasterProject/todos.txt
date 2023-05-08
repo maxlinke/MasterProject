@@ -9,6 +9,11 @@
 	- check how we did it in visualization
 - the datasaver
 	- agent rankings
+		- elo for two players is easy, how does it work for multiple player rounds?
+		- for visualization it'd be nice if the elo was trackable too
+			- where to save that? i think gamerecords would be best
+			- because they have a timestamp and an agent id already
+			- rather than keeping elo with just the agents which might make elo over time graphing harder
 	- the "database"?
 	- could make it so all data is just cached and manually has to be written
 	- with an automatic write on program exit

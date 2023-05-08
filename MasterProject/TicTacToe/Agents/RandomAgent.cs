@@ -8,7 +8,7 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class RandomAgent : TTTAgent {
 
-        public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
+        public override int GetMoveIndex (TTTGameState gameState, IReadOnlyList<TTTMove> moves) {
             return GetRandomMoveIndex(moves);
         }
 

@@ -8,8 +8,7 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class Human : TTTAgent {
 
-        public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
-            var gs = game.GetCurrentGameStateVisibleForAgent(this);
+        public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             Console.WriteLine();
             Console.WriteLine($"You are: {TTTGameState.GetSymbolForPlayer(gs.CurrentPlayerIndex)}");
             Console.WriteLine();

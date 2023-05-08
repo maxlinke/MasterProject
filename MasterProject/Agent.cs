@@ -26,11 +26,13 @@ namespace MasterProject {
 
     }
 
-    public abstract class Agent<TGame, TMove> : Agent {
+    public abstract class Agent<TGameState, TMove> : Agent 
+        where TGameState : GameState<TGameState, TMove>    
+    {
 
         protected readonly Random rng = new();
 
-        public abstract int GetMoveIndex (TGame game, IReadOnlyList<TMove> moves);
+        public abstract int GetMoveIndex (TGameState gameState, IReadOnlyList<TMove> moves);
 
     }
 

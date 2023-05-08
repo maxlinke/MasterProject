@@ -8,13 +8,15 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class AlphaBetaMinMaxer : TTTAgent {
 
-        public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
-            var gs = game.GetCurrentGameStateVisibleForAgent(this);
+        public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             var ownIndex = gs.CurrentPlayerIndex;
             var bestMoveIndex = -1;
             var bestScore = float.NegativeInfinity;
             for (int i = 0; i < moves.Count; i++) {
                 var newGs = gs.GetResultOfMove(moves[i]);
+                if (newGs.GameOver && newGs.winnerIndex == gs.CurrentPlayerIndex) {
+                    return i;
+                }
                 var newScore = AlphaBeta(
                     newGs,
                     (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.winnerIndex == ownIndex) ? 1 : -1)),

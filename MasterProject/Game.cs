@@ -40,10 +40,23 @@ namespace MasterProject {
         }
 
         public void RunSynced () {
-            RunAsync().GetAwaiter().GetResult();
+            Run().GetAwaiter().GetResult();
         }
 
-        public abstract Task RunAsync ();
+        public async Task RunAsync () {
+            await Task.Run(() => Run());    // because if there's no timeout set, the run-task will actually not run asynchronously so this forces it to do so
+        }
+
+        public const int NO_MOVE_LIMIT = int.MaxValue;
+        public const int NO_TIMEOUT = int.MaxValue;
+
+        private int _moveLimit = NO_MOVE_LIMIT;
+        public int MoveLimit { get => _moveLimit; set => _moveLimit = Math.Max(value, 0); }
+
+        private int _agentMoveTimeoutMilliseconds = NO_TIMEOUT;
+        public int AgentMoveTimeoutMilliseconds { get => _agentMoveTimeoutMilliseconds; set => _agentMoveTimeoutMilliseconds = Math.Max(value, 0); }
+
+        protected abstract Task Run ();
 
         public abstract GameRecord GetRecord ();
 
@@ -53,7 +66,7 @@ namespace MasterProject {
         where TGame : Game<TGame, TGameState, TMove, TAgent>
         where TGameState : GameState<TGameState, TMove>
         where TMove : class
-        where TAgent : Agent<TGame, TMove>
+        where TAgent : Agent<TGameState, TMove>
     {
 
         protected TGameState? CurrentGameState { get; private set; }
@@ -75,12 +88,6 @@ namespace MasterProject {
         protected abstract int MinimumNumberOfAgentsRequired { get; }
 
         protected abstract int MaximumNumberOfAgentsAllowed { get; }
-
-        private int _moveLimit = int.MaxValue;
-        public int MoveLimit { get => _moveLimit; set => _moveLimit = Math.Max(value, 0); }
-
-        private int _agentMoveTimeoutMilliseconds = int.MaxValue;
-        public int AgentMoveTimeoutMilliseconds { get => _agentMoveTimeoutMilliseconds; set => _agentMoveTimeoutMilliseconds = Math.Max(value, 0); }
 
         public void SetAgents (IEnumerable<TAgent> agentsToSet) {
             if (agents.Count > 0) {
@@ -108,18 +115,7 @@ namespace MasterProject {
             }
         }
 
-        // https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
-
-        private async Task<int> GetAgentMoveIndex (TAgent agent, IReadOnlyList<TMove> moves) {
-            return await Task.Run(() => agent.GetMoveIndex((TGame)this, moves));
-        }
-
-        private async Task<int> PerformAgentTimeoutDelay () {
-            await Task.Delay(AgentMoveTimeoutMilliseconds);
-            return default;
-        }
-
-        public override async Task RunAsync () {
+        protected override async Task Run () {
             VerifyOnlyOneRun();
             VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
@@ -138,10 +134,11 @@ namespace MasterProject {
                 int moveIndex;
                 bool moveTimeout; 
                 if (moves.Count > 1) {
+                    var agentVisibleState = CurrentGameState.GetVisibleGameStateForPlayer(CurrentGameState.CurrentPlayerIndex);
                     sw.Restart();
                     if (AgentMoveTimeoutMilliseconds < int.MaxValue) {
-                        var agentTask = GetAgentMoveIndex(currentAgent, moves);
-                        var timeoutTask = PerformAgentTimeoutDelay();
+                        var agentTask = Task.Run(() => currentAgent.GetMoveIndex(agentVisibleState, moves));
+                        var timeoutTask = Task.Delay(AgentMoveTimeoutMilliseconds);
                         var resultTask = await Task.WhenAny(agentTask, timeoutTask);
                         if (resultTask == agentTask) {
                             moveIndex = agentTask.Result;
@@ -151,7 +148,7 @@ namespace MasterProject {
                             moveTimeout = true;
                         }
                     } else {
-                        moveIndex = currentAgent.GetMoveIndex((TGame)this, moves);
+                        moveIndex = currentAgent.GetMoveIndex(agentVisibleState, moves);
                         moveTimeout = false;
                     }
                     sw.Stop();
