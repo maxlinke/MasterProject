@@ -91,6 +91,12 @@ public class Program {
 
     // conclusion: just running all of them and awaiting all the results is way faster than the alternative. c# takes care of stuff for you so you don't have to manage thread counts or anything.
 
+    // interesting: with 0 ms move timeout the results are like this
+    // Synced took 670ms
+    // Parallel took 7138ms
+    // this shows that of the 8s for the 100 game run, 7s is just task overhead and it's still faster
+    // so these benefits will scale for more complicated games as the overhead will be comparatively lower
+
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {
         var sw = new System.Diagnostics.Stopwatch();
 
