@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 namespace MasterProject.TicTacToe.Agents {
 
     public class LineBuilder : TTTAgent {
-        
-        public override void OnGameStarted (TTTGame game) { }
 
         public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);

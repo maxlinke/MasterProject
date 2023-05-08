@@ -8,7 +8,7 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class MinMaxer : TTTAgent {
 
-        public override void OnGameStarted (TTTGame game) { }
+        // uses negamax
 
         public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
@@ -17,7 +17,11 @@ namespace MasterProject.TicTacToe.Agents {
             var bestScore = float.NegativeInfinity;
             for (int i = 0; i < moves.Count; i++) {
                 var newGs = gs.GetResultOfMove(moves[i]);
-                var newScore = -GetMoveScoreAllTheWayDown(ownIndex, newGs, -1);
+                var newScore = -GetMoveScoreAllTheWayDown(
+                    newGs,
+                    (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.winnerIndex == ownIndex) ? 1 : -1)),
+                    -1
+                );
                 if (newScore > bestScore) {
                     bestMoveIndex = i;
                     bestScore = newScore;
@@ -26,17 +30,14 @@ namespace MasterProject.TicTacToe.Agents {
             return bestMoveIndex;
         }
 
-        static float GetMoveScoreAllTheWayDown (int ownIndex, TTTGameState gs, float multiplier) {
+        static float GetMoveScoreAllTheWayDown (TTTGameState gs, System.Func<TTTGameState, float> evaluate, float multiplier) {
             if (gs.GameOver) {
-                if (gs.winnerIndex < 0) {
-                    return 0;
-                }
-                return multiplier * ((gs.winnerIndex == ownIndex) ? 1 : -1);
+                return multiplier * evaluate(gs);
             }
             var moves = gs.GetPossibleMovesForCurrentPlayer();
             var maxScore = float.NegativeInfinity;
             foreach (var move in moves) {
-                maxScore = Math.Max(maxScore, -GetMoveScoreAllTheWayDown(ownIndex, gs.GetResultOfMove(move), -multiplier));
+                maxScore = Math.Max(maxScore, -GetMoveScoreAllTheWayDown(gs.GetResultOfMove(move), evaluate, -multiplier));
             }
             return maxScore;
         }

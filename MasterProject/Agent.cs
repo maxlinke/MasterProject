@@ -30,8 +30,6 @@ namespace MasterProject {
 
         protected readonly Random rng = new();
 
-        public abstract void OnGameStarted (TGame game);
-
         public abstract int GetMoveIndex (TGame game, IReadOnlyList<TMove> moves);
 
     }

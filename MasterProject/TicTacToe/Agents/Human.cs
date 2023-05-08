@@ -8,8 +8,6 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class Human : TTTAgent {
 
-        public override void OnGameStarted (TTTGame game) { }
-
         public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
             Console.WriteLine();

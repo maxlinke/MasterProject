@@ -123,9 +123,6 @@ namespace MasterProject {
             VerifyOnlyOneRun();
             VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
-            foreach (var agent in agents) {
-                agent.OnGameStarted((TGame)this);
-            }
             var rng = new Random();
             var sw = new Stopwatch();
             var moveCounter = 0;

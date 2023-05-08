@@ -35,22 +35,21 @@ public class Program {
     }
 
     // TODO figure out how to do it all in parallel (and generalize)
-    // TODO make a faster minmaxer
     // TODO make a minmaxer that uses a generic minmaxing thing
     static void DoBotTournament (int gameCountPerAgentConfig, int threadCount = 1) {
         threadCount = Math.Max(1, threadCount);
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.RandomAgent(),
+            //    new MasterProject.TicTacToe.Agents.RandomAgent(),
+            //},
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+                new MasterProject.TicTacToe.Agents.MinMaxer(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.MinMaxer(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-            },
-            new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-                new MasterProject.TicTacToe.Agents.MinMaxer(),
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
             },
             //new List<MasterProject.TicTacToe.TTTAgent>(){
             //    new MasterProject.TicTacToe.Agents.RandomAgent(),
