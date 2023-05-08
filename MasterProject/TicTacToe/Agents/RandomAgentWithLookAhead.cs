@@ -19,7 +19,7 @@ namespace MasterProject.TicTacToe.Agents {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
             for(int i=0; i<moves.Count; i++){
                 var moveResult = gs.GetResultOfMove(moves[i]);
-                if (moveResult.GameOver && moveResult.winnerIndex == gs.currentPlayerIndex) {
+                if (moveResult.GameOver && moveResult.winnerIndex == gs.CurrentPlayerIndex) {
                     return i;
                 }
             }

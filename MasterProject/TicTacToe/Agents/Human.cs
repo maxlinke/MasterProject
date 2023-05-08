@@ -13,7 +13,7 @@ namespace MasterProject.TicTacToe.Agents {
         public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
             Console.WriteLine();
-            Console.WriteLine($"You are: {TTTGameState.GetSymbolForPlayer(gs.currentPlayerIndex)}");
+            Console.WriteLine($"You are: {TTTGameState.GetSymbolForPlayer(gs.CurrentPlayerIndex)}");
             Console.WriteLine();
             var symbolBoard = gs.GetPrintableBoardWithXsAndOs();
             var intBoard = gs.GetPrintableBoard((i) => moves.Any((move) => (move.fieldIndex == i)) ? (char)('0' + i) : ' ');

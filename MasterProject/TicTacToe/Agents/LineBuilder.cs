@@ -12,7 +12,7 @@ namespace MasterProject.TicTacToe.Agents {
 
         public override int GetMoveIndex (TTTGame game, IReadOnlyList<TTTMove> moves) {
             var gs = game.GetCurrentGameStateVisibleForAgent(this);
-            var ownIndex = gs.currentPlayerIndex;
+            var ownIndex = gs.CurrentPlayerIndex;
             var possibleLineMoves = new List<int>();
             var leastMovesRemaining = int.MaxValue;
             // probably more?

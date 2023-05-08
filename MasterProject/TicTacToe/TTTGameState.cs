@@ -26,9 +26,10 @@ namespace MasterProject.TicTacToe {
         public const int EMPTY_FIELD = -1;
         public const int PLAYER_COUNT = 2;
 
-        public int currentPlayerIndex;
-        public int winnerIndex;
-        public bool gameOver;
+        private int currentPlayerIndex;
+        private bool gameOver;
+
+        public int winnerIndex { get; private set; }
         public int[] board;
 
         public override int CurrentPlayerIndex => currentPlayerIndex;
