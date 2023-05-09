@@ -13,67 +13,152 @@ namespace MasterProject {
         // they are best used to force a selection, i.e. if a given move directly leads to victory, then infinity would be appropriate
         // otherwise if a victory is rated equally, no matter how far into the gametree it occurs, the earlier best move will be chosen
 
-        public static int GetBestMoveIndex<TGameState, TMove> (
-            TGameState gameState, 
-            IReadOnlyList<TMove> moves, 
-            int maxDepth, 
-            System.Func<TGameState, int, float> evaluate
+        // TODO i don't like the float, float, bool func
+        // technically i could probably do this by just messing with the evaluation function?
+        // start off with a best score of -infinity always
+        // 
+
+        private static readonly Random tiebreakerRng = new();
+
+        public static int SelectMove<TGameState, TMove> (
+            TGameState initialGameState,
+            IReadOnlyList<TMove> moves,
+            int maxDepth,
+            Func<TGameState, int, bool> maximize,
+            Func<TGameState, int, float> evaluate,
+            bool randomTieBreaker
         )
             where TGameState : GameState<TGameState, TMove>
         {
             maxDepth = Math.Max(1, maxDepth);
-            var bestMoveIndex = -1;
-            var bestScore = float.NegativeInfinity;
+            var scores = new float[moves.Count];
+            var maxScore = float.NegativeInfinity;
+            var maxScoreCounter = 0;
+            var outputIndex = 0;
             for (int i = 0; i < moves.Count; i++) {
-                var outcomes = gameState.GetPossibleOutcomesForMove(moves[i]);
+                var outcomes = initialGameState.GetPossibleOutcomesForMove(moves[i]);
+                scores[i] = 0;
                 foreach (var outcome in outcomes) {
-                    var newScore = outcome.Probability * AlphaBeta<TGameState, TMove>(
-                        maximizingPlayerIndex: gameState.CurrentPlayerIndex,
+                    scores[i] += outcome.Probability * RateGameStateRecursive<TGameState, TMove>(
                         currentState: outcome.GameState,
-                        depth: 1,
-                        depthRemaining: maxDepth - 1,
-                        alpha : float.NegativeInfinity,
-                        beta: float.PositiveInfinity,
+                        maxDepth: maxDepth - 1,
+                        maximize: maximize,
                         evaluate: evaluate
                     );
-                    if (newScore > bestScore) {
-                        bestMoveIndex = i;
-                        bestScore = newScore;
+                }
+                if (scores[i] > maxScore) {
+                    maxScore = scores[i];
+                    maxScoreCounter = 1;
+                    outputIndex = i;
+                } else if (scores[i] == maxScore) {
+                    maxScoreCounter++;
+                }
+            }
+            if (maxScoreCounter > 1 && randomTieBreaker) {
+                var tiebreakerCountdown = tiebreakerRng.Next(maxScoreCounter);
+                for (int i = 0; i < scores.Length; i++) {
+                    if (scores[i] == maxScore) {
+                        tiebreakerCountdown--;
+                        if (tiebreakerCountdown <= 0) {
+                            outputIndex = i;
+                            break;
+                        }
                     }
                 }
             }
-            return bestMoveIndex;
+            return outputIndex;
         }
+
+        public static int GetBestMoveIndex<TGameState, TMove> (
+            TGameState gameState, 
+            IReadOnlyList<TMove> moves, 
+            int maxDepth, 
+            Func<TGameState, int, float> evaluate,
+            bool randomTieBreaker
+        )
+            where TGameState : GameState<TGameState, TMove> 
+        {
+            var ownPlayerIndex = gameState.CurrentPlayerIndex;
+            return SelectMove(
+                initialGameState: gameState,
+                moves: moves,
+                maxDepth: maxDepth,
+                maximize: (gs, _) => (gs.CurrentPlayerIndex == ownPlayerIndex),
+                evaluate: evaluate,
+                randomTieBreaker: randomTieBreaker
+            );
+        }
+
+        // for alpha-beta-pruning to work, there must be maximizing and minimizing
+        // so this would oddly enough be very expensive
+        //public static int GetWorstMoveIndex<TGameState, TMove> (
+        //    TGameState gameState,
+        //    IReadOnlyList<TMove> moves,
+        //    int maxDepth,
+        //    Func<TGameState, int, float> evaluate,
+        //    bool randomTieBreaker
+        //)
+        //    where TGameState : GameState<TGameState, TMove>
+        //{
+        //    return SelectMove(
+        //        initialGameState: gameState,
+        //        moves: moves,
+        //        maxDepth: maxDepth,
+        //        maximize: (_, _) => true,                   // always maxmize (because of the inverted eval)
+        //        evaluate: (gs, d) => (-evaluate(gs, d)),    // invert the evaluation
+        //        randomTieBreaker: randomTieBreaker
+        //    );
+        //}
+
+        public static float RateGameStateRecursive<TGameState, TMove> (
+            TGameState currentState,
+            int maxDepth,
+            Func<TGameState, int, bool> maximize,
+            Func<TGameState, int, float> evaluate
+        )
+            where TGameState : GameState<TGameState, TMove>
+        {
+            return RateGameStateRecursive<TGameState, TMove>(
+                currentState: currentState,
+                depth: 1,
+                depthRemaining: maxDepth,
+                alpha: float.NegativeInfinity,
+                beta: float.PositiveInfinity,
+                maximize: maximize,
+                evaluate: evaluate
+            );
+        }
+
 
         // combination of https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
         // and https://en.wikipedia.org/wiki/Expectiminimax for the probabalistic aspect
         // for deterministic outcomes (probability = 1) it is identical to normal alpha beta pruning
-        static float AlphaBeta<TGameState, TMove> (
-            int maximizingPlayerIndex, 
+        private static float RateGameStateRecursive<TGameState, TMove> (
             TGameState currentState, 
             int depth, 
             int depthRemaining, 
             float alpha, 
             float beta, 
-            System.Func<TGameState, int, float> evaluate
+            Func<TGameState, int, bool> maximize,
+            Func<TGameState, int, float> evaluate
         )
             where TGameState : GameState<TGameState, TMove> 
         {
             if (currentState.GameOver || depthRemaining < 1) {
                 return evaluate(currentState, depth);
             }
-            if (currentState.CurrentPlayerIndex == maximizingPlayerIndex) {
+            if (maximize(currentState, depth)) {
                 var value = float.NegativeInfinity;
                 foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
                     var combinedOutcomes = 0f;
                     foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
-                        combinedOutcomes += outcome.Probability * AlphaBeta<TGameState, TMove>(
-                            maximizingPlayerIndex: maximizingPlayerIndex,
+                        combinedOutcomes += outcome.Probability * RateGameStateRecursive<TGameState, TMove>(
                             currentState: outcome.GameState,
                             depth: depth + 1,
                             depthRemaining: depthRemaining - 1,
                             alpha: alpha,
                             beta: beta,
+                            maximize: maximize,
                             evaluate: evaluate
                         );
                     }
@@ -89,13 +174,13 @@ namespace MasterProject {
                 foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
                     var combinedOutcomes = 0f;
                     foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
-                        combinedOutcomes += outcome.Probability * AlphaBeta<TGameState, TMove>(
-                            maximizingPlayerIndex: maximizingPlayerIndex,
+                        combinedOutcomes += outcome.Probability * RateGameStateRecursive<TGameState, TMove>(
                             currentState: outcome.GameState,
                             depth: depth + 1,
                             depthRemaining: depthRemaining - 1,
                             alpha: alpha,
                             beta: beta,
+                            maximize: maximize,
                             evaluate: evaluate
                         );
                     }

@@ -22,7 +22,8 @@ namespace MasterProject.TicTacToe.Agents {
                         return (gs.IsDraw ? 0 : -1);
                     }
                     throw new NotImplementedException("This will never happen");
-                }
+                },
+                true
             );
         }
 

@@ -1,8 +1,68 @@
-﻿- run a bunch of games of ttt with the two agent variants and see if it actually works what i've built so far
-	- only when i have the game tree agent (who should never lose) will i see if it actually works
-	  because it's a little suspect that the line builder performs so bad when he's player two
+﻿>>> Test the elo rating system with my ttt-bots
+	- see how many games it takes to converge (maybe also read if that's stated anywhere)
+	- also make a bot that tries to lose as hard as possible just to show that it's possible to be worse than random
+		- one with alpha beta
+		- one that actively does NOT put anything in the path of the opponent
+			- basically the line builder but "helping" the other one
+
+- agent data
+	- number of games played (implicit?) -> could also come from just the list of played games but i think it's still smart to keep a separate record
+		- wins, losses, draws            -> could also come from just the list of played games but i think it's still smart to keep a separate record
+	- average move duration
+		- find a way to make that happen without breaking with a huge game count (can't do ((gamecount * currentavg) + newVal) / (gamecount+1))
+			- just add the current average and the new value weighted
+				- over time current weight will go to one and new weight to 0
+	- current elo value
+	- elo history
+		- how the value evolved over time
+		- do i care what causes what change? 
+			- i.e. against which bots the game was played and the result of that game and what rankings the other bots had?
+			- sounds not interesting enough or "could" be extracted if REALLY desired
+		- so it'd just be elo value and the game id that was played with it
+			- with that, games have which agents played in a game, ...  hold up
+		- if i just save the ids of ranked games then that's enough to reconstruct the elo history
+		- provided i don't delete the game records
+			- the vis framework will have to deal with that
+	- on the other hand, it'd be good to just keep one file with all the agent ranking stuff
+		- that could contain the matchup matrix kinda
+			- how would that work with >2 player games?
+				- the winner won against the average elo of the opponents
+				- the losers lost against the elo of the winner
+
+- force playerstates on all gamestates just to make the web thing easier?
+	- on the other hand, no. the important win-counting happens with the agents
+	- the game records are more there to analyze the average game with various constraints
+
+ELO
+https://en.wikipedia.org/wiki/Elo_rating_system
+https://en.wikipedia.org/wiki/Chess_engine#Ratings
+https://sourceforge.net/p/tom7misc/svn/HEAD/tree/trunk/chess/elo.cc
+it seems that elo is calculated from wins and losses alone
+so i can't do a moving average i guess?
+but since elo is calculated using the elo of other players, how does that work?
+so i DO need to record against WHOM i have won, lost or drawn huh
+...
+so it it a process i have to do multiple times?
+basically start everyone at 1000 and then go through the games chronologically and after each round apply a new rating to the players?
+or is it that i initialize every bot, do a big tournament and then update the elo based on that and that's the new elo
+then i do another tournament, tally up everything again and after it's done, update everybody's elo again?
+that sounds like it makes sense actually
+so it would always require a tournament to update elo, single games aren't enough
+TODO calculate how many matchups there are per game and see if it is even feasable to ensure everybody plays against everybody
+maybe i'll have to actually implement proper tournament stuff with brackets or something
+so that the good bots spend less time battling the bad ones
+man, this IS getting interesting :D
+
+
+SAVED DATA IS THIS
+> ONE AGENT DATABASE FILE PER GAME
+> ONE FILE PER TOURNAMENT WITH ALL THE GAMERECORDS OF THE TOURNAMENT
+THIS KEEPS THE AMOUNT OF DISK ACCESS LOW
 
 - a way to run a lot of games and get the results
+	- what results do i actually care about?
+		- do i want all gamerecords?
+		- for fast games that sounds bad because it's probably a lot of data
 - a start of the web-visualizer (can i easily read a bunch of files?)
 	- i think i can just put the .json things as scripts into the main visualizer script then it's automatic
 	- how does that break if those scripts get removed?

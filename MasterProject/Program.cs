@@ -42,9 +42,9 @@ public class Program {
 
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
-        //PlayAgainstBot(new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(), 5000);
-        DoSyncAsyncTest(20);
-        //DoBotTournament(100);
+        //PlayAgainstBot(new MasterProject.TicTacToe.Agents.GenericMinMaxUser());
+        //DoSyncAsyncTest(20);
+        DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
         //DoTheThing(1000, true).GetAwaiter().GetResult();
@@ -77,42 +77,13 @@ public class Program {
             });
         }
         Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} {logMsg}");
-
     }
 
-    // 100 games result:
-    // Synced took 22659ms
-    // Parallel took 8573ms
-    // 37.83% of the duration
-
-    // 1000 games result:
-    // Synced took 225944ms
-    // Parallel took 80349ms
-    // 35.35% of the duration
-
-    // conclusion: just running all of them and awaiting all the results is way faster than the alternative. c# takes care of stuff for you so you don't have to manage thread counts or anything.
-
-    // interesting: with 0 ms move timeout the results are like this
-    // Synced took 670ms
-    // Parallel took 7138ms
-    // this shows that of the 8s for the 100 game run, 7s is just task overhead and it's still faster
-    // so these benefits will scale for more complicated games as the overhead will be comparatively lower
-
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {
-        var sw = new System.Diagnostics.Stopwatch();
-
-        //sw.Restart();
-        //DoBotTournament(gameCount, gameCount, timeoutMillis);
-        //sw.Stop();
-        //var asyncMillis = sw.ElapsedMilliseconds;
-
-        sw.Restart();
-        DoBotTournament(gameCount, 0, timeoutMillis);
-        sw.Stop();
-        var syncMillis = sw.ElapsedMilliseconds;
-
+        var asyncMillis = DoBotTournament(gameCount, gameCount, timeoutMillis);
+        var syncMillis = DoBotTournament(gameCount, 0, timeoutMillis);
+        Console.WriteLine($"Parallel took {asyncMillis}ms");
         Console.WriteLine($"Synced took {syncMillis}ms");
-        //Console.WriteLine($"Parallel took {asyncMillis}ms");
     }
 
     static void PlayAgainstBot (MasterProject.TicTacToe.TTTAgent bot, int timeoutMillis = Game.NO_TIMEOUT) {
@@ -124,33 +95,18 @@ public class Program {
         );
     }
 
-    // 20 rounds smart vs random and 20 rounds random vs smart
-
-    // regular minmax -> 549945 recursions on first move
-    // Synced took 5728ms
-    // Synced took 5613ms
-    // Synced took 5610ms
-
-    // alpha beta minmax -> 153011 recursions on first move
-    // Synced took 2155ms
-    // Synced took 2193ms
-    // Synced took 2173ms
-
-    // generic alpha beta -> 153011 recursions on first move
-    // Synced took 2796ms
-    // Synced took 2768ms
-    // Synced took 2812ms
-
-    static void DoBotTournament (int gameCountPerAgentConfig, int threadCount = 1, int timeoutMillis = Game.NO_TIMEOUT) {
+    static long DoBotTournament (int gameCountPerAgentConfig, int threadCount = 1, int timeoutMillis = Game.NO_TIMEOUT) {
+        var sw = new System.Diagnostics.Stopwatch();
+        sw.Start();
         threadCount = Math.Max(1, threadCount);
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
             new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
                 new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
                 new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
             }
         };
         var sb = new System.Text.StringBuilder();
@@ -205,13 +161,11 @@ public class Program {
             }
             sb.AppendLine($" - There were {draws} draws");
             sb.AppendLine();
-            var firstAgent = agents[0];
-            agents.RemoveAt(0);
-            agents.Add(firstAgent);
         }
         Console.WriteLine();
         Console.WriteLine(sb.ToString());
-
+        sw.Stop();
+        return sw.ElapsedMilliseconds;
     }
 
     static async Task RunGamesInParallel<TGame> (IEnumerable<TGame> games) where TGame : Game {
