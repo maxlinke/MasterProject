@@ -44,6 +44,7 @@ public class Program {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
         //PlayAgainstBot(new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(), 5000);
         DoSyncAsyncTest(100);
+        //DoBotTournament(100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
         //DoTheThing(1000, true).GetAwaiter().GetResult();
@@ -100,10 +101,10 @@ public class Program {
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {
         var sw = new System.Diagnostics.Stopwatch();
 
-        sw.Restart();
-        DoBotTournament(gameCount, gameCount, timeoutMillis);
-        sw.Stop();
-        var asyncMillis = sw.ElapsedMilliseconds;
+        //sw.Restart();
+        //DoBotTournament(gameCount, gameCount, timeoutMillis);
+        //sw.Stop();
+        //var asyncMillis = sw.ElapsedMilliseconds;
 
         sw.Restart();
         DoBotTournament(gameCount, 0, timeoutMillis);
@@ -111,7 +112,7 @@ public class Program {
         var syncMillis = sw.ElapsedMilliseconds;
 
         Console.WriteLine($"Synced took {syncMillis}ms");
-        Console.WriteLine($"Parallel took {asyncMillis}ms");
+        //Console.WriteLine($"Parallel took {asyncMillis}ms");
     }
 
     static void PlayAgainstBot (MasterProject.TicTacToe.TTTAgent bot, int timeoutMillis = Game.NO_TIMEOUT) {
@@ -123,13 +124,33 @@ public class Program {
         );
     }
 
-    // TODO make a minmaxer that uses a generic minmaxing thing
+    // 20 rounds smart vs random and 20 rounds random vs smart
+
+    // regular minmax -> 549945 recursions on first move
+    // Synced took 5728ms
+    // Synced took 5613ms
+    // Synced took 5610ms
+
+    // alpha beta minmax -> 153011 recursions on first move
+    // Synced took 2155ms
+    // Synced took 2193ms
+    // Synced took 2173ms
+
+    // generic alpha beta -> 153011 recursions on first move
+    // Synced took 3152ms
+    // Synced took 2919ms
+    // Synced took 2976ms
+
     static void DoBotTournament (int gameCountPerAgentConfig, int threadCount = 1, int timeoutMillis = Game.NO_TIMEOUT) {
         threadCount = Math.Max(1, threadCount);
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.MinMaxer(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
+                new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+                new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
             }
         };
         var sb = new System.Text.StringBuilder();

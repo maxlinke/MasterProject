@@ -8,33 +8,101 @@ namespace MasterProject {
 
     public static class AlphaBetaMinMax {
 
-        // two variants kinda
-        // or even more
-        // there's the standard zero-sum minimax stuff for two players
-        // where we only need one rating function and can simply negamax the stuff
-        // and then there's the n-player variant
-        // which CAN simply try to minimize the score of the maximizing player
-        // but they could also try to maximize their own scores
-        // also working all the probability in here will be... fun...
-        // well, if i have a rating for something i can just weigh it by its probability?
-        // but that breaks if i have an infinity rating for example. 
-        // i.e. there's a 1% chance that something will lead to a win now (infinite reward)
-        // and a 99% chance that it won't
-        // does it make sense to go for that 1% move?
-        // i don't know
-        // maybe i should check that
-        // by also making the weighingfunction dynamic...
-        // or at least an enum
-        // what variations are there? clamp infinities and don't?
-        // also i could just not give an infinite rating to things
-        // this'll be easier with machine learning agents that can just learn what rating to give for the given baseline function that sorts the moves
+        // careful with infinite evaluations
+        // they will always dominate, no matter how unlikely they are
+        // they are best used to force a selection, i.e. if a given move directly leads to victory, then infinity would be appropriate
+        // otherwise if a victory is rated equally, no matter how far into the gametree it occurs, the earlier best move will be chosen
 
-        public static int GetBestMoveIndex<TGameState, TMove> (GameState<TGameState, TMove> gameState)
+        public static int GetBestMoveIndex<TGameState, TMove> (
+            TGameState gameState, 
+            IReadOnlyList<TMove> moves, 
+            int maxDepth, 
+            System.Func<TGameState, int, float> evaluate
+        )
             where TGameState : GameState<TGameState, TMove>
         {
-            // TODO start out with a simple assumption that it's deterministic and two player zero sum
-            // throw notimplementedexceptions where that assumption breaks down
-            return 0;
+            maxDepth = Math.Max(1, maxDepth);
+            var bestMoveIndex = -1;
+            var bestScore = float.NegativeInfinity;
+            for (int i = 0; i < moves.Count; i++) {
+                var outcomes = gameState.GetPossibleOutcomesForMove(moves[i]);
+                foreach (var outcome in outcomes) {
+                    var newScore = outcome.Probability * AlphaBeta<TGameState, TMove>(
+                        maximizingPlayerIndex: gameState.CurrentPlayerIndex,
+                        currentState: outcome.GameState,
+                        depth: 1,
+                        depthRemaining: maxDepth - 1,
+                        alpha : float.NegativeInfinity,
+                        beta: float.PositiveInfinity,
+                        evaluate: evaluate
+                    );
+                    if (newScore > bestScore) {
+                        bestMoveIndex = i;
+                        bestScore = newScore;
+                    }
+                }
+            }
+            return bestMoveIndex;
+        }
+
+        // combination of https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
+        // and https://en.wikipedia.org/wiki/Expectiminimax for the probabalistic aspect
+        // for deterministic outcomes (probability = 1) it is identical to normal alpha beta pruning
+        static float AlphaBeta<TGameState, TMove> (
+            int maximizingPlayerIndex, 
+            TGameState currentState, 
+            int depth, 
+            int depthRemaining, 
+            float alpha, 
+            float beta, 
+            System.Func<TGameState, int, float> evaluate
+        )
+            where TGameState : GameState<TGameState, TMove> 
+        {
+            if (currentState.GameOver || depthRemaining < 1) {
+                return evaluate(currentState, depth);
+            }
+            if (currentState.CurrentPlayerIndex == maximizingPlayerIndex) {
+                var value = float.NegativeInfinity;
+                foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
+                    foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
+                        value = Math.Max(value, outcome.Probability * AlphaBeta<TGameState, TMove>(
+                            maximizingPlayerIndex: maximizingPlayerIndex,
+                            currentState: outcome.GameState,
+                            depth: depth + 1,
+                            depthRemaining: depthRemaining - 1,
+                            alpha: alpha,
+                            beta: beta,
+                            evaluate: evaluate
+                        ));
+                    }
+                    if (value > beta) {
+                        break;
+                    }
+                    alpha = Math.Max(alpha, value);
+                }
+                return value;
+            } else {
+                var value = float.PositiveInfinity;
+                foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
+                    foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
+                        value = Math.Min(value, outcome.Probability * AlphaBeta<TGameState, TMove>(
+                            maximizingPlayerIndex: maximizingPlayerIndex,
+                            currentState: outcome.GameState,
+                            depth: depth + 1,
+                            depthRemaining: depthRemaining - 1,
+                            alpha: alpha,
+                            beta: beta,
+                            evaluate: evaluate
+                        ));
+                    }
+                    if (value < alpha) {
+                        break;
+                    }
+                    beta = Math.Min(beta, value);
+                }
+                return value;
+            }
         }
 
 	}

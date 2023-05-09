@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace MasterProject {
 
-    public class PossibleOutcome<T> {
+    public class PossibleOutcome<TGameState> where TGameState : GameState {
 
         public float Probability { get; set; }
 
-        public T? Outcome { get; set; }
+        public TGameState GameState { get; set; }
 
     }
 
     public static class PossibleOutcomeExtensions {
 
-        public static void NormalizeProbabilities<T> (this IEnumerable<PossibleOutcome<T>> possibleOutcomes) {
+        public static void NormalizeProbabilities<TGameState> (this IEnumerable<PossibleOutcome<TGameState>> possibleOutcomes) where TGameState : GameState {
             var sum = 0f;
             foreach (var possibleOutcome in possibleOutcomes) {
                 sum += Math.Max(0, possibleOutcome.Probability);

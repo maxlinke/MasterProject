@@ -54,7 +54,7 @@ namespace MasterProject.TicTacToe {
             var output = new List<PossibleOutcome<TTTGameState>>();
             output.Add(new PossibleOutcome<TTTGameState>() {
                 Probability = 1,
-                Outcome = this.GetResultOfMove(move)
+                GameState = this.GetResultOfMove(move)
             });
             return output;
         }

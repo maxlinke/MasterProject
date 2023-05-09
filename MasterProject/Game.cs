@@ -184,7 +184,7 @@ namespace MasterProject {
                     MoveChoiceTimedOut = moveTimeout
                 });
                 gameStates.Add(CurrentGameState);
-                CurrentGameState = possibleOutcomes[newGameStateIndex].Outcome;
+                CurrentGameState = possibleOutcomes[newGameStateIndex].GameState;
                 moveCounter++;
             }
             gameStates.Add(CurrentGameState);

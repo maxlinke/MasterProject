@@ -32,6 +32,7 @@ namespace MasterProject.TicTacToe.Agents {
             return bestMoveIndex;
         }
 
+
         // https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
         static float AlphaBeta (TTTGameState gs, System.Func<TTTGameState, float> evaluate, float alpha, float beta, bool maximizing) {
             if (gs.GameOver) {
