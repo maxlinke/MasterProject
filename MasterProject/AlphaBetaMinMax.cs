@@ -65,8 +65,9 @@ namespace MasterProject {
             if (currentState.CurrentPlayerIndex == maximizingPlayerIndex) {
                 var value = float.NegativeInfinity;
                 foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
+                    var combinedOutcomes = 0f;
                     foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
-                        value = Math.Max(value, outcome.Probability * AlphaBeta<TGameState, TMove>(
+                        combinedOutcomes += outcome.Probability * AlphaBeta<TGameState, TMove>(
                             maximizingPlayerIndex: maximizingPlayerIndex,
                             currentState: outcome.GameState,
                             depth: depth + 1,
@@ -74,8 +75,9 @@ namespace MasterProject {
                             alpha: alpha,
                             beta: beta,
                             evaluate: evaluate
-                        ));
+                        );
                     }
+                    value = Math.Max(value, combinedOutcomes);
                     if (value > beta) {
                         break;
                     }
@@ -85,8 +87,9 @@ namespace MasterProject {
             } else {
                 var value = float.PositiveInfinity;
                 foreach (var move in currentState.GetPossibleMovesForCurrentPlayer()) {
+                    var combinedOutcomes = 0f;
                     foreach (var outcome in currentState.GetPossibleOutcomesForMove(move)) {
-                        value = Math.Min(value, outcome.Probability * AlphaBeta<TGameState, TMove>(
+                        combinedOutcomes += outcome.Probability * AlphaBeta<TGameState, TMove>(
                             maximizingPlayerIndex: maximizingPlayerIndex,
                             currentState: outcome.GameState,
                             depth: depth + 1,
@@ -94,8 +97,9 @@ namespace MasterProject {
                             alpha: alpha,
                             beta: beta,
                             evaluate: evaluate
-                        ));
+                        );
                     }
+                    value = Math.Min(value, combinedOutcomes);
                     if (value < alpha) {
                         break;
                     }

@@ -43,7 +43,7 @@ public class Program {
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
         //PlayAgainstBot(new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(), 5000);
-        DoSyncAsyncTest(100);
+        DoSyncAsyncTest(20);
         //DoBotTournament(100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
@@ -137,19 +137,19 @@ public class Program {
     // Synced took 2173ms
 
     // generic alpha beta -> 153011 recursions on first move
-    // Synced took 3152ms
-    // Synced took 2919ms
-    // Synced took 2976ms
+    // Synced took 2796ms
+    // Synced took 2768ms
+    // Synced took 2812ms
 
     static void DoBotTournament (int gameCountPerAgentConfig, int threadCount = 1, int timeoutMillis = Game.NO_TIMEOUT) {
         threadCount = Math.Max(1, threadCount);
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
-                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
                 new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
             }
         };
