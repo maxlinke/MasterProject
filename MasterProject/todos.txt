@@ -52,6 +52,21 @@ TODO calculate how many matchups there are per game and see if it is even feasab
 maybe i'll have to actually implement proper tournament stuff with brackets or something
 so that the good bots spend less time battling the bad ones
 man, this IS getting interesting :D
+>>> VISUALIZATION & EXPERIMENTS
+with ttt games are very quick and the number of agents is low
+there are only n² permutations
+so have some tournaments and tournament variations and see if 
+	a) everything converges to the same result
+	b) how fast the convergence is
+versions: 
+	1) per tournament, everybody plays everybody once
+	2) per tournament, everybody plays everybody 10 times
+	3) per tournament, everybody plays everybody 100 times
+	4) per tournament, everybody plays 1 match against a randomly selected opponent
+	5) per tournament, everybody plays 10 matches against randomly selected opponents
+	6) per tournament, everybody plays 100 matches against randomly selected opponents
+then graph that in the web-visualizer and see how many tournaments (and total games) it takes to converge
+also does it make sense to have dilutions of the perfect bots? probably does...
 
 
 SAVED DATA IS THIS
