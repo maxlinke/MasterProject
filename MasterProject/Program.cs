@@ -42,7 +42,7 @@ public class Program {
 
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
-        //PlayAgainstBot(new MasterProject.TicTacToe.Agents.GenericMinMaxUser());
+        //PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABLoseFast());
         //DoSyncAsyncTest(20);
         DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
@@ -100,13 +100,17 @@ public class Program {
         sw.Start();
         threadCount = Math.Max(1, threadCount);
         var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.RandomAgent(),
+            //    new MasterProject.TicTacToe.Agents.ABLose(),
+            //},
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
-                new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
+                new MasterProject.TicTacToe.Agents.ABWin(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
             },
             new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.GenericMinMaxUser(),
-                new MasterProject.TicTacToe.Agents.AlphaBetaMinMaxer(),
+                new MasterProject.TicTacToe.Agents.ABWinFast(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(), 
             }
         };
         var sb = new System.Text.StringBuilder();
@@ -116,6 +120,7 @@ public class Program {
             var agents = agentConfigs[c];
             var wins = new int[agents.Count];
             var draws = 0;
+            var totalMovesUntilWin = new int[agents.Count];
             if (threadCount < 2) {
                 for (int i = 0; i < gameCountPerAgentConfig; i++) {
                     var gameId = $"Game {i + 1} of {gameCountPerAgentConfig}";
@@ -129,6 +134,7 @@ public class Program {
                         draws++;
                     } else {
                         wins[finalState.winnerIndex]++;
+                        totalMovesUntilWin[finalState.winnerIndex] += game.GetRecord().GameStates.Length - 1;
                     }
                 }
             } else {
@@ -151,13 +157,19 @@ public class Program {
                             draws++;
                         } else {
                             wins[finalState.winnerIndex]++;
+                            totalMovesUntilWin[finalState.winnerIndex] += game.GetRecord().GameStates.Length - 1;
                         }
                     }
                 }
             }
             sb.AppendLine($"Result after {gameCountPerAgentConfig} games:");
             for (int i = 0; i < agents.Count; i++) {
-                sb.AppendLine($" - Agent {i} ({agents[i].Id}) won {wins[i]} times");
+                sb.Append($" - Agent {i} ({agents[i].Id}) won {wins[i]} times ");
+                if (wins[i] > 0) {
+                    var avgMoves = (float)(totalMovesUntilWin[i]) / wins[i];
+                    sb.Append($"in a game of on average {avgMoves} moves");
+                }
+                sb.AppendLine();
             }
             sb.AppendLine($" - There were {draws} draws");
             sb.AppendLine();

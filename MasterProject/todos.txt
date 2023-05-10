@@ -65,9 +65,10 @@ versions:
 	4) per tournament, everybody plays 1 match against a randomly selected opponent
 	5) per tournament, everybody plays 10 matches against randomly selected opponents
 	6) per tournament, everybody plays 100 matches against randomly selected opponents
+	... -> try some skill-based matchmaking too and see if that makes a difference
+	    -> is elo hell real? (only play against your elo-neighbors)
 then graph that in the web-visualizer and see how many tournaments (and total games) it takes to converge
 also does it make sense to have dilutions of the perfect bots? probably does...
-
 
 SAVED DATA IS THIS
 > ONE AGENT DATABASE FILE PER GAME
