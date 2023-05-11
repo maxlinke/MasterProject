@@ -5,6 +5,11 @@
 		- one that actively does NOT put anything in the path of the opponent
 			- basically the line builder but "helping" the other one
 
+json for some things, csv for others?
+offer both?
+csv saves me some visualization work as i can import the data into openoffice and make visualizations there... simple ones at least
+and as far as the 2d-matrix for n-player games is concerned: treat it like elo. you won against the average of everyone else and you lost to the elo of the winner
+
 - agent data
 	- number of games played (implicit?) -> could also come from just the list of played games but i think it's still smart to keep a separate record
 		- wins, losses, draws            -> could also come from just the list of played games but i think it's still smart to keep a separate record
