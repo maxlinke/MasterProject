@@ -5,46 +5,66 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MasterProject {
-
-    // make exportable as json
-    // also make something up for csv
-    // unless c# already has something?
-    // c# has Microsoft.VisualBasic.FileIO.TextFieldParser but that works on files
-    // which is fine-ish?
-    // but i'd much rather feed it a string, just like the json thing
-    // on the other hand, do i really need it?
     
     public class WinLossDrawRecord {
 
-        // TODO this needs to preserve the order
-        // i.e. the winner was the first player OR the winner was the second player
-        // then i should maybe just save base-playerstates in order?
+        public string[] playerIds { get; set; }
+        public int dimensionality { get; set; }
+        public List<int>[] matchupWinners { get; set; } // TODO does this serialize as json?
 
-        //public Dictionary<string, Dictionary<string, int>> wins   { get; set; } = new();
-        //public Dictionary<string, Dictionary<string, int>> losses { get; set; } = new();
-        //public Dictionary<string, Dictionary<string, int>> draws  { get; set; } = new();
-
-        public void RecordWin (string winner, params string[] losers) {
-            //if (!wins.ContainsKey(winner)) {
-            //    wins.Add(winner, new Dictionary<string, int>());
-            //}
-            //foreach (var loser in losers) {
-            //    if (!wins[winner].ContainsKey(loser)) {
-            //        wins[winner].Add(loser, 0);
-            //    }
-            //    if (!losses.ContainsKey(loser)) {
-            //        losses.Add(loser, new Dictionary<string, int>());
-            //    }
-            //    if (!losses[loser].ContainsKey(winner)) {
-            //        losses[loser].Add(winner, 0);
-            //    }
-            //    wins[winner][loser]++;
-            //    losses[loser][winner]++;
-            //}
+        public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
+            this.playerIds = playerIds.ToArray();
+            this.dimensionality = playersPerGame;
+            this.matchupWinners = new List<int>[GetPossibleMatchupCount(playerIds.Count, playersPerGame)];
+            for (int i = 0; i < matchupWinners.Length; i++) {
+                matchupWinners[i] = new List<int>();
+            }
         }
 
-        public void RecordDraw (params string[] participants) {
-            //foreach(parti
+        public const int DRAW = -1;
+
+        public void RecordWin (IReadOnlyList<string> keys, int winnerIndex) {
+            matchupWinners[GetMatchupIndex(keys)].Add(winnerIndex);
+        }
+
+        public void RecordDraw (IReadOnlyList<string> keys) {
+            RecordWin(keys, DRAW);
+        }
+
+        public static int GetPossibleMatchupCount (int numberOfPlayers, int playersPerGame) {
+            var output = 1;
+            for (int i = 0; i < playersPerGame; i++) {
+                output *= numberOfPlayers;
+            }
+            return output;
+        }
+
+        // TODO test all this matchup math
+        public int GetMatchupIndex (IReadOnlyList<string> keys) {
+            if (keys.Count != dimensionality) {
+                throw new ArgumentException($"Matchup must consist of {dimensionality} players, but consisted of {keys.Count} instead!");
+            }
+            var output = 0;
+            foreach (var key in keys) {
+                var index = Array.IndexOf(this.playerIds, key);
+                if (index == -1) {
+                    throw new ArgumentException($"\"{key}\" is not registered!");
+                }
+                output *= dimensionality;
+                output += index;
+            }
+            return output;
+        }
+           
+        // TODO check this too
+        public IReadOnlyList<string> GetMatchupFromIndex (int matchupIndex) {
+            var keys = new List<string>();
+            for (int i = 0; i < dimensionality; i++) {
+                var playerIndex = matchupIndex % dimensionality;
+                matchupIndex -= playerIndex;
+                matchupIndex /= dimensionality;
+            }
+            return keys;
         }
 
         //public static WinLossDrawRecord Merge (WinLossDrawRecord a, WinLossDrawRecord b) {
