@@ -40,43 +40,45 @@ public class Program {
 
     class Bar : TestObj { }
 
+    // TODO make up some winlossdrawmatrices, try the merge function, try exporting to json and datasavering it
+    // then make a quick html/js thing to take care of the rest
+    // elo calculation can be done there
+    // and also image generation and stuff
+    // TODO generate an image and see what happens when i right-click it (can i save it?)
+
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
         //PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABLoseFast());
         //DoSyncAsyncTest(20);
-        DoBotTournament(100, 100);
+        //DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
+        DoWinLossDrawTest();
+        //DataSaver.SaveInProject("DATASAVERTEST/hello.txt", System.Text.Encoding.UTF8.GetBytes("hello, world"));
+        DataSaver.Flush();
     }
 
-    static async Task DoTheThing (int duration, bool trulyAsync) {
-        Console.WriteLine($"Doing the thing {((trulyAsync) ? "for real" : "but not really")}");
-        var tasks = new List<Task>();
-        tasks.Add(WaitAndLog(duration, trulyAsync, "lol"));
-        tasks.Add(WaitAndLog(duration, trulyAsync, "lmao"));
-        tasks.Add(WaitAndLog(duration, trulyAsync, "rofl"));
-        tasks.Add(WaitAndLog(duration, trulyAsync, "roflmao"));
-        await Task.WhenAll(tasks);
-    }
-
-    static async Task WaitAndLog (int waitDuration, bool useAsync, string logMsg) {
-        if (useAsync) {
-            await Task.Delay(waitDuration);
-        } else {
-            await Task.Run(() => {      // if this task.run isn't here this entire method will run synchronously
-                var sw = new System.Diagnostics.Stopwatch();
-                sw.Start();
-                var foo = 0;
-                var rng = new System.Random();
-                while (sw.ElapsedMilliseconds < waitDuration) {
-                    foo ^= rng.Next();
-                }
-                sw.Stop();
-            });
-        }
-        Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} {logMsg}");
+    static void DoWinLossDrawTest () {
+        //var a = new WinLossDrawRecord();
+        //a.wins["Peter"]["Bob"] = 3;
+        //a.losses["Bob"]["Peter"] = 3;
+        //a.draws["Peter"]["Bob"] = 2;
+        //a.draws["Bob"]["Peter"] = 1;
+        //a.wins["Bob"]["Peter"] = 1;
+        //a.losses["Bob"]["Peter"] = 1;
+        //var b = new WinLossDrawRecord();
+        //b.wins["Peter"]["Bob"] = 6;
+        //b.losses["Bob"]["Peter"] = 6;
+        //b.wins["Peter"]["Jim"] = 2;
+        //b.losses["Jim"]["Peter"] = 2;
+        //b.draws["Jim"]["Mary"] = 1;
+        //b.draws["Mary"]["Jim"] = 1;
+        //var c = WinLossDrawRecord.Merge(a, b);
+        //DataSaver.SaveInProject($"WinLossTest/a.json", JsonSerializer.SerializeToUtf8Bytes(a));
+        //DataSaver.SaveInProject($"WinLossTest/b.json", JsonSerializer.SerializeToUtf8Bytes(b));
+        //DataSaver.SaveInProject($"WinLossTest/c.json", JsonSerializer.SerializeToUtf8Bytes(c));
     }
 
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {

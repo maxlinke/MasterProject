@@ -75,6 +75,11 @@ versions:
 then graph that in the web-visualizer and see how many tournaments (and total games) it takes to converge
 also does it make sense to have dilutions of the perfect bots? probably does...
 
+VISALIZATION
+for agents, in the paper, preface it with the agents ordered by elo
+then give graphics for wins, losses and draws
+because they are three somewhat independent measures and rgb is hard to parse visually
+
 SAVED DATA IS THIS
 > ONE AGENT DATABASE FILE PER GAME
 > ONE FILE PER TOURNAMENT WITH ALL THE GAMERECORDS OF THE TOURNAMENT
