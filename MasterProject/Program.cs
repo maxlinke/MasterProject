@@ -61,13 +61,25 @@ public class Program {
     }
 
     static void DoWinLossDrawTest () {
-        //var a = new WinLossDrawRecord();
-        //a.wins["Peter"]["Bob"] = 3;
-        //a.losses["Bob"]["Peter"] = 3;
-        //a.draws["Peter"]["Bob"] = 2;
-        //a.draws["Bob"]["Peter"] = 1;
-        //a.wins["Bob"]["Peter"] = 1;
-        //a.losses["Bob"]["Peter"] = 1;
+        var a = new WinLossDrawRecord(new string[]{
+            "Peter",
+            "Bob"
+        },2);
+        for (int i = 0; i < 3; i++) a.RecordWin(new string[] { "Peter", "Bob" }, 0);
+        for (int i = 0; i < 1; i++) a.RecordWin(new string[] { "Peter", "Bob" }, 1);
+        for (int i = 0; i < 1; i++) a.RecordWin(new string[] { "Bob", "Peter" }, 0);
+        for (int i = 0; i < 2; i++) a.RecordWin(new string[] { "Bob", "Peter" }, 1);
+        for (int i = 0; i < 1; i++) a.RecordDraw(new string[] { "Peter", "Bob" });
+        var b = new WinLossDrawRecord(new string[]{
+            "Jim",
+            "Mary",
+            "Bob",
+            "Peter"
+        }, 2);
+        for (int i = 0; i < 6; i++) b.RecordWin(new string[] { "Peter", "Bob" }, 0);
+        for (int i = 0; i < 2; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 0);
+        for (int i = 0; i < 1; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 1);
+        for (int i = 0; i < 1; i++) b.RecordDraw(new string[] { "Jim", "Mary" });
         //var b = new WinLossDrawRecord();
         //b.wins["Peter"]["Bob"] = 6;
         //b.losses["Bob"]["Peter"] = 6;
@@ -75,10 +87,28 @@ public class Program {
         //b.losses["Jim"]["Peter"] = 2;
         //b.draws["Jim"]["Mary"] = 1;
         //b.draws["Mary"]["Jim"] = 1;
-        //var c = WinLossDrawRecord.Merge(a, b);
+        var c = WinLossDrawRecord.Merge(a, b);
+        LogMatchupResults(a, "Peter", "Bob");
+        LogMatchupResults(b, "Peter", "Bob");
+        LogMatchupResults(c, "Peter", "Bob");
         //DataSaver.SaveInProject($"WinLossTest/a.json", JsonSerializer.SerializeToUtf8Bytes(a));
         //DataSaver.SaveInProject($"WinLossTest/b.json", JsonSerializer.SerializeToUtf8Bytes(b));
         //DataSaver.SaveInProject($"WinLossTest/c.json", JsonSerializer.SerializeToUtf8Bytes(c));
+
+        void LogMatchupResults (WinLossDrawRecord record, params string[] players) {
+            var i = record.GetMatchupIndex(players);
+            var sb = new System.Text.StringBuilder();
+            foreach (var player in players) {
+                sb.Append($"{player}, ");
+            }
+            sb.Remove(sb.Length - 2, 2);
+            sb.Append($" ({i}) -> ");
+            foreach (var winner in record.matchupWinners[i]) {
+                sb.Append($"{winner}, ");
+            }
+            sb.Remove(sb.Length - 2, 2);
+            Console.WriteLine(sb.ToString());
+        }
     }
 
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {
