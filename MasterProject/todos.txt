@@ -75,7 +75,18 @@ versions:
 then graph that in the web-visualizer and see how many tournaments (and total games) it takes to converge
 also does it make sense to have dilutions of the perfect bots? probably does...
 
-VISALIZATION
+ELO again
+- get a large tournament record
+- init everyone's elo
+- then for each player, tally up wins, losses, draws and calculate an elo with that and cache it
+- do that for everyone
+- then apply the cached values and repeat
+- graph the elo over iterations to see convergence
+- try out different orderings and see if it still converges to the same result
+- if not, maybe seek a different performance rating system?
+- or just average out all the variations?
+
+VISUALIZATION
 for agents, in the paper, preface it with the agents ordered by elo
 then give graphics for wins, losses and draws
 because they are three somewhat independent measures and rgb is hard to parse visually

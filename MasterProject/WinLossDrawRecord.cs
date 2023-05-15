@@ -16,11 +16,6 @@ namespace MasterProject {
         public List<int>[] matchupWinners { get; set; } // TODO does this serialize as json?
 
         public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
-            var sb = new System.Text.StringBuilder();
-            foreach (var id in playerIds) {
-                sb.Append($"{id}, ");
-            }
-            Console.WriteLine($" > {sb.ToString()}");
             this.playerIds = playerIds.ToArray();
             this.totalWins = new int[playerIds.Count];
             this.totalLosses = new int[playerIds.Count];
@@ -29,6 +24,31 @@ namespace MasterProject {
             this.matchupWinners = new List<int>[GetPossibleMatchupCount(playerIds.Count, playersPerGame)];
             for (int i = 0; i < matchupWinners.Length; i++) {
                 matchupWinners[i] = new List<int>();
+            }
+        }
+
+        public int GetTotalWins (string player) {
+            return totalWins[Array.IndexOf(playerIds, player)];
+        }
+
+        public int GetTotalLosses (string player) {
+            return totalLosses[Array.IndexOf(playerIds, player)];
+        }
+
+        public int GetTotalDraws (string player) {
+            return totalDraws[Array.IndexOf(playerIds, player)];
+        }
+
+        public IEnumerable<(IReadOnlyList<string> participants, int winnerIndex)> GetMatchupResultsForPlayer (string player) {
+            // TODO there's probably a smarter way than iterating over all possible matchups
+            // but is it it really neccessary? probably not. 
+            for (int i = 0; i < matchupWinners.Length; i++) {
+                var matchup = GetMatchupFromIndex(i);
+                if (matchup.Contains(player)) {
+                    foreach (var winner in matchupWinners[i]) {
+                        yield return (matchup, winner);
+                    }
+                }
             }
         }
 
@@ -48,13 +68,13 @@ namespace MasterProject {
         }
 
         public void RecordDraw (IReadOnlyList<string> keys) {
-            RecordWin(keys, DRAW);
+            matchupWinners[GetMatchupIndex(keys)].Add(DRAW);
             for (int i = 0; i < keys.Count; i++) {
                 var playerId = keys[i];
                 var playerIndex = Array.IndexOf(playerIds, playerId);
                 totalDraws[playerIndex]++;
             }
-            }
+        }
 
         public static int GetPossibleMatchupCount (int numberOfPlayers, int playersPerGame) {
             var output = 1;
@@ -64,7 +84,15 @@ namespace MasterProject {
             return output;
         }
 
-        // TODO test all this matchup math
+        //public static IReadOnlyList<IReadOnlyList<string>> GetPossibleMatchups (IReadOnlyList<string> players, int playersPerGame) {
+        //    var temp = new WinLossDrawRecord(players, playersPerGame);
+        //    var output = new string[temp.matchupWinners.Length][];
+        //    for (int i = 0; i < output.Length; i++) {
+        //        output[i] = temp.GetMatchupFromIndex(i).ToArray();
+        //    }
+        //    return output;
+        //}
+
         public int GetMatchupIndex (IReadOnlyList<string> keys) {
             if (keys.Count != matchupSize) {
                 throw new ArgumentException($"Matchup must consist of {matchupSize} players, but consisted of {keys.Count} instead!");
@@ -75,19 +103,18 @@ namespace MasterProject {
                 if (index == -1) {
                     throw new ArgumentException($"\"{key}\" is not registered!");
                 }
-                output *= matchupSize;
+                output *= playerIds.Length;
                 output += index;
             }
             return output;
         }
            
-        // TODO check this too
         public IReadOnlyList<string> GetMatchupFromIndex (int matchupIndex) {
             var keys = new List<string>();
             for (int i = 0; i < matchupSize; i++) {
-                var playerIndex = matchupIndex % matchupSize;
+                var playerIndex = matchupIndex % playerIds.Length;
                 matchupIndex -= playerIndex;
-                matchupIndex /= matchupSize;
+                matchupIndex /= playerIds.Length;
                 keys.Insert(0, playerIds[playerIndex]);
             }
             return keys;
@@ -127,7 +154,7 @@ namespace MasterProject {
             void CopyResults (WinLossDrawRecord src) {
                 for (int i = 0; i < src.matchupWinners.Length; i++) {
                     if (src.matchupWinners[i].Count > 0) {
-                        var players = a.GetMatchupFromIndex(i);
+                        var players = src.GetMatchupFromIndex(i);
                         var outputIndex = output.GetMatchupIndex(players);
                         foreach (var winner in src.matchupWinners[i]) {
                             output.matchupWinners[outputIndex].Add(winner);

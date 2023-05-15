@@ -80,20 +80,24 @@ public class Program {
         for (int i = 0; i < 2; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 0);
         for (int i = 0; i < 1; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 1);
         for (int i = 0; i < 1; i++) b.RecordDraw(new string[] { "Jim", "Mary" });
-        //var b = new WinLossDrawRecord();
-        //b.wins["Peter"]["Bob"] = 6;
-        //b.losses["Bob"]["Peter"] = 6;
-        //b.wins["Peter"]["Jim"] = 2;
-        //b.losses["Jim"]["Peter"] = 2;
-        //b.draws["Jim"]["Mary"] = 1;
-        //b.draws["Mary"]["Jim"] = 1;
         var c = WinLossDrawRecord.Merge(a, b);
+        
+        //var pba = a.GetMatchupIndex(new string[] { "Peter", "Bob" });
+        //var pbb = b.GetMatchupIndex(new string[] { "Peter", "Bob" });
+        //var pbc = c.GetMatchupIndex(new string[] { "Peter", "Bob" });
+        //Console.WriteLine(pba);
+        //Console.WriteLine(JsonSerializer.Serialize(a.GetMatchupFromIndex(pba)));
+        //Console.WriteLine(pbb);
+        //Console.WriteLine(JsonSerializer.Serialize(b.GetMatchupFromIndex(pbb)));
+        //Console.WriteLine(pbc);
+        //Console.WriteLine(JsonSerializer.Serialize(c.GetMatchupFromIndex(pbc)));
+
         LogMatchupResults(a, "Peter", "Bob");
         LogMatchupResults(b, "Peter", "Bob");
         LogMatchupResults(c, "Peter", "Bob");
-        //DataSaver.SaveInProject($"WinLossTest/a.json", JsonSerializer.SerializeToUtf8Bytes(a));
-        //DataSaver.SaveInProject($"WinLossTest/b.json", JsonSerializer.SerializeToUtf8Bytes(b));
-        //DataSaver.SaveInProject($"WinLossTest/c.json", JsonSerializer.SerializeToUtf8Bytes(c));
+        DataSaver.SaveInProject($"WinLossTest/a.json", JsonSerializer.SerializeToUtf8Bytes(a));
+        DataSaver.SaveInProject($"WinLossTest/b.json", JsonSerializer.SerializeToUtf8Bytes(b));
+        DataSaver.SaveInProject($"WinLossTest/c.json", JsonSerializer.SerializeToUtf8Bytes(c));
 
         void LogMatchupResults (WinLossDrawRecord record, params string[] players) {
             var i = record.GetMatchupIndex(players);
