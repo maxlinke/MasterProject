@@ -8,6 +8,8 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class AlphaBetaMinMaxer : TTTAgent {
 
+        public override Agent Clone () => new AlphaBetaMinMaxer();
+
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             var ownIndex = gs.CurrentPlayerIndex;
             var bestMoveIndex = -1;

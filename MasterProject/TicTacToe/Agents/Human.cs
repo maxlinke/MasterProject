@@ -8,6 +8,8 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class Human : TTTAgent {
 
+        public override Agent Clone () => new Human();
+
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             Console.WriteLine();
             Console.WriteLine($"You are: {TTTGameState.GetSymbolForPlayer(gs.CurrentPlayerIndex)}");
@@ -39,5 +41,6 @@ namespace MasterProject.TicTacToe.Agents {
             }
             return sb.ToString();
         }
+
     }
 }

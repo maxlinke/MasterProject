@@ -75,6 +75,8 @@ namespace MasterProject {
             return -1;
         }
 
+        public abstract Agent Clone ();
+
     }
 
     public abstract class Agent<TGameState, TMove> : Agent 

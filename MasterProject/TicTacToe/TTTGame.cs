@@ -34,22 +34,21 @@ namespace MasterProject.TicTacToe {
         private static void PlayGameWithAgents (TTTAgent agent1, TTTAgent agent2, int timeoutMillis = NO_TIMEOUT, Game.ConsoleOutputs consoleOutputs = Game.ConsoleOutputs.Nothing) {
             var game = new TTTGame();
             game.AllowedConsoleOutputs = consoleOutputs;
-            game.SetAgents(new List<TTTAgent>(){
+            game.AgentMoveTimeoutMilliseconds = timeoutMillis;
+            Console.WriteLine($"Agent 1 is {agent1.GetType()}, Agent 2 is {agent2.GetType()}");
+            game.RunSynced(new List<TTTAgent>(){
                 agent1,
                 agent2,
             });
-            game.AgentMoveTimeoutMilliseconds = timeoutMillis;
-            Console.WriteLine($"Agent 1 is {agent1.GetType()}, Agent 2 is {agent2.GetType()}");
-            game.RunSynced();
             Console.WriteLine();
             Console.WriteLine("GAME OVER!");
             var gs = game.GetFinalGameState();
-            if (gs.winnerIndex < 0) {
+            if (gs.WinnerIndex < 0) {
                 Console.WriteLine("Resut: DRAW");
             } else {
-                Console.WriteLine($"Result: {TTTGameState.GetSymbolForPlayer(gs.winnerIndex)} wins!");
+                Console.WriteLine($"Result: {TTTGameState.GetSymbolForPlayer(gs.WinnerIndex)} wins!");
             }
-            Console.WriteLine($"Final gamestate: \n{gs.GetPrintableBoardWithXsAndOs()}");
+            Console.WriteLine($"Final gamestate: \n{((TTTGameState)gs).GetPrintableBoardWithXsAndOs()}");
         }
 
     }

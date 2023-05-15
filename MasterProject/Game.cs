@@ -39,12 +39,12 @@ namespace MasterProject {
             TryLog(ConsoleOutputs.Debug, message);
         }
 
-        public void RunSynced () {
-            Run().GetAwaiter().GetResult();
+        public void RunSynced (IEnumerable<Agent> agents) {
+            Run(agents).GetAwaiter().GetResult();
         }
 
-        public async Task RunAsync () {
-            await Task.Run(() => Run());    // because if there's no timeout set, the run-task will actually not run asynchronously so this forces it to do so
+        public async Task RunAsync (IEnumerable<Agent> agents) {
+            await Task.Run(() => Run(agents));  // because if there's no timeout set, the run-task will actually not run asynchronously so this forces it to do so
         }
 
         public const int NO_MOVE_LIMIT = int.MaxValue;
@@ -56,9 +56,13 @@ namespace MasterProject {
         private int _agentMoveTimeoutMilliseconds = NO_TIMEOUT;
         public int AgentMoveTimeoutMilliseconds { get => _agentMoveTimeoutMilliseconds; set => _agentMoveTimeoutMilliseconds = Math.Max(value, 0); }
 
-        protected abstract Task Run ();
+        protected abstract Task Run (IEnumerable<Agent> agents);
 
         public abstract GameRecord GetRecord ();
+
+        public abstract GameState GetFinalGameState ();
+
+        public class MoveLimitReachedException : System.Exception { }
 
     }
 
@@ -71,7 +75,7 @@ namespace MasterProject {
 
         protected TGameState? CurrentGameState { get; private set; }
 
-        public TGameState? GetFinalGameState () {
+        public override GameState GetFinalGameState () {
             if (CurrentGameState == null || !CurrentGameState.GameOver) {
                 return null;
             }
@@ -89,13 +93,6 @@ namespace MasterProject {
 
         protected abstract int MaximumNumberOfAgentsAllowed { get; }
 
-        public void SetAgents (IEnumerable<TAgent> agentsToSet) {
-            if (agents.Count > 0) {
-                throw new NotSupportedException("Agents have already been set!");
-            }
-            agents.AddRange(agentsToSet);
-        }
-
         public TGameState GetCurrentGameStateVisibleForAgent (TAgent agent) {
             return CurrentGameState.GetVisibleGameStateForPlayer(agents.IndexOf(agent));
         }
@@ -103,6 +100,15 @@ namespace MasterProject {
         private void VerifyOnlyOneRun () {
             if (hasRun) {
                 throw new NotSupportedException($"Running a game multiple times is not allowed!");
+            }
+        }
+
+        private void TrySetAgents (IEnumerable<Agent> agentsToUse) {
+            foreach (var agent in agentsToUse) {
+                if (!(agent is TAgent tAgent)) {
+                    throw new ArgumentException($"Agent {agent.Id} ({agent.GetType().FullName}) is not a {typeof(TAgent).FullName}!");
+                }
+                this.agents.Add(tAgent);
             }
         }
 
@@ -115,8 +121,9 @@ namespace MasterProject {
             }
         }
 
-        protected override async Task Run () {
+        protected override async Task Run (IEnumerable<Agent> agentsTouse) {
             VerifyOnlyOneRun();
+            TrySetAgents(agentsTouse);
             VerifyNumberOfAgents();
             CurrentGameState = GetInitialGameState();
             var rng = new Random();
@@ -125,7 +132,7 @@ namespace MasterProject {
             hasRun = true;
             while (!CurrentGameState.GameOver) {
                 if (moveCounter >= MoveLimit) {
-                    throw new Exception($"Move limit reached after {moveCounter} moves!");
+                    throw new MoveLimitReachedException();
                 }
                 TryLog(ConsoleOutputs.Move, $"Move {moveCounter}");
                 var currentAgent = agents[CurrentGameState.CurrentPlayerIndex];

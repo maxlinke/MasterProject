@@ -10,6 +10,8 @@ namespace MasterProject.TicTacToe.Agents {
 
         // uses negamax
 
+        public override Agent Clone () => new MinMaxer();
+
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             var ownIndex = gs.CurrentPlayerIndex;
             var bestMoveIndex = -1;

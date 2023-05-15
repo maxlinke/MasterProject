@@ -8,6 +8,8 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class ABWin : GenericAlphaBetaAgent {
 
+        public override Agent Clone () => new ABWin();
+
         protected override int GetMaxDepth (TTTGameState gameState, IReadOnlyList<TTTMove> moves) {
             return 9;
         }

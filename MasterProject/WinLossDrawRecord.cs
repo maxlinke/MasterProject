@@ -13,7 +13,9 @@ namespace MasterProject {
         public int[] totalWins { get; set; }
         public int[] totalLosses { get; set; }
         public int[] totalDraws { get; set; }
-        public List<int>[] matchupWinners { get; set; } // TODO does this serialize as json?
+        public List<int>[] matchupWinners { get; set; }
+
+        public int matchupCount => matchupWinners.Length;
 
         public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
             this.playerIds = playerIds.ToArray();

@@ -49,70 +49,60 @@ public class Program {
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
         //PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABLoseFast());
-        //DoSyncAsyncTest(20);
+        DoSyncAsyncTest(20);
         //DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
-        DoWinLossDrawTest();
-        //DataSaver.SaveInProject("DATASAVERTEST/hello.txt", System.Text.Encoding.UTF8.GetBytes("hello, world"));
+        //ExceptionInTaskTest();
+        //ExceptionsInTasksTest();
         DataSaver.Flush();
     }
 
-    static void DoWinLossDrawTest () {
-        var a = new WinLossDrawRecord(new string[]{
-            "Peter",
-            "Bob"
-        },2);
-        for (int i = 0; i < 3; i++) a.RecordWin(new string[] { "Peter", "Bob" }, 0);
-        for (int i = 0; i < 1; i++) a.RecordWin(new string[] { "Peter", "Bob" }, 1);
-        for (int i = 0; i < 1; i++) a.RecordWin(new string[] { "Bob", "Peter" }, 0);
-        for (int i = 0; i < 2; i++) a.RecordWin(new string[] { "Bob", "Peter" }, 1);
-        for (int i = 0; i < 1; i++) a.RecordDraw(new string[] { "Peter", "Bob" });
-        var b = new WinLossDrawRecord(new string[]{
-            "Jim",
-            "Mary",
-            "Bob",
-            "Peter"
-        }, 2);
-        for (int i = 0; i < 6; i++) b.RecordWin(new string[] { "Peter", "Bob" }, 0);
-        for (int i = 0; i < 2; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 0);
-        for (int i = 0; i < 1; i++) b.RecordWin(new string[] { "Peter", "Jim" }, 1);
-        for (int i = 0; i < 1; i++) b.RecordDraw(new string[] { "Jim", "Mary" });
-        var c = WinLossDrawRecord.Merge(a, b);
-        
-        //var pba = a.GetMatchupIndex(new string[] { "Peter", "Bob" });
-        //var pbb = b.GetMatchupIndex(new string[] { "Peter", "Bob" });
-        //var pbc = c.GetMatchupIndex(new string[] { "Peter", "Bob" });
-        //Console.WriteLine(pba);
-        //Console.WriteLine(JsonSerializer.Serialize(a.GetMatchupFromIndex(pba)));
-        //Console.WriteLine(pbb);
-        //Console.WriteLine(JsonSerializer.Serialize(b.GetMatchupFromIndex(pbb)));
-        //Console.WriteLine(pbc);
-        //Console.WriteLine(JsonSerializer.Serialize(c.GetMatchupFromIndex(pbc)));
-
-        LogMatchupResults(a, "Peter", "Bob");
-        LogMatchupResults(b, "Peter", "Bob");
-        LogMatchupResults(c, "Peter", "Bob");
-        DataSaver.SaveInProject($"WinLossTest/a.json", JsonSerializer.SerializeToUtf8Bytes(a));
-        DataSaver.SaveInProject($"WinLossTest/b.json", JsonSerializer.SerializeToUtf8Bytes(b));
-        DataSaver.SaveInProject($"WinLossTest/c.json", JsonSerializer.SerializeToUtf8Bytes(c));
-
-        void LogMatchupResults (WinLossDrawRecord record, params string[] players) {
-            var i = record.GetMatchupIndex(players);
-            var sb = new System.Text.StringBuilder();
-            foreach (var player in players) {
-                sb.Append($"{player}, ");
-            }
-            sb.Remove(sb.Length - 2, 2);
-            sb.Append($" ({i}) -> ");
-            foreach (var winner in record.matchupWinners[i]) {
-                sb.Append($"{winner}, ");
-            }
-            sb.Remove(sb.Length - 2, 2);
-            Console.WriteLine(sb.ToString());
+    static void ExceptionInTaskTest () {
+        try {
+            var task = Task.Run(TaskWithException);
+            Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} task started, waiting");
+            Thread.Sleep(3000);
+            Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} wait finished");
+            task.GetAwaiter().GetResult();  // this is where the exception gets caught
+        } catch (System.Exception e) {
+            Console.WriteLine($"Caught exception {e.GetType()} \"{e.Message}\"\n{e.StackTrace}");
         }
+    }
+
+    static void ExceptionsInTasksTest () {
+        var tasks = new Task<int>[4];
+        for (int i = 0; i < tasks.Length; i++) {
+            tasks[i] = (i % 2 == 0
+                ? Task.Run(TaskWithException)
+                : Task.Run(TaskWithoutException));
+        }
+        Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} tasks started, waiting");
+        Thread.Sleep(3000);
+        Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} wait finished");
+        foreach (var task in tasks) {
+            try {
+                var result = task.GetAwaiter().GetResult();
+                Console.WriteLine($"task result: {result}");
+            } catch (System.Exception e) {
+                Console.WriteLine($"Caught exception {e.GetType()} \"{e.Message}\"\n{e.StackTrace}");
+            }
+        }
+        //Task.WhenAll(tasks).GetAwaiter().GetResult();     // doesn't let me discern where exceptions happened and where it went smoothly
+        
+    }
+
+    static async Task<int> TaskWithException () {
+        await Task.Delay(100);
+        Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} exception about to be thrown");
+        throw new Exception("hello");
+    }
+
+    static async Task<int> TaskWithoutException() {
+        await Task.Delay(100);
+        return 42;
     }
 
     static void DoSyncAsyncTest (int gameCount, int timeoutMillis = Game.NO_TIMEOUT) {
@@ -162,15 +152,14 @@ public class Program {
                     var gameId = $"Game {i + 1} of {gameCountPerAgentConfig}";
                     Console.WriteLine($"{runId} {gameId}");
                     var game = new MasterProject.TicTacToe.TTTGame();
-                    game.SetAgents(agents);
                     game.AgentMoveTimeoutMilliseconds = timeoutMillis;
-                    game.RunSynced();
+                    game.RunSynced(agents);
                     var finalState = game.GetFinalGameState();
-                    if (finalState.winnerIndex < 0) {
+                    if (finalState.WinnerIndex < 0) {
                         draws++;
                     } else {
-                        wins[finalState.winnerIndex]++;
-                        totalMovesUntilWin[finalState.winnerIndex] += game.GetRecord().GameStates.Length - 1;
+                        wins[finalState.WinnerIndex]++;
+                        totalMovesUntilWin[finalState.WinnerIndex] += game.GetRecord().GameStates.Length - 1;
                     }
                 }
             } else {
@@ -181,19 +170,18 @@ public class Program {
                     Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} init");
                     for (int j = 0; j < games.Length; j++) {
                         games[j] = new MasterProject.TicTacToe.TTTGame();
-                        games[j].SetAgents(agents);
                         games[j].AgentMoveTimeoutMilliseconds = timeoutMillis;
                     }
                     Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} start wait");
-                    RunGamesInParallel(games).GetAwaiter().GetResult();
+                    RunGamesInParallel(games, agents).GetAwaiter().GetResult();
                     Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} finish wait");
                     foreach (var game in games) {
                         var finalState = game.GetFinalGameState();
-                        if (finalState.winnerIndex < 0) {
+                        if (finalState.WinnerIndex < 0) {
                             draws++;
                         } else {
-                            wins[finalState.winnerIndex]++;
-                            totalMovesUntilWin[finalState.winnerIndex] += game.GetRecord().GameStates.Length - 1;
+                            wins[finalState.WinnerIndex]++;
+                            totalMovesUntilWin[finalState.WinnerIndex] += game.GetRecord().GameStates.Length - 1;
                         }
                     }
                 }
@@ -216,11 +204,11 @@ public class Program {
         return sw.ElapsedMilliseconds;
     }
 
-    static async Task RunGamesInParallel<TGame> (IEnumerable<TGame> games) where TGame : Game {
+    static async Task RunGamesInParallel<TGame> (IEnumerable<TGame> games, IEnumerable<Agent> agents) where TGame : Game {
         var tasks = new List<Task>();
         foreach (var game in games) {
             Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} run async");
-            tasks.Add(game.RunAsync());
+            tasks.Add(game.RunAsync(agents));
         }
         await Task.WhenAll(tasks);
     }

@@ -34,7 +34,8 @@ namespace MasterProject.TicTacToe {
 
         public override int CurrentPlayerIndex => currentPlayerIndex;
         public override bool GameOver => gameOver;
-        public bool IsDraw => gameOver && winnerIndex < 0;
+        public override bool IsDraw => gameOver && winnerIndex < 0;
+        public override int WinnerIndex => winnerIndex;
 
         public override TTTGameState GetVisibleGameStateForPlayer (int playerIndex) {
             return this;

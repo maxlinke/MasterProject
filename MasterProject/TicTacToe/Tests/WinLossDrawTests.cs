@@ -113,6 +113,26 @@ namespace MasterProject.TicTacToe.Tests {
             Assert.AreEqual(a.totalDraws[peterA] + b.totalDraws[peterB], peterCDraws);
         }
 
+        [Test]
+        public void TestCopyViaMerge () {
+            var a = GetRecordA();
+            var b = GetRecordB();
+            var c = WinLossDrawRecord.Merge(a, b);
+            var d = WinLossDrawRecord.Merge(c, new WinLossDrawRecord(new string[0], c.matchupSize));
+            for (int i = 0; i < c.playerIds.Length; i++) {
+                Assert.AreEqual(c.playerIds[i], d.playerIds[i]);
+                Assert.AreEqual(c.totalWins[i], d.totalWins[i]);
+                Assert.AreEqual(c.totalLosses[i], d.totalLosses[i]);
+                Assert.AreEqual(c.totalDraws[i], d.totalDraws[i]);
+            }
+            for (int i = 0; i < c.matchupWinners.Length; i++) {
+                Assert.AreEqual(c.matchupWinners[i].Count, d.matchupWinners[i].Count);
+                for (int j = 0; j < c.matchupWinners[i].Count; j++) {
+                    Assert.AreEqual(c.matchupWinners[i][j], d.matchupWinners[i][j]);
+                }
+            }
+        }
+
         static void TallyUpResults (WinLossDrawRecord record, string player, out int wins, out int losses, out int draws) {
             wins = 0;
             losses = 0;
