@@ -45,8 +45,8 @@ namespace MasterProject {
         public bool IsFinished { get; private set; } = false;
 
         private bool hasRun = false;
-        private List<Agent> agents = new ();
-        private List<string> agentIds = new ();
+        private Agent[] agents = new Agent[0];
+        private string[] agentIds = new string[0];
         private WinLossDrawRecord? record;
         private int playersPerGame;
 
@@ -68,6 +68,25 @@ namespace MasterProject {
         private void VerifyOnlyOneRun () {
             if (hasRun) {
                 throw new NotSupportedException($"Running a game multiple times is not allowed!");
+            }
+        }
+
+        private void VerifyAgents () {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < agents.Length; i++) {
+                var testClone = agents[i].Clone();
+                if (testClone.GetType() != agents[i].GetType()) {
+                    sb.AppendLine($"Clone of agent type {agents[i].GetType()} returned type {testClone.GetType()}!");
+                }
+                var agentId = agentIds[i];
+                for (int j = 0; j < agentIds.Length; j++) {
+                    if (i != j && agentIds[j] == agentId) {
+                        sb.AppendLine($"Agent type {agents[i].GetType()} returned same id as agent type {agents[j].GetType()} ({agentId})!");
+                    }
+                }
+            }
+            if (sb.Length > 0) {
+                throw new InvalidDataException(sb.ToString());
             }
         }
 
@@ -104,8 +123,9 @@ namespace MasterProject {
 
         public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup) {
             VerifyOnlyOneRun();
-            this.agents.AddRange(agentsToUse);
-            this.agentIds.AddRange(agentsToUse.Select((agent) => (agent.Id)));
+            this.agents = agentsToUse.ToArray();
+            this.agentIds = new List<string>(agentsToUse.Select((agent) => (agent.Id))).ToArray();
+            VerifyAgents();
             SetupRecord();
             hasRun = true;
             var startTime = System.DateTime.Now;
@@ -145,7 +165,7 @@ namespace MasterProject {
                     var matchupAgentIds = record.GetMatchupFromIndex(i);
                     var agents = new Agent[playersPerGame];
                     for (int k = 0; k < agents.Length; k++) {
-                        agents[i] = this.agents.FirstOrDefault((agent) => (agent.Id == matchupAgentIds[k])).Clone();
+                        agents[k] = this.agents[Array.IndexOf(agentIds, matchupAgentIds[k])].Clone();
                     }
                     for (int j = 0; j < remaining; j++) {
                         var game = new TGame();
@@ -157,7 +177,7 @@ namespace MasterProject {
                             agentIds = matchupAgentIds.ToArray(),
                             runTask = game.RunAsync(agents)
                         });
-                        if (gameRuns.Count > MaxNumberOfGamesToRunInParallel) {
+                        if (gameRuns.Count >= MaxNumberOfGamesToRunInParallel) {
                             LogTournamentProgress(runGameCounter, gameRuns.Count, totalGameCount);
                             RunCurrentRuns(gameRuns, ref moveLimitReachedCounter, (List<Exception>)otherExceptions);
                             runGameCounter += gameRuns.Count;
@@ -174,9 +194,8 @@ namespace MasterProject {
             }
         }
 
-
         void LogTournamentProgress (int counter, int numGamesThisRound, int total) {
-            Console.WriteLine($"Tournament at {((float)counter / total):F1}% running games {counter} to {counter + numGamesThisRound - 1} of {total} ({System.DateTime.Now.ToLongTimeString()})");
+            Console.WriteLine($"Tournament at {(100f * counter / total):F1}% running games {counter} to {counter + numGamesThisRound - 1} of {total} ({System.DateTime.Now.ToLongTimeString()})");
         }
 
         void RunCurrentRuns (IEnumerable<GameRun> gameRuns, ref int moveLimitReachedCounter, List<Exception> otherExceptions) {

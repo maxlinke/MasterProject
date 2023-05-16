@@ -8,6 +8,8 @@ namespace MasterProject.TicTacToe.Agents {
     
     public class ABLoseFast : ABWinFast {
 
+        public override Agent Clone () => new ABLoseFast();
+
         protected override int SelectOutputIndexFromScores (IReadOnlyList<float> scores) {
             return GetIndexOfMinimum(scores, true);
         }

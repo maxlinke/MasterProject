@@ -1,6 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using MasterProject;
+using MasterProject.TicTacToe;
+using MasterProject.TicTacToe.Agents;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -49,7 +51,7 @@ public class Program {
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
         //PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABLoseFast());
-        DoSyncAsyncTest(20);
+        //DoSyncAsyncTest(20);
         //DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
         //DoTheThing(1000, false).GetAwaiter().GetResult();
@@ -57,6 +59,18 @@ public class Program {
         //DoTheThing(1000, false).GetAwaiter().GetResult();
         //ExceptionInTaskTest();
         //ExceptionsInTasksTest();
+
+        var tournament = Tournament<TTTGame>.New(2);
+        tournament.MaxNumberOfGamesToRunInParallel = 16;
+        tournament.Run(new TTTAgent[]{
+            new RandomAgent(),
+            new RandomAgentWithLookAhead(),
+            new LineBuilder(),
+            new ABWinFast(),
+            new ABLoseFast()
+        }, 100);
+        tournament.SaveWinLossDrawRecord();
+
         DataSaver.Flush();
     }
 
@@ -130,13 +144,23 @@ public class Program {
             //    new MasterProject.TicTacToe.Agents.RandomAgent(),
             //    new MasterProject.TicTacToe.Agents.ABLose(),
             //},
-            new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.ABWin(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-            },
+
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.ABWin(),
+            //    new MasterProject.TicTacToe.Agents.RandomAgent(),
+            //},
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.ABWinFast(),
+            //    new MasterProject.TicTacToe.Agents.RandomAgent(), 
+            //}
+
             new List<MasterProject.TicTacToe.TTTAgent>(){
                 new MasterProject.TicTacToe.Agents.ABWinFast(),
-                new MasterProject.TicTacToe.Agents.RandomAgent(), 
+                new MasterProject.TicTacToe.Agents.ABLoseFast(),
+            },
+            new List<MasterProject.TicTacToe.TTTAgent>(){
+                new MasterProject.TicTacToe.Agents.ABLoseFast(),
+                new MasterProject.TicTacToe.Agents.ABWinFast(),
             }
         };
         var sb = new System.Text.StringBuilder();
