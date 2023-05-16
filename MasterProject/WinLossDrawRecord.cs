@@ -16,17 +16,71 @@ namespace MasterProject {
         public List<int>[] matchupWinners { get; set; }
 
         public int matchupCount => matchupWinners.Length;
-
-        public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
-            this.playerIds = playerIds.ToArray();
-            this.totalWins = new int[playerIds.Count];
-            this.totalLosses = new int[playerIds.Count];
-            this.totalDraws = new int[playerIds.Count];
-            this.matchupSize = playersPerGame;
-            this.matchupWinners = new List<int>[GetPossibleMatchupCount(playerIds.Count, playersPerGame)];
-            for (int i = 0; i < matchupWinners.Length; i++) {
-                matchupWinners[i] = new List<int>();
+        public int GetNumberOfMatchesPlayedInMatchup (int matchupIndex) => matchupWinners[matchupIndex].Count;
+        public int GetNumberOfMatchesPlayedInMatchup (IReadOnlyList<string> players) => GetNumberOfMatchesPlayedInMatchup(GetMatchupIndex(players));
+        public int GetNumberOfMatchesPlayedInTotal () {
+            var output = 0;
+            foreach (var winners in matchupWinners) {
+                output += winners.Count;
             }
+            return output;
+        }
+
+        public override bool Equals (object? obj) {
+            if (obj == null || !(obj is WinLossDrawRecord other)) {
+                return false;
+            }
+            return (this.matchupSize == other.matchupSize)
+                && CompareCollection(this.playerIds, other.playerIds, (a, b) => a.Equals(b))
+                && CompareCollection(this.totalWins, other.totalWins, (a, b) => a.Equals(b))
+                && CompareCollection(this.totalLosses, other.totalLosses, (a, b) => a.Equals(b))
+                && CompareCollection(this.totalDraws, other.totalDraws, (a, b) => a.Equals(b))
+                && CompareCollection(this.matchupWinners, other.matchupWinners, (a, b) => CompareCollection(a, b, (a2, b2) => a2 == b2))
+            ;
+
+            bool CompareCollection<T> (IReadOnlyList<T> a, IReadOnlyList<T> b, System.Func<T, T, bool> compareElement) {
+                if ((a == null) != (b == null)) {
+                    return false;
+                }
+                if (a.Count != b.Count) {
+                    return false;
+                }
+                for (int i = 0; i < a.Count; i++) {
+                    if (!compareElement(a[i], b[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        //public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
+        //    this.playerIds = playerIds.ToArray();
+        //    this.totalWins = new int[playerIds.Count];
+        //    this.totalLosses = new int[playerIds.Count];
+        //    this.totalDraws = new int[playerIds.Count];
+        //    this.matchupSize = playersPerGame;
+        //    this.matchupWinners = new List<int>[GetPossibleMatchupCount(playerIds.Count, playersPerGame)];
+        //    for (int i = 0; i < matchupWinners.Length; i++) {
+        //        matchupWinners[i] = new List<int>();
+        //    }
+        //}
+
+        public static WinLossDrawRecord Empty (int playersPerGame) => New(new string[0], playersPerGame);
+
+        public static WinLossDrawRecord New (IReadOnlyList<string> playerIds, int playersPerGame) {
+            var output = new WinLossDrawRecord();
+            output.playerIds = playerIds.ToArray();
+            output.totalWins = new int[playerIds.Count];
+            output.totalLosses = new int[playerIds.Count];
+            output.totalDraws = new int[playerIds.Count];
+            output.matchupSize = playersPerGame;
+            var matchupCount = GetPossibleMatchupCount(playerIds.Count, playersPerGame);
+            output.matchupWinners = new List<int>[matchupCount];
+            for (int i = 0; i < matchupCount; i++) {
+                output.matchupWinners[i] = new List<int>();
+            }
+            return output;
         }
 
         public int GetTotalWins (string player) {
@@ -129,7 +183,7 @@ namespace MasterProject {
             var combinedPlayers = new List<string>();
             EnsureIdsRegistered(a.playerIds);
             EnsureIdsRegistered(b.playerIds);
-            var output = new WinLossDrawRecord(combinedPlayers, a.matchupSize);
+            var output = New(combinedPlayers, a.matchupSize);
             CopyTotals(a);
             CopyTotals(b);
             CopyResults(a);
@@ -165,6 +219,28 @@ namespace MasterProject {
                 }
             }
         }
+
+        public string ToJson () {
+            return System.Text.Json.JsonSerializer.Serialize(this);
+        }
+
+        public byte[] ToJsonBytes () {
+            return System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(this);
+        }
+
+        public static WinLossDrawRecord FromJson (string json) {
+            var output = System.Text.Json.JsonSerializer.Deserialize<WinLossDrawRecord>(json);
+            if (output == null) {
+                throw new InvalidDataException("Couldn't deserialize record!");
+            }
+            return output;
+        }
+
+        public static WinLossDrawRecord FromJsonBytes (byte[] bytes) {
+            return FromJson(System.Text.Encoding.UTF8.GetString(bytes));
+        }
+
+
 
     }
 

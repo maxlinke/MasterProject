@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace MasterProject.TicTacToe.Tests {
+namespace MasterProject.Tests {
 
     [TestFixture]
     public class WinLossDrawTests {
 
         static WinLossDrawRecord GetRecordA () {
-            var output = new WinLossDrawRecord(new string[]{
+            var output = WinLossDrawRecord.New(new string[]{
                 "Peter",
                 "Bob"
             }, 2);
@@ -29,7 +29,7 @@ namespace MasterProject.TicTacToe.Tests {
         }
 
         static WinLossDrawRecord GetRecordB () {
-            var output = new WinLossDrawRecord(new string[]{
+            var output = WinLossDrawRecord.New(new string[]{
                 "Jim",
                 "Mary",
                 "Bob",
@@ -118,7 +118,7 @@ namespace MasterProject.TicTacToe.Tests {
             var a = GetRecordA();
             var b = GetRecordB();
             var c = WinLossDrawRecord.Merge(a, b);
-            var d = WinLossDrawRecord.Merge(c, new WinLossDrawRecord(new string[0], c.matchupSize));
+            var d = WinLossDrawRecord.Merge(c, WinLossDrawRecord.Empty(c.matchupSize));
             for (int i = 0; i < c.playerIds.Length; i++) {
                 Assert.AreEqual(c.playerIds[i], d.playerIds[i]);
                 Assert.AreEqual(c.totalWins[i], d.totalWins[i]);
@@ -131,6 +131,26 @@ namespace MasterProject.TicTacToe.Tests {
                     Assert.AreEqual(c.matchupWinners[i][j], d.matchupWinners[i][j]);
                 }
             }
+        }
+
+        [Test]
+        public void TestBasicEquals () {
+            var a1 = GetRecordA();
+            var a2 = GetRecordA();
+            var b = GetRecordB();
+            Assert.AreEqual(a1, a2);
+            Assert.AreNotEqual(a1, b);
+        }
+
+        [Test]
+        public void TestEqualityAfterSerialization () {
+            var c1 = WinLossDrawRecord.Merge(GetRecordA(), GetRecordB());
+            var json = c1.ToJson();
+            var c2 = WinLossDrawRecord.FromJson(json);
+            Assert.AreEqual(c1, c2);
+            var jsonBytes = c1.ToJsonBytes();
+            var c3 = WinLossDrawRecord.FromJsonBytes(jsonBytes);
+            Assert.AreEqual(c1, c3);
         }
 
         static void TallyUpResults (WinLossDrawRecord record, string player, out int wins, out int losses, out int draws) {

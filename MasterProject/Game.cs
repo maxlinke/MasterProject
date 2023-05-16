@@ -70,7 +70,7 @@ namespace MasterProject {
         where TGame : Game<TGame, TGameState, TMove, TAgent>
         where TGameState : GameState<TGameState, TMove>
         where TMove : class
-        where TAgent : Agent<TGameState, TMove>
+        where TAgent : Agent<TGame, TGameState, TMove>
     {
 
         protected TGameState? CurrentGameState { get; private set; }
@@ -86,6 +86,8 @@ namespace MasterProject {
         private readonly List<TAgent> agents = new();
         private readonly List<TGameState> gameStates = new();
         private readonly List<MoveRecord> moveRecords = new();
+
+        public int moveCounter => moveRecords.Count;
 
         protected abstract TGameState GetInitialGameState ();
 
@@ -128,8 +130,10 @@ namespace MasterProject {
             CurrentGameState = GetInitialGameState();
             var rng = new Random();
             var sw = new Stopwatch();
-            var moveCounter = 0;
             hasRun = true;
+            foreach (var agent in agents) {
+                agent.OnGameStarted((TGame)this);
+            }
             while (!CurrentGameState.GameOver) {
                 if (moveCounter >= MoveLimit) {
                     throw new MoveLimitReachedException();
@@ -192,7 +196,6 @@ namespace MasterProject {
                 });
                 gameStates.Add(CurrentGameState);
                 CurrentGameState = possibleOutcomes[newGameStateIndex].GameState;
-                moveCounter++;
             }
             gameStates.Add(CurrentGameState);
             TryLog(ConsoleOutputs.GameOver, "Game Over");
