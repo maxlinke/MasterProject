@@ -153,6 +153,25 @@ namespace MasterProject.Tests {
             Assert.AreEqual(c1, c3);
         }
 
+        [Test]
+        public void TestRemove () {
+            var c = WinLossDrawRecord.Merge(GetRecordA(), GetRecordB());
+            var d = c.Remove("Peter");
+            for (int i = 0; i < c.matchupWinners.Length; i++) {
+                var participants = c.GetMatchupFromIndex(i);
+                if (!participants.Contains("Peter")) {;
+                    var prevWinners = c.matchupWinners[i];
+                    var newWinners = d.matchupWinners[d.GetMatchupIndex(participants)];
+                    Assert.AreEqual(prevWinners.Count, newWinners.Count);
+                    for (int j = 0; j < prevWinners.Count; j++) {
+                        if (prevWinners[j] != newWinners[j]) {
+                            Assert.Fail();
+                        }
+                    }
+                }
+            }
+        }
+
         static void TallyUpResults (WinLossDrawRecord record, string player, out int wins, out int losses, out int draws) {
             wins = 0;
             losses = 0;

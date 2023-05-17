@@ -176,6 +176,22 @@ namespace MasterProject {
             return keys;
         }
 
+        public WinLossDrawRecord Remove (string playerId) {
+            return Remove(new string[] { playerId });
+        }
+
+        public WinLossDrawRecord Remove (IEnumerable<string> playerIds) {
+            var remainingIds = new List<string>(this.playerIds);
+            remainingIds.RemoveAll(id => playerIds.Contains(id));
+            var output = WinLossDrawRecord.New(remainingIds, this.matchupSize);
+            for (int i = 0; i < output.matchupWinners.Length; i++) {
+                var participants = output.GetMatchupFromIndex(i);
+                var origI = this.GetMatchupIndex(participants);
+                output.matchupWinners[i].AddRange(this.matchupWinners[origI]);
+            }
+            return output;
+        }
+
         public static WinLossDrawRecord Merge (WinLossDrawRecord a, WinLossDrawRecord b) {
             if (a.matchupSize != b.matchupSize) {
                 throw new NotImplementedException("Matchup size must be the same when merging!");

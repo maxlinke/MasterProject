@@ -16,32 +16,6 @@ public class Program {
         return binPath;
     }
 
-    // TODO
-    public static IEnumerable<IEnumerable<TObj>> GetPermutations<TObj> (int groupSize, params TObj[] objs) {
-        // outputcount = pow(objs.Length, groupSize)
-        // basically just nested for loops
-        // easy with recursion
-        // is there a way without recursion?
-        // there always is...
-
-        yield return null;
-    }
-
-    void TestMethod () {
-        var perms1 = GetPermutations<TestObj>(3, new Foo(), new Bar());
-        var perms2 = GetPermutations<TestObj>(3, new TestObj[] { new Foo(), new Bar() });
-        var list = new List<TestObj>();
-        list.Add(new Foo());
-        list.Add(new Bar());
-        var perms3 = GetPermutations(3, list);
-    }
-
-    abstract class TestObj { }
-
-    class Foo : TestObj { }
-
-    class Bar : TestObj { }
-
     // TODO make up some winlossdrawmatrices, try the merge function, try exporting to json and datasavering it
     // then make a quick html/js thing to take care of the rest
     // elo calculation can be done there
