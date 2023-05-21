@@ -1,0 +1,31 @@
+body {
+    font-family: "arial";
+    /* text-align: center; */
+}
+
+label {
+    display: inline-block;
+    width: 5em;
+}
+
+.matrixRow {
+    height: 2em;
+}
+
+.matrixField {
+    width: 2em;
+}
+
+.rowLabel {
+    text-align: right;
+    padding-right: 0.25em;
+}
+
+.columnLabel {
+    text-align: center;
+}
+
+.fieldLabel {
+    font-size: 0.5em;
+    font-style: normal;
+}

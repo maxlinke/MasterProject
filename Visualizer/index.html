@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizer</title>
-    <!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+    <link rel="stylesheet" type="text/css" href="style.css">
     <script src="script.js"></script>
 </head>
 <body>
@@ -11,5 +11,35 @@
         <label for="fileInput">Select File</label>
         <input id="fileInput" type="file">
     </div>
+    <div>
+        <label for="displayOptionsSelection">Display</label>
+        <select id="displayOptionsSelection"></select>
+    </div>
+    <table>
+        <tr>
+            <th></th>
+            <th class="columnLabel">A</th>
+            <th class="columnLabel">B</th>
+            <th class="columnLabel">C</th>
+        </tr>
+        <tr class="matrixRow">
+            <th class="rowLabel">Albert</th>
+            <th class="matrixField" style="background-color: #F00;"><p class="fieldLabel">red</p></th>
+            <th class="matrixField" style="background-color: #0F0;"><p class="fieldLabel">green</p></th>
+            <th class="matrixField" style="background-color: #00F;"><p class="fieldLabel">blue</p></th>
+        </tr>
+        <tr class="matrixRow">
+            <th class="rowLabel">Bob</th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 00%);"></th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 10%);"></th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 20%);"></th>
+        </tr>
+        <tr class="matrixRow">
+            <th class="rowLabel">Carl</th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 50%);"></th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 60%);"></th>
+            <th class="matrixField" style="background-color: hsl(0, 0%, 70%);"></th>
+        </tr>
+    </table>
 </body>
 </html>
