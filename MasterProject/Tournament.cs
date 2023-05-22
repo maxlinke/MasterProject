@@ -30,6 +30,8 @@ namespace MasterProject {
 
         public const string ResultsDirectoryName = "TournamentResults";
 
+        public const string ResultsFileExtension = "tournamentResult";
+
         public static string ResultsDirectoryPath => System.IO.Path.Combine(Program.GetProjectPath(), ResultsDirectoryName);
 
     }
@@ -62,7 +64,7 @@ namespace MasterProject {
                 throw new NotImplementedException("Can't save win loss record now!");
             }
             var id = $"{typeof(TGame).FullName}_{System.DateTime.Now.Ticks}";
-            DataSaver.SaveInProject($"{ResultsDirectoryName}/{id}.json", record.ToJsonBytes());
+            DataSaver.SaveInProject($"{ResultsDirectoryName}/{id}.{ResultsFileExtension}", record.ToJsonBytes());
         }
 
         private void VerifyOnlyOneRun () {
@@ -137,7 +139,7 @@ namespace MasterProject {
 
         int CountNumberOfMatchesToRun (int targetRunsPerMatchup) {
             var output = 0;
-            for (int i = 0; i < record.matchupCount; i++) {
+            for (int i = 0; i < record.GetMatchupCount(); i++) {
                 output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup);
             }
             return output;
@@ -159,7 +161,7 @@ namespace MasterProject {
             moveLimitReachedCounter = 0;
             otherExceptions = new List<Exception>();
             List<GameRun> gameRuns = new();
-            for (int i = 0; i < record.matchupCount; i++) {
+            for (int i = 0; i < record.GetMatchupCount(); i++) {
                 var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup);
                 if (remaining > 0) {
                     var matchupAgentIds = record.GetMatchupFromIndex(i);

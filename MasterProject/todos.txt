@@ -1,4 +1,13 @@
-﻿>>> Test the elo rating system with my ttt-bots
+﻿TODO diluted agents
+- i should be able to make them fully generic
+- override the id to be the id of the actual agent but with the dilution suffix
+- always call the agent's move, but ignore the result sometimes
+- also clone the inner agent
+
+RERUN THE TOURNAMENT with the non-fast agents too and some dilutions
+and do a lot more runs
+
+>>> Test the elo rating system with my ttt-bots
 	- see how many games it takes to converge (maybe also read if that's stated anywhere)
 	- also make a bot that tries to lose as hard as possible just to show that it's possible to be worse than random
 		- one with alpha beta

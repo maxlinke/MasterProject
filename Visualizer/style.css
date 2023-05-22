@@ -1,6 +1,5 @@
 body {
     font-family: "arial";
-    /* text-align: center; */
 }
 
 label {
@@ -8,21 +7,24 @@ label {
     width: 5em;
 }
 
-.matrixRow {
-    height: 2em;
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
 }
 
 .matrixField {
+    height: 2em;
     width: 2em;
 }
 
 .rowLabel {
     text-align: right;
-    padding-right: 0.25em;
+    padding: 0.25em;
 }
 
 .columnLabel {
     text-align: center;
+    padding: 0.25em;
 }
 
 .fieldLabel {

@@ -10,16 +10,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayOptionDropdown = document.getElementById("displayOptionsSelection");
     function getCurrentDisplayOption () { return displayOptionDropdown.value; }
 
+    const wlRatioMetric = "(Wins-Losses)/Games";
+    const eloMetric = "Elo (TODO)";
+    const performanceMetrics = [ wlRatioMetric, eloMetric ];
+    // TODO dropdown for that too
+    // so don't sort the participant ids in the processing step
+    // but rather just assign the scores there
+    // and the sorting can happen in here
+    // show the raw data in a different table (i'll have to refactor my code in here)
+    // agentid wins losses draws w/l elo
+
     async function handleFileSelect(evt) {
         const reader = new FileReader();
         reader.onload = function(e) {
             try{
+                // TODO if i support also displaying not just tournament results but other things (agent records?) i need to discriminate what file i just opened
                 const rawText = e.target.result;
                 const parsedObject = JSON.parse(rawText);
                 onDataLoaded(parsedObject);
             }catch(error){
                 // TODO display this somewhere
                 console.error(error);
+                loadedData = undefined;
                 clearTable();
             }
         }
@@ -30,26 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function onDataLoaded (input) {
         clearTable();
-        if(!validateData(input)){
-            loadedData = undefined;
-            throw "lol";
-        }
-        loadedData = processData(input);;
+        loadedData = processData(input);
+        console.log(loadedData);
         updateTable();
         // TODO add the option to select participants if more than 2 players per matchup (include "any" option to average all together)
-    }
-
-    function validateData (input) {
-        // TODO check that everything is okay at first glance
-        // on the other hand, if i can limit the file select to specific extensions i can just make them .tournamentResult
-        // keep the json inside but change the extension to make the dropdown better
-        // then this validation won't be neccessary
-        return true;
-    }
-
-    function processData (input) {
-        // TODO unpack the compact data
-        return input;
     }
 
     function onDisplayOptionChanged () {
@@ -67,23 +63,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function getParticipantsSortedByMetric (participants, values) {
-        const map = participants.map((p, i) => {
-            return { participantName: p, value: values[i] }
-        });
-        map.sort((a, b) => {
-            if(a.value > b.value) return 1;
-            if(b.value < b.value) return -1;
-            return 0;
-        });
-        return map.map((obj) => obj.participantName);
+    function getSimpleWinLossDrawRatio (wins, losses, draws) {
+        const output = [];
+        for(let i=0; i<wins.length; i++){
+            output[i] = (wins[i] - losses[i]) / (wins[i] + losses[i] + draws[i]);
+        }
+        return output;
     }
 
     function updateTable () {
         clearTable();
-        console.log(loadedData);
-        const sortedParticipants = getParticipantsSortedByMetric(loadedData.playerIds, loadedData.totalWins);
-        console.log(sortedParticipants);
         // TODO data will be processed in above step
         // document.getElementsByTagName("body")[0].appendChild(...
     }
@@ -99,6 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     displayOptionDropdown.value = displayOptions[0];
     displayOptionDropdown.addEventListener("change", () => onDisplayOptionChanged());
-    clearTable();
+    // clearTable();
 
 });

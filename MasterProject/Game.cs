@@ -66,11 +66,10 @@ namespace MasterProject {
 
     }
 
-    public abstract class Game<TGame, TGameState, TMove, TAgent> : Game
-        where TGame : Game<TGame, TGameState, TMove, TAgent>
+    public abstract class Game<TGame, TGameState, TMove> : Game
+        where TGame : Game<TGame, TGameState, TMove>
         where TGameState : GameState<TGameState, TMove>
         where TMove : class
-        where TAgent : Agent<TGame, TGameState, TMove>
     {
 
         protected TGameState? CurrentGameState { get; private set; }
@@ -83,7 +82,7 @@ namespace MasterProject {
         }
 
         private bool hasRun = false;
-        private readonly List<TAgent> agents = new();
+        private readonly List<Agent<TGame, TGameState, TMove>> agents = new();
         private readonly List<TGameState> gameStates = new();
         private readonly List<MoveRecord> moveRecords = new();
 
@@ -95,7 +94,7 @@ namespace MasterProject {
 
         protected abstract int MaximumNumberOfAgentsAllowed { get; }
 
-        public TGameState GetCurrentGameStateVisibleForAgent (TAgent agent) {
+        public TGameState GetCurrentGameStateVisibleForAgent (Agent<TGame, TGameState, TMove> agent) {
             return CurrentGameState.GetVisibleGameStateForPlayer(agents.IndexOf(agent));
         }
 
@@ -107,8 +106,8 @@ namespace MasterProject {
 
         private void TrySetAgents (IEnumerable<Agent> agentsToUse) {
             foreach (var agent in agentsToUse) {
-                if (!(agent is TAgent tAgent)) {
-                    throw new ArgumentException($"Agent {agent.Id} ({agent.GetType().FullName}) is not a {typeof(TAgent).FullName}!");
+                if (!(agent is Agent<TGame, TGameState, TMove> tAgent)) {
+                    throw new ArgumentException($"Agent {agent.Id} ({agent.GetType().FullName}) is not a {typeof(Agent<TGame, TGameState, TMove>).FullName}!");
                 }
                 this.agents.Add(tAgent);
             }

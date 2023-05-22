@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MasterProject.TicTacToe {
 
-    public class TTTGame : Game<TTTGame, TTTGameState, TTTMove, TTTAgent> {
+    public class TTTGame : Game<TTTGame, TTTGameState, TTTMove> {
 
         protected override int MinimumNumberOfAgentsRequired => TTTGameState.PLAYER_COUNT;
 

@@ -15,7 +15,7 @@ namespace MasterProject {
         public int[] totalDraws { get; set; }
         public List<int>[] matchupWinners { get; set; }
 
-        public int matchupCount => matchupWinners.Length;
+        public int GetMatchupCount () => matchupWinners.Length;
         public int GetNumberOfMatchesPlayedInMatchup (int matchupIndex) => matchupWinners[matchupIndex].Count;
         public int GetNumberOfMatchesPlayedInMatchup (IReadOnlyList<string> players) => GetNumberOfMatchesPlayedInMatchup(GetMatchupIndex(players));
         public int GetNumberOfMatchesPlayedInTotal () {

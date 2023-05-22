@@ -36,13 +36,18 @@ public class Program {
 
         var tournament = Tournament<TTTGame>.New(2);
         tournament.MaxNumberOfGamesToRunInParallel = 16;
-        tournament.Run(new TTTAgent[]{
+        tournament.Run(new Agent<TTTGame, TTTGameState, TTTMove>[]{
             new RandomAgent(),
             new RandomAgentWithLookAhead(),
             new LineBuilder(),
+            new ABWin(),
+            new ABLose(),
             new ABWinFast(),
-            new ABLoseFast()
-        }, 100);
+            new ABLoseFast(),
+            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.99f),
+            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f)
+        }, 500);
+        ;
         tournament.SaveWinLossDrawRecord();
 
         DataSaver.Flush();
@@ -113,7 +118,7 @@ public class Program {
         var sw = new System.Diagnostics.Stopwatch();
         sw.Start();
         threadCount = Math.Max(1, threadCount);
-        var agentConfigs = new List<List<MasterProject.TicTacToe.TTTAgent>>() {
+        var agentConfigs = new List<List<Agent<TTTGame, TTTGameState, TTTMove>>>() {
             //new List<MasterProject.TicTacToe.TTTAgent>(){
             //    new MasterProject.TicTacToe.Agents.RandomAgent(),
             //    new MasterProject.TicTacToe.Agents.ABLose(),
@@ -128,15 +133,25 @@ public class Program {
             //    new MasterProject.TicTacToe.Agents.RandomAgent(), 
             //}
 
-            new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.ABWinFast(),
-                new MasterProject.TicTacToe.Agents.ABLoseFast(),
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.ABWinFast(),
+            //    new MasterProject.TicTacToe.Agents.ABLoseFast(),
+            //},
+            //new List<MasterProject.TicTacToe.TTTAgent>(){
+            //    new MasterProject.TicTacToe.Agents.ABLoseFast(),
+            //    new MasterProject.TicTacToe.Agents.ABWinFast(),
+            //}
+
+            new List<Agent<TTTGame, TTTGameState, TTTMove>>(){
+                new ABWinFast(),
+                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.99f),
             },
-            new List<MasterProject.TicTacToe.TTTAgent>(){
-                new MasterProject.TicTacToe.Agents.ABLoseFast(),
-                new MasterProject.TicTacToe.Agents.ABWinFast(),
+            new List<Agent<TTTGame, TTTGameState, TTTMove>>(){
+                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.99f),
+                new ABWinFast(),
             }
         };
+
         var sb = new System.Text.StringBuilder();
         for (int c = 0; c < agentConfigs.Count; c++) {
             var runId = $"Run {c + 1} of {agentConfigs.Count}";
