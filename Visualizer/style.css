@@ -2,32 +2,71 @@ body {
     font-family: "arial";
 }
 
+.horizontalControlGroup {
+    margin-bottom: 5px;
+}
+
+.sectionHeader {
+    margin-bottom: 5px;
+}
+
+.sectionContent {
+    margin-left: 1em;
+}
+
 label {
     display: inline-block;
+    font-size: 10pt;
     width: 5em;
 }
 
 table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
+    padding: 2px;
+}
+
+td {
+    text-align: right;
+}
+
+#agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
+    border: 0px;
+    padding: 4px;
+}
+
+.rankingTableColumnLabel {
+    text-align: right;
+}
+
+.rankingTableRowLabel {
+    text-align: left;
+    font-weight: normal;
+    font-size: 10pt;
+}
+
+.rankingTableDataField {
+    text-align: right;
+    width: 80px;
+    font-size: 10pt;
 }
 
 .matrixField {
-    height: 2em;
-    width: 2em;
+    height: 32px;
+    width: 32px;
 }
 
 .rowLabel {
     text-align: right;
-    padding: 0.25em;
+    padding-left: 0.25em;
+    padding-right: 0.25em;
 }
 
 .columnLabel {
     text-align: center;
-    padding: 0.25em;
 }
 
 .fieldLabel {
-    font-size: 0.5em;
+    font-size: 8pt;
     font-style: normal;
 }

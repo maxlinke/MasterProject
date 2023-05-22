@@ -6,41 +6,87 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <script src="script.js"></script>
     <script src="tournamentResultProcessor.js"></script>
+    <script src="testData.js"></script>
 </head>
 <body>
-    <div>
-        <label for="fileInput">Select File</label>
-        <input id="fileInput" type="file" accept=".tournamentResult">
-    </div>
-    <div>
-        <label for="displayOptionsSelection">Display</label>
-        <select id="displayOptionsSelection"></select>
-    </div>
-    <table>
-        <tr>
-            <th></th>
-            <th class="columnLabel">A</th>
-            <th class="columnLabel">B</th>
-            <th class="columnLabel">C</th>
-        </tr>
-        <tr>
-            <th class="rowLabel">Albert</th>
-            <td class="matrixField" style="background-color: #F00;"><p class="fieldLabel">red</p></th>
-            <td class="matrixField" style="background-color: #0F0;"><p class="fieldLabel">green</p></th>
-            <td class="matrixField" style="background-color: #00F;"><p class="fieldLabel">blue</p></th>
-        </tr>
-        <tr>
-            <th class="rowLabel">Bob</th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 00%);"></th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 10%);"></th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 20%);"></th>
-        </tr>
-        <tr>
-            <th class="rowLabel">Carl</th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 50%);"></th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 60%);"></th>
-            <td class="matrixField" style="background-color: hsl(0, 0%, 70%);"></th>
-        </tr>
-    </table>
+    <section>
+        <h2 class="sectionHeader">File Selection</h2>
+        <div class="sectionContent">
+            <div class="horizontalControlGroup">
+                <label for="fileInput">Select File</label>
+                <input id="fileInput" type="file" accept=".tournamentResult">
+            </div>
+        </div>
+    </section>
+    <section>
+        <h2 class="sectionHeader">Agent Rankings</h2>
+        <div class="sectionContent">
+            <div class="horizontalControlGroup">
+                <label for="rankingOptionsSelection">Sort by</label>
+                <select id="rankingOptionsSelection"></select>
+            </div>
+            <table id="agentRankingTable">
+                <tr>
+                    <th>Agent</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Draws</th>
+                </tr>
+                <tr>
+                    <th>Alice</th>
+                    <td>4</td>
+                    <td>12</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <th>Bob</th>
+                    <td>8</td>
+                    <td>5</td>
+                    <td>9</td>
+                </tr>
+                <tr>
+                    <th>Carl</th>
+                    <td>1</td>
+                    <td>9</td>
+                    <td>9</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+    <section>
+        <h2 class="sectionHeader">Matchup Matrix</h2>
+        <div class="sectionContent">
+            <div class="horizontalControlGroup">
+                <label for="displayOptionsSelection">Display</label>
+                <select id="displayOptionsSelection"></select>
+            </div>
+            <table id="matchupMatrix">
+                <tr>
+                    <th></th>
+                    <th class="columnLabel">A</th>
+                    <th class="columnLabel">B</th>
+                    <th class="columnLabel">C</th>
+                </tr>
+                <tr>
+                    <th class="rowLabel">Alice</th>
+                    <td class="matrixField" style="background-color: #F00;"><p class="fieldLabel">red</p></th>
+                    <td class="matrixField" style="background-color: #0F0;"><p class="fieldLabel">green</p></th>
+                    <td class="matrixField" style="background-color: #00F;"><p class="fieldLabel">blue</p></th>
+                </tr>
+                <tr>
+                    <th class="rowLabel">Bob</th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 00%);"></th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 10%);"></th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 20%);"></th>
+                </tr>
+                <tr>
+                    <th class="rowLabel">Carl</th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 50%);"></th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 60%);"></th>
+                    <td class="matrixField" style="background-color: hsl(0, 0%, 70%);"></th>
+                </tr>
+            </table>
+        </div>
+    </section>
 </body>
 </html>
