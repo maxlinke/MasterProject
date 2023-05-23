@@ -27,28 +27,28 @@
             </div>
             <table id="agentRankingTable">
                 <tr>
-                    <th>Agent</th>
-                    <th>Wins</th>
-                    <th>Losses</th>
-                    <th>Draws</th>
+                    <th class="rankingTableColumnLabel"></th>
+                    <th class="rankingTableColumnLabel">Wins</th>
+                    <th class="rankingTableColumnLabel">Losses</th>
+                    <th class="rankingTableColumnLabel">Draws</th>
                 </tr>
                 <tr>
-                    <th>Alice</th>
-                    <td>4</td>
-                    <td>12</td>
-                    <td>3</td>
+                    <th class="rankingTableRowLabel">Alice</th>
+                    <td class="rankingTableDataField">4</td>
+                    <td class="rankingTableDataField">12</td>
+                    <td class="rankingTableDataField">3</td>
                 </tr>
                 <tr>
-                    <th>Bob</th>
-                    <td>8</td>
-                    <td>5</td>
-                    <td>9</td>
+                    <th class="rankingTableRowLabel">Bob</th>
+                    <td class="rankingTableDataField">8</td>
+                    <td class="rankingTableDataField">5</td>
+                    <td class="rankingTableDataField">9</td>
                 </tr>
                 <tr>
-                    <th>Carl</th>
-                    <td>1</td>
-                    <td>9</td>
-                    <td>9</td>
+                    <th class="rankingTableRowLabel">Carl</th>
+                    <td class="rankingTableDataField">1</td>
+                    <td class="rankingTableDataField">9</td>
+                    <td class="rankingTableDataField">9</td>
                 </tr>
             </table>
         </div>
@@ -60,30 +60,33 @@
                 <label for="displayOptionsSelection">Display</label>
                 <select id="displayOptionsSelection"></select>
             </div>
+            <div id="additionalMatchupMatrixControls">
+                <!-- stuff added in script -->
+            </div>
             <table id="matchupMatrix">
                 <tr>
                     <th></th>
-                    <th class="columnLabel">A</th>
-                    <th class="columnLabel">B</th>
-                    <th class="columnLabel">C</th>
+                    <th class="matrixColumnLabel">A</th>
+                    <th class="matrixColumnLabel">B</th>
+                    <th class="matrixColumnLabel">C</th>
                 </tr>
                 <tr>
-                    <th class="rowLabel">Alice</th>
-                    <td class="matrixField" style="background-color: #F00;"><p class="fieldLabel">red</p></th>
-                    <td class="matrixField" style="background-color: #0F0;"><p class="fieldLabel">green</p></th>
-                    <td class="matrixField" style="background-color: #00F;"><p class="fieldLabel">blue</p></th>
+                    <th class="matrixRowLabel">Alice</th>
+                    <td class="matrixDataField" style="background-color: #F00;"></th>
+                    <td class="matrixDataField" style="background-color: #0F0;"></th>
+                    <td class="matrixDataField" style="background-color: #00F;"></th>
                 </tr>
                 <tr>
-                    <th class="rowLabel">Bob</th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 00%);"></th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 10%);"></th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 20%);"></th>
+                    <th class="matrixRowLabel">Bob</th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 00%);"></th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 10%);"></th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 20%);"></th>
                 </tr>
                 <tr>
-                    <th class="rowLabel">Carl</th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 50%);"></th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 60%);"></th>
-                    <td class="matrixField" style="background-color: hsl(0, 0%, 70%);"></th>
+                    <th class="matrixRowLabel">Carl</th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 80%);"></th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 90%);"></th>
+                    <td class="matrixDataField" style="background-color: hsl(0, 0%, 100%);"></th>
                 </tr>
             </table>
         </div>

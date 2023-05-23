@@ -1,8 +1,13 @@
+:not(h1, h2, h3, h4, h5, h6) {
+    font-weight: normal;
+    font-size: 10pt;
+}
+
 body {
     font-family: "arial";
 }
 
-.horizontalControlGroup {
+div {
     margin-bottom: 5px;
 }
 
@@ -16,18 +21,7 @@ body {
 
 label {
     display: inline-block;
-    font-size: 10pt;
     width: 5em;
-}
-
-table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-    padding: 2px;
-}
-
-td {
-    text-align: right;
 }
 
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
@@ -37,36 +31,41 @@ td {
 
 .rankingTableColumnLabel {
     text-align: right;
+    font-size: 12pt;
+    font-weight: bold;
 }
 
 .rankingTableRowLabel {
     text-align: left;
     font-weight: normal;
-    font-size: 10pt;
 }
 
 .rankingTableDataField {
     text-align: right;
     width: 80px;
-    font-size: 10pt;
 }
 
-.matrixField {
-    height: 32px;
-    width: 32px;
+#matchupMatrix, .matrixColumnLabel, .matrixRowLabel, .matrixDataField {
+    border: 0px;
+    padding: 4px;
 }
 
-.rowLabel {
+.matrixDataField {
+    border: 1px solid rgba(0,0,0,0.25);
+    height: 16px;
+    width: 16px;
+}
+
+.matrixRowLabel {
     text-align: right;
-    padding-left: 0.25em;
-    padding-right: 0.25em;
 }
 
-.columnLabel {
+.matrixColumnLabel {
     text-align: center;
 }
 
 .fieldLabel {
-    font-size: 8pt;
+    display: inline;
+    font-size: 6pt;
     font-style: normal;
 }

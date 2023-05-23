@@ -28,8 +28,7 @@ function processData (input) {
         });
     }
     output.players = input.playerIds.map((id, i) => { return { 
-        id: id,
-        shortId: id.substring(commonPrefix.length),
+        id: id.substring(commonPrefix.length),
         index: i,
         totalGamesPlayed: playerGameCounts[i],
         totalWins: input.totalWins[i],
@@ -42,16 +41,12 @@ function processData (input) {
         winLossRatio: (input.totalWins[i] - input.totalLosses[i]) / (playerGameCounts[i]),
         elo: input.elo[i]
     }});
-    // output.players.sort((a, b) => {
-    //     if(a.performance > b.performance) return 1;
-    //     if(a.performance < b.performance) return -1;
-    //     return 0;
-    // });
-    console.log(output.players);
-    // what now?
-    // i need to unpack the matchup winners things
-    // i guess i can just replace all the indices with the proper ids (and undefined for draws)
-    // and replace the matchup indices with matchup objects
-    
+    output.matchupSize = input.matchupSize;
+    output.matchupRecords = input.matchupRecords;
+    output.matchupRecords.forEach(matchupRecord => {
+        matchupRecord.playerIds.forEach((id, index) => {
+            matchupRecord.playerIds[index] = id.substring(commonPrefix.length);
+        });
+    });
     return output;
 }
