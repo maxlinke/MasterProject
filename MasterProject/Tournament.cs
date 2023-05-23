@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MasterProject.Records;
 
 namespace MasterProject {
 
@@ -32,7 +33,16 @@ namespace MasterProject {
 
         public const string ResultsFileExtension = "tournamentResult";
 
-        public static string ResultsDirectoryPath => System.IO.Path.Combine(Program.GetProjectPath(), ResultsDirectoryName);
+        protected static string GetProjectPathForResult (string id) => $"{ResultsDirectoryName}/{id}.{ResultsFileExtension}";
+
+        public static bool TryLoadWinLossDrawRecord (string id, out WinLossDrawRecord output) {
+            if (DataLoader.TryLoadInProject(GetProjectPathForResult(id), out var loadedBytes)) {
+                output = WinLossDrawRecord.FromJsonBytes(loadedBytes);
+                return true;
+            }
+            output = default;
+            return false;
+        }
 
     }
 
@@ -56,15 +66,18 @@ namespace MasterProject {
             if (!IsFinished || record == null) {
                 return null;
             }
-            return WinLossDrawRecord.Merge(record, WinLossDrawRecord.Empty(record.matchupSize));
+            var output = WinLossDrawRecord.Merge(record, WinLossDrawRecord.Empty(record.matchupSize));
+            output.CalculateElo();
+            return output;
         }
 
         public void SaveWinLossDrawRecord () {
             if (!IsFinished || record == null) {
                 throw new NotImplementedException("Can't save win loss record now!");
             }
+            record.CalculateElo();
             var id = $"{typeof(TGame).FullName}_{System.DateTime.Now.Ticks}";
-            DataSaver.SaveInProject($"{ResultsDirectoryName}/{id}.{ResultsFileExtension}", record.ToJsonBytes());
+            DataSaver.SaveInProject(GetProjectPathForResult(id), record.ToJsonBytes());
         }
 
         private void VerifyOnlyOneRun () {
@@ -205,14 +218,11 @@ namespace MasterProject {
                 try {
                     gameRun.runTask.GetAwaiter().GetResult();
                     var gs = gameRun.game.GetFinalGameState();
-                    if (gs.IsDraw) {
-                        record.RecordDraw(gameRun.agentIds);
-                    } else {
-                        record.RecordWin(gameRun.agentIds, gs.WinnerIndex);
-                    }
+                    record.RecordResult(gameRun.agentIds, gs);
                 } catch (System.Exception e) {
                     if (e is Game.MoveLimitReachedException) {
-                        record.RecordDraw(gameRun.agentIds);
+                        var gs = gameRun.game.GetFinalGameState();
+                        record.RecordResult(gameRun.agentIds, gs);
                         moveLimitReachedCounter++;
                     } else {
                         otherExceptions.Add(e);

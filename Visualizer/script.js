@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const winPercentMetric = "Win%";
     const wlRatioMetric = "W/L-Ratio";
-    const eloMetric = "Elo (TODO)";
+    const eloMetric = "Elo";
     const rankingOptions = [ winPercentMetric, wlRatioMetric, eloMetric ];
     const rankingOptionsDropdown = document.getElementById("rankingOptionsSelection");
     function getCurrentRankingOption () { return rankingOptionsDropdown.value; }

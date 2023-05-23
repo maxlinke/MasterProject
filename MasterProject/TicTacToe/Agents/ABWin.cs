@@ -19,7 +19,7 @@ namespace MasterProject.TicTacToe.Agents {
                 throw new NotImplementedException();
             if (gameState.IsDraw)
                 return 0;
-            return (gameState.winnerIndex == ownIndex) ? 1 : -1;
+            return (gameState.WinnerIndex == ownIndex) ? 1 : -1;
         }
 
         protected override bool MaximizeAtState (int ownIndex, TTTGameState gameState, int depth) {

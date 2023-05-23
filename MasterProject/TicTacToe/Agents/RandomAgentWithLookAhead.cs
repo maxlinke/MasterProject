@@ -13,7 +13,7 @@ namespace MasterProject.TicTacToe.Agents {
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
             for(int i=0; i<moves.Count; i++){
                 var moveResult = gs.GetResultOfMove(moves[i]);
-                if (moveResult.GameOver && moveResult.winnerIndex == gs.CurrentPlayerIndex) {
+                if (moveResult.GameOver && moveResult.WinnerIndex == gs.CurrentPlayerIndex) {
                     return i;
                 }
             }

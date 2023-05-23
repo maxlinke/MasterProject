@@ -11,11 +11,13 @@ namespace MasterProject {
 
         public abstract bool GameOver { get; }
 
-        public abstract bool IsDraw { get; }
-
-        public abstract int WinnerIndex { get; }
-
         public abstract int CurrentPlayerIndex { get; }
+
+        public abstract bool GetPlayerHasWon (int index);
+
+        public abstract bool GetPlayerHasLost (int index);
+
+        public abstract bool GetPlayerHasDrawn (int index);
 
     }
 

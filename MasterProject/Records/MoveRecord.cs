@@ -1,4 +1,4 @@
-﻿namespace MasterProject {
+﻿namespace MasterProject.Records {
 
     public class MoveRecord {
 

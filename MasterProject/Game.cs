@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Diagnostics;
+using MasterProject.Records;
 
 namespace MasterProject {
 
@@ -56,6 +57,8 @@ namespace MasterProject {
         private int _agentMoveTimeoutMilliseconds = NO_TIMEOUT;
         public int AgentMoveTimeoutMilliseconds { get => _agentMoveTimeoutMilliseconds; set => _agentMoveTimeoutMilliseconds = Math.Max(value, 0); }
 
+        public abstract int PlayerCount { get; }
+
         protected abstract Task Run (IEnumerable<Agent> agents);
 
         public abstract GameRecord GetRecord ();
@@ -75,7 +78,7 @@ namespace MasterProject {
         protected TGameState? CurrentGameState { get; private set; }
 
         public override GameState GetFinalGameState () {
-            if (CurrentGameState == null || !CurrentGameState.GameOver) {
+            if (CurrentGameState == null || !(CurrentGameState.GameOver || MoveLimitReached)) {
                 return null;
             }
             return CurrentGameState;
@@ -86,7 +89,11 @@ namespace MasterProject {
         private readonly List<TGameState> gameStates = new();
         private readonly List<MoveRecord> moveRecords = new();
 
-        public int moveCounter => moveRecords.Count;
+        public override int PlayerCount => agents.Count;
+
+        public int MoveCounter => moveRecords.Count;
+
+        public bool MoveLimitReached => MoveCounter >= MoveLimit;
 
         protected abstract TGameState GetInitialGameState ();
 
@@ -134,10 +141,10 @@ namespace MasterProject {
                 agent.OnGameStarted((TGame)this);
             }
             while (!CurrentGameState.GameOver) {
-                if (moveCounter >= MoveLimit) {
+                if (MoveLimitReached) {
                     throw new MoveLimitReachedException();
                 }
-                TryLog(ConsoleOutputs.Move, $"Move {moveCounter}");
+                TryLog(ConsoleOutputs.Move, $"Move {MoveCounter}");
                 var currentAgent = agents[CurrentGameState.CurrentPlayerIndex];
                 TryLog(ConsoleOutputs.Move, $"Turn of player {CurrentGameState.CurrentPlayerIndex} ({currentAgent.GetType()})");
                 var moves = CurrentGameState.GetPossibleMovesForCurrentPlayer();

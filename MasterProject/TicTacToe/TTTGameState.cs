@@ -28,14 +28,17 @@ namespace MasterProject.TicTacToe {
 
         private int currentPlayerIndex;
         private bool gameOver;
-
-        public int winnerIndex { get; private set; }
+        
+        public int WinnerIndex { get; private set; }
+        public bool IsDraw => gameOver && WinnerIndex < 0;
         public int[] board;
 
         public override int CurrentPlayerIndex => currentPlayerIndex;
         public override bool GameOver => gameOver;
-        public override bool IsDraw => gameOver && winnerIndex < 0;
-        public override int WinnerIndex => winnerIndex;
+
+        public override bool GetPlayerHasWon (int index) => gameOver && index == WinnerIndex;
+        public override bool GetPlayerHasLost (int index) => gameOver && index != WinnerIndex && !IsDraw;
+        public override bool GetPlayerHasDrawn (int index) => IsDraw;
 
         public override TTTGameState GetVisibleGameStateForPlayer (int playerIndex) {
             return this;
@@ -68,7 +71,7 @@ namespace MasterProject.TicTacToe {
             board = new int[BOARD_FIELD_COUNT];
             Array.Fill(board, EMPTY_FIELD);
             currentPlayerIndex = 0;
-            winnerIndex = -1;
+            WinnerIndex = -1;
             gameOver = false;
         }
 
@@ -93,13 +96,13 @@ namespace MasterProject.TicTacToe {
             foreach (var line in lines) {
                 if (CheckLine(line, out var newWinner)) {
                     gameOver = true;
-                    winnerIndex = newWinner;
+                    WinnerIndex = newWinner;
                     return;
                 }
             }
             if (CheckAllFieldsFilled()) {
                 gameOver = true;
-                winnerIndex = -1;
+                WinnerIndex = -1;
             }
 
             bool CheckLine (IReadOnlyList<int> line, out int winner) {

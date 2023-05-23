@@ -16,12 +16,12 @@ namespace MasterProject.TicTacToe.Agents {
             var bestScore = float.NegativeInfinity;
             for (int i = 0; i < moves.Count; i++) {
                 var newGs = gs.GetResultOfMove(moves[i]);
-                if (newGs.GameOver && newGs.winnerIndex == gs.CurrentPlayerIndex) {
+                if (newGs.GameOver && newGs.WinnerIndex == gs.CurrentPlayerIndex) {
                     return i;
                 }
                 var newScore = AlphaBeta(
                     newGs,
-                    (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.winnerIndex == ownIndex) ? 1 : -1)),
+                    (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.WinnerIndex == ownIndex) ? 1 : -1)),
                     float.NegativeInfinity,
                     float.PositiveInfinity,
                     false

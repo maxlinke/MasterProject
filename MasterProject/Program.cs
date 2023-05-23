@@ -24,7 +24,8 @@ public class Program {
 
     public static void Main (string[] args) {
         //MasterProject.TicTacToe.TTTGame.RunHumanTwoPlayerGame();
-        //PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABLoseFast());
+        //PlayAgainstBot(new ABLoseFast());
+        //PlayAgainstBot(new ABWinFast());
         //DoSyncAsyncTest(20);
         //DoBotTournament(100, 100);
         //DoTheThing(1000, true).GetAwaiter().GetResult();
@@ -34,20 +35,50 @@ public class Program {
         //ExceptionInTaskTest();
         //ExceptionsInTasksTest();
 
-        var tournament = Tournament<TTTGame>.New(2);
+        //var game = new TTTGame();
+        //game.RunSynced(new Agent[]{
+        //    new ABWinFast(),
+        //    new ABWin()
+        //});
+        //var gs = game.GetFinalGameState();
+        //Console.WriteLine(((TTTGameState)gs).GetPrintableBoardWithXsAndOs());
+        //for (int i = 0; i < game.PlayerCount; i++) {
+        //    if (gs.GetPlayerHasWon(i))
+        //        Console.WriteLine($"{i} - win");
+        //    else if (gs.GetPlayerHasLost(i))
+        //        Console.WriteLine($"{i} - loss");
+        //    else if (gs.GetPlayerHasDrawn(i))
+        //        Console.WriteLine($"{i} - draw");
+        //    else
+        //        Console.WriteLine($"{i} - ???");
+        //}
+        //game.GetRecord();
+
+        const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
+        const int numberOfGamesToPlay = 500;
+
+        Tournament<TTTGame> tournament;
+        if (Tournament.TryLoadWinLossDrawRecord(continueTournamentId, out var loadedRecord)) {
+            tournament = Tournament<TTTGame>.Continue(loadedRecord);
+            Console.WriteLine("Continuing!");
+        } else {
+            tournament = Tournament<TTTGame>.New(2);
+            Console.WriteLine("New!");
+        }
+
         tournament.MaxNumberOfGamesToRunInParallel = 16;
         tournament.Run(new Agent<TTTGame, TTTGameState, TTTMove>[]{
             new RandomAgent(),
             new RandomAgentWithLookAhead(),
             new LineBuilder(),
-            new ABWin(),
-            new ABLose(),
+            //new ABWin(),
+            //new ABLose(),
             new ABWinFast(),
             new ABLoseFast(),
-            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.99f),
-            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f)
-        }, 500);
-        ;
+            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.5f),
+            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.8f),
+            new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f),
+        }, numberOfGamesToPlay);
         tournament.SaveWinLossDrawRecord();
 
         DataSaver.Flush();
@@ -167,7 +198,7 @@ public class Program {
                     var game = new MasterProject.TicTacToe.TTTGame();
                     game.AgentMoveTimeoutMilliseconds = timeoutMillis;
                     game.RunSynced(agents);
-                    var finalState = game.GetFinalGameState();
+                    var finalState = (TTTGameState)game.GetFinalGameState();
                     if (finalState.WinnerIndex < 0) {
                         draws++;
                     } else {
@@ -189,7 +220,7 @@ public class Program {
                     RunGamesInParallel(games, agents).GetAwaiter().GetResult();
                     Console.WriteLine($"{System.DateTime.Now.ToLongTimeString()} finish wait");
                     foreach (var game in games) {
-                        var finalState = game.GetFinalGameState();
+                        var finalState = (TTTGameState)game.GetFinalGameState();
                         if (finalState.WinnerIndex < 0) {
                             draws++;
                         } else {

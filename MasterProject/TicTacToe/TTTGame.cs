@@ -42,8 +42,8 @@ namespace MasterProject.TicTacToe {
             });
             Console.WriteLine();
             Console.WriteLine("GAME OVER!");
-            var gs = game.GetFinalGameState();
-            if (gs.WinnerIndex < 0) {
+            var gs = (TTTGameState)game.GetFinalGameState();
+            if (gs.IsDraw) {
                 Console.WriteLine("Resut: DRAW");
             } else {
                 Console.WriteLine($"Result: {TTTGameState.GetSymbolForPlayer(gs.WinnerIndex)} wins!");

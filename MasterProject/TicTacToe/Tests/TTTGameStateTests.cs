@@ -122,7 +122,7 @@ namespace MasterProject.TicTacToe.Tests {
                 Array.Copy(inputBoard, tttgs.board, 9);
             }
             tttgs.CheckBoard();
-            Assert.AreEqual(tttgs.winnerIndex, expectedWinner);
+            Assert.AreEqual(tttgs.WinnerIndex, expectedWinner);
             Assert.AreEqual(tttgs.GameOver, expectedGameOver);
         }
 

@@ -20,7 +20,7 @@ namespace MasterProject.TicTacToe.Agents {
                 var newGs = gs.GetResultOfMove(moves[i]);
                 var newScore = -GetMoveScoreAllTheWayDown(
                     newGs,
-                    (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.winnerIndex == ownIndex) ? 1 : -1)),
+                    (finalGs) => (finalGs.IsDraw ? 0 : ((finalGs.WinnerIndex == ownIndex) ? 1 : -1)),
                     -1
                 );
                 if (newScore > bestScore) {

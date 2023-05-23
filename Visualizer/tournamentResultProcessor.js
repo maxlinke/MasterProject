@@ -31,6 +31,7 @@ function processData (input) {
         id: id,
         shortId: id.substring(commonPrefix.length),
         index: i,
+        totalGamesPlayed: playerGameCounts[i],
         totalWins: input.totalWins[i],
         totalLosses: input.totalLosses[i],
         totalDraws: input.totalDraws[i],
@@ -39,7 +40,7 @@ function processData (input) {
         lossPercentage: input.totalLosses[i] / playerGameCounts[i],
         drawPercentage: input.totalDraws[i] / playerGameCounts[i],
         winLossRatio: (input.totalWins[i] - input.totalLosses[i]) / (playerGameCounts[i]),
-        elo: NaN    // TODO
+        elo: input.elo[i]
     }});
     // output.players.sort((a, b) => {
     //     if(a.performance > b.performance) return 1;
@@ -51,11 +52,6 @@ function processData (input) {
     // i need to unpack the matchup winners things
     // i guess i can just replace all the indices with the proper ids (and undefined for draws)
     // and replace the matchup indices with matchup objects
-    output.matchups = input.matchupWinners.map((v, i) => {
-        // return {
-        //     // TODO
-        // };
-        return v;
-    });
+    
     return output;
 }

@@ -4,81 +4,105 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MasterProject {
-    
+namespace MasterProject.Records {
+
     public class WinLossDrawRecord {
 
+        public class MatchupRecord {
+
+            public const char WIN = 'W';
+            public const char LOSS = 'L';
+            public const char DRAW = 'D';
+
+            public string[] playerIds { get; set; }
+            public List<string> gameResults { get; set; }       // not optional. strings because of the json export. makes everything easier to parse and is shorter than another array which would have commas
+            public List<GameRecord> gameRecords { get; set; }   // optional (full info on the entire game)
+
+            public override bool Equals (object? obj) {
+                return obj is MatchupRecord other
+                    && CompareCollection(this.playerIds, other.playerIds)
+                    && CompareCollection(this.gameResults, other.gameResults)
+                    && CompareCollection(this.gameRecords, other.gameRecords)
+                ;
+            }
+
+            public override int GetHashCode () {
+                return HashCode.Combine(playerIds, gameResults, gameRecords);
+            }
+
+            public MatchupRecord Clone () {
+                var output = new MatchupRecord();
+                output.playerIds = this.playerIds.Select((id) => id).ToArray(); // simple string duplication
+                output.gameResults = new List<string>(this.gameResults);        // simple string duplication
+                output.gameRecords = new List<GameRecord>();                    // inefficient but simple cloning via serialization
+                foreach(var gr in this.gameRecords){
+                    var json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(gr);
+                    var clone = System.Text.Json.JsonSerializer.Deserialize<GameRecord>(json);
+                    if (clone != default) {
+                        output.gameRecords.Add(clone);
+                    }
+                };
+                return output;
+            }
+
+        }
+
         public string[] playerIds { get; set; }
+        public float[] elo { get; set; }
         public int matchupSize { get; set; }
         public int[] totalWins { get; set; }
         public int[] totalLosses { get; set; }
         public int[] totalDraws { get; set; }
-        public List<int>[] matchupWinners { get; set; }
+        public MatchupRecord[] matchupRecords { get; set; }
 
-        public int GetMatchupCount () => matchupWinners.Length;
-        public int GetNumberOfMatchesPlayedInMatchup (int matchupIndex) => matchupWinners[matchupIndex].Count;
+        public int GetMatchupCount () => matchupRecords.Length;
+        public int GetNumberOfMatchesPlayedInMatchup (int matchupIndex) => matchupRecords[matchupIndex].gameResults.Count;
         public int GetNumberOfMatchesPlayedInMatchup (IReadOnlyList<string> players) => GetNumberOfMatchesPlayedInMatchup(GetMatchupIndex(players));
         public int GetNumberOfMatchesPlayedInTotal () {
             var output = 0;
-            foreach (var winners in matchupWinners) {
-                output += winners.Count;
+            foreach (var record in matchupRecords) {
+                output += record.gameResults.Count;
             }
             return output;
         }
 
         public override bool Equals (object? obj) {
-            if (obj == null || !(obj is WinLossDrawRecord other)) {
-                return false;
-            }
-            return (this.matchupSize == other.matchupSize)
-                && CompareCollection(this.playerIds, other.playerIds, (a, b) => a.Equals(b))
-                && CompareCollection(this.totalWins, other.totalWins, (a, b) => a.Equals(b))
-                && CompareCollection(this.totalLosses, other.totalLosses, (a, b) => a.Equals(b))
-                && CompareCollection(this.totalDraws, other.totalDraws, (a, b) => a.Equals(b))
-                && CompareCollection(this.matchupWinners, other.matchupWinners, (a, b) => CompareCollection(a, b, (a2, b2) => a2 == b2))
+            return obj is WinLossDrawRecord other
+                && (this.matchupSize == other.matchupSize)
+                && CompareCollection(this.playerIds, other.playerIds)
+                && CompareCollection(this.totalWins, other.totalWins)
+                && CompareCollection(this.totalLosses, other.totalLosses)
+                && CompareCollection(this.totalDraws, other.totalDraws)
+                && CompareCollection(this.matchupRecords, other.matchupRecords)
             ;
-
-            bool CompareCollection<T> (IReadOnlyList<T> a, IReadOnlyList<T> b, System.Func<T, T, bool> compareElement) {
-                if ((a == null) != (b == null)) {
-                    return false;
-                }
-                if (a.Count != b.Count) {
-                    return false;
-                }
-                for (int i = 0; i < a.Count; i++) {
-                    if (!compareElement(a[i], b[i])) {
-                        return false;
-                    }
-                }
-                return true;
-            }
         }
 
-        //public WinLossDrawRecord (IReadOnlyList<string> playerIds, int playersPerGame) {
-        //    this.playerIds = playerIds.ToArray();
-        //    this.totalWins = new int[playerIds.Count];
-        //    this.totalLosses = new int[playerIds.Count];
-        //    this.totalDraws = new int[playerIds.Count];
-        //    this.matchupSize = playersPerGame;
-        //    this.matchupWinners = new List<int>[GetPossibleMatchupCount(playerIds.Count, playersPerGame)];
-        //    for (int i = 0; i < matchupWinners.Length; i++) {
-        //        matchupWinners[i] = new List<int>();
-        //    }
-        //}
+        public override int GetHashCode () {
+            return HashCode.Combine(playerIds, matchupSize, totalWins, totalLosses, totalDraws, matchupRecords);
+        }
+
+        public void CalculateElo () {
+            Console.WriteLine("TODO calculate elo");  // TODO
+        }
 
         public static WinLossDrawRecord Empty (int playersPerGame) => New(new string[0], playersPerGame);
 
         public static WinLossDrawRecord New (IReadOnlyList<string> playerIds, int playersPerGame) {
             var output = new WinLossDrawRecord();
             output.playerIds = playerIds.ToArray();
+            output.elo = new float[playerIds.Count];
             output.totalWins = new int[playerIds.Count];
             output.totalLosses = new int[playerIds.Count];
             output.totalDraws = new int[playerIds.Count];
             output.matchupSize = playersPerGame;
             var matchupCount = GetPossibleMatchupCount(playerIds.Count, playersPerGame);
-            output.matchupWinners = new List<int>[matchupCount];
+            output.matchupRecords = new MatchupRecord[matchupCount];
             for (int i = 0; i < matchupCount; i++) {
-                output.matchupWinners[i] = new List<int>();
+                output.matchupRecords[i] = new MatchupRecord();
+                var newMatchupRecord = output.matchupRecords[i];
+                newMatchupRecord.playerIds = output.GetMatchupFromIndex(i).ToArray();
+                newMatchupRecord.gameResults = new List<string>();
+                newMatchupRecord.gameRecords = new List<GameRecord>();
             }
             return output;
         }
@@ -95,41 +119,37 @@ namespace MasterProject {
             return totalDraws[Array.IndexOf(playerIds, player)];
         }
 
-        public IEnumerable<(IReadOnlyList<string> participants, int winnerIndex)> GetMatchupResultsForPlayer (string player) {
+        public IEnumerable<MatchupRecord> GetMatchupRecordsForPlayer (string player) {
             // TODO there's probably a smarter way than iterating over all possible matchups
             // but is it it really neccessary? probably not. 
-            for (int i = 0; i < matchupWinners.Length; i++) {
+            for (int i = 0; i < matchupRecords.Length; i++) {
                 var matchup = GetMatchupFromIndex(i);
                 if (matchup.Contains(player)) {
-                    foreach (var winner in matchupWinners[i]) {
-                        yield return (matchup, winner);
-                    }
+                    yield return matchupRecords[i];
                 }
             }
         }
 
-        public const int DRAW = -1;
-
-        public void RecordWin (IReadOnlyList<string> keys, int winnerIndex) {
-            matchupWinners[GetMatchupIndex(keys)].Add(winnerIndex);
+        public void RecordResult (IReadOnlyList<string> keys, GameState gameState) {
+            var record = matchupRecords[GetMatchupIndex(keys)];
+            var result = new char[keys.Count];
             for(int i=0; i<keys.Count; i++){
                 var playerId = keys[i];
                 var playerIndex = Array.IndexOf(playerIds, playerId);
-                if (i == winnerIndex) {
+                if (gameState.GetPlayerHasLost(i)) {
+                    result[i] = MatchupRecord.LOSS;
+                    totalLosses[playerIndex]++;
+                } else if (gameState.GetPlayerHasDrawn(i) || !gameState.GameOver) {
+                    result[i] = MatchupRecord.DRAW;
+                    totalDraws[playerIndex]++;
+                } else if (gameState.GetPlayerHasWon(i)) {
+                    result[i] = MatchupRecord.WIN;
                     totalWins[playerIndex]++;
                 } else {
-                    totalLosses[playerIndex]++;
+                    throw new NotSupportedException($"Unable to determine what to record for player \"{playerId}\" after game!");
                 }
             }
-        }
-
-        public void RecordDraw (IReadOnlyList<string> keys) {
-            matchupWinners[GetMatchupIndex(keys)].Add(DRAW);
-            for (int i = 0; i < keys.Count; i++) {
-                var playerId = keys[i];
-                var playerIndex = Array.IndexOf(playerIds, playerId);
-                totalDraws[playerIndex]++;
-            }
+            record.gameResults.Add(new string(result));
         }
 
         public static int GetPossibleMatchupCount (int numberOfPlayers, int playersPerGame) {
@@ -184,10 +204,10 @@ namespace MasterProject {
             var remainingIds = new List<string>(this.playerIds);
             remainingIds.RemoveAll(id => playerIds.Contains(id));
             var output = WinLossDrawRecord.New(remainingIds, this.matchupSize);
-            for (int i = 0; i < output.matchupWinners.Length; i++) {
+            for (int i = 0; i < output.matchupRecords.Length; i++) {
                 var participants = output.GetMatchupFromIndex(i);
                 var origI = this.GetMatchupIndex(participants);
-                output.matchupWinners[i].AddRange(this.matchupWinners[origI]);
+                output.matchupRecords[i] = this.matchupRecords[origI].Clone();
             }
             return output;
         }
@@ -202,8 +222,8 @@ namespace MasterProject {
             var output = New(combinedPlayers, a.matchupSize);
             CopyTotals(a);
             CopyTotals(b);
-            CopyResults(a);
-            CopyResults(b);
+            CopyRecords(a);
+            CopyRecords(b);
             return output;
 
             void EnsureIdsRegistered (IEnumerable<string> idsToRegister) {
@@ -223,14 +243,14 @@ namespace MasterProject {
                 }
             }
 
-            void CopyResults (WinLossDrawRecord src) {
-                for (int i = 0; i < src.matchupWinners.Length; i++) {
-                    if (src.matchupWinners[i].Count > 0) {
+            void CopyRecords (WinLossDrawRecord src) {
+                for (int i = 0; i < src.matchupRecords.Length; i++) {
+                    var srcRecordClone = src.matchupRecords[i].Clone();
+                    if (srcRecordClone.gameResults.Count > 0) {
                         var players = src.GetMatchupFromIndex(i);
                         var outputIndex = output.GetMatchupIndex(players);
-                        foreach (var winner in src.matchupWinners[i]) {
-                            output.matchupWinners[outputIndex].Add(winner);
-                        }
+                        output.matchupRecords[outputIndex].gameResults.AddRange(srcRecordClone.gameResults);
+                        output.matchupRecords[outputIndex].gameRecords.AddRange(srcRecordClone.gameRecords);
                     }
                 }
             }
@@ -256,7 +276,23 @@ namespace MasterProject {
             return FromJson(System.Text.Encoding.UTF8.GetString(bytes));
         }
 
-
+        protected static bool CompareCollection<T> (IReadOnlyList<T> a, IReadOnlyList<T> b, System.Func<T, T, bool> compareElement = null) {
+            if ((a == null) != (b == null)) {
+                return false;
+            }
+            if (a.Count != b.Count) {
+                return false;
+            }
+            if (compareElement == null) {
+                compareElement = (a, b) => a.Equals(b);
+            }
+            for (int i = 0; i < a.Count; i++) {
+                if (!compareElement(a[i], b[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
     }
 
