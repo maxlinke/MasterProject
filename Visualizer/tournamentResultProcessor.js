@@ -38,7 +38,7 @@ function processData (input) {
         winPercentage: input.totalWins[i] / playerGameCounts[i],
         lossPercentage: input.totalLosses[i] / playerGameCounts[i],
         drawPercentage: input.totalDraws[i] / playerGameCounts[i],
-        winLossRatio: (input.totalWins[i] - input.totalLosses[i]) / (playerGameCounts[i]),
+        winLossRatio: (input.totalWins[i] - input.totalLosses[i]) / Math.max(1, (playerGameCounts[i] - input.totalDraws[i])),
         elo: input.elo[i]
     }});
     output.matchupSize = input.matchupSize;

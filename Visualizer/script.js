@@ -17,6 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const rankingOptionsDropdown = document.getElementById("rankingOptionsSelection");
     function getCurrentRankingOption () { return rankingOptionsDropdown.value; }
 
+    const noHighlights = "Off";
+    const fixedOutcomeHighlights = "Fixed Outcomes";
+    const highlightOptions = [ noHighlights, fixedOutcomeHighlights ];
+    const highlightOptionsDropdown = document.getElementById("highlightOptionsSelection");
+    function getHighlightFixedOutcomes () { return highlightOptionsDropdown.value == fixedOutcomeHighlights; }
+
     const rankingTable = document.getElementById("agentRankingTable");
     const matchupMatrix = document.getElementById("matchupMatrix");
     const matchupMatrixControlsParent = document.getElementById("additionalMatchupMatrixControls");
@@ -70,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMatrix();
     }
 
-    function onDisplayOptionChanged () {
+    function onMatrixOptionChanged () {
         if(loadedData != undefined){
             updateMatrix();
         }
@@ -165,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
         matchupMatrix.replaceChildren();
         if(loadedData != undefined){
             if(loadedData.matchupSize >= 2){
-                const getColor = getMatrixFieldElementColorFunction();
+                const getInfo = getMatrixFieldElementInfoGetterFunction();
                 const headerRow = document.createElement("tr");
                 matchupMatrix.appendChild(headerRow);
                 headerRow.appendChild(document.createElement("th"));    // empty field
@@ -175,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     newLabel.innerHTML = loadedData.players[playerIndex].id[0];
                     newLabel.className = "matrixColumnLabel";
                 });
+                const highlightFixed = getHighlightFixedOutcomes();
                 sortedPlayerIndices.forEach((mainPlayerIndex) => {
                     const mainPlayer = loadedData.players[mainPlayerIndex];
                     const newRow = document.createElement("tr");
@@ -188,14 +195,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         const newField = document.createElement("td");
                         newRow.appendChild(newField);
                         newField.className = "matrixDataField";
-                        newField.style = `background-color: ${getColor(mainPlayer, secondaryPlayer)}`;
+                        const info = getInfo(mainPlayer, secondaryPlayer);
+                        newField.style = `background-color: ${info.color}`;
+                        if(info.deterministic && highlightFixed){
+                            const overlay = document.createElement("div");
+                            newField.appendChild(overlay);
+                            overlay.style = `position: relative; padding: 0; margin-bottom: 0; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; border: 2px solid ${info.contrastColor}; border-collapse: collapse; border-radius: 8px;`;
+                        }
                     });
                 });
             }
         }
     }
 
-    function getMatrixFieldElementColorFunction () {
+    function getMatrixFieldElementInfoGetterFunction () {
         const errorCol = "#FF00FF"
         switch(getCurrentDisplayOption()){
             case matrixWinsOption:
@@ -203,45 +216,60 @@ document.addEventListener("DOMContentLoaded", () => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
                     if(count.games < 1) return errorCol;
-                    if(count["W"] == undefined) count["W"] = 0; // would be nice to specifically show == 0 and == total
-                    return `hsl(120, 100%, ${50 * (count["W"] / count.total)}%)`;
+                    return { 
+                        color: `hsl(120, 100%, ${50 * (count["W"] / count.total)}%)`, 
+                        contrastColor: "#fff",
+                        deterministic: count.alwaysZero["W"] || count.alwaysMaximum["W"]
+                    };
                 }
             case matrixLossesOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
                     if(count.games < 1) return errorCol;
-                    if(count["L"] == undefined) count["L"] = 0;
-                    return `hsl(0, 100%, ${50 * (count["L"] / count.total)}%)`;
+                    return {
+                        color: `hsl(0, 100%, ${50 * (count["L"] / count.total)}%)`, 
+                        contrastColor: "#fff",
+                        deterministic: count.alwaysZero["L"] || count.alwaysMaximum["L"]
+                    };
                 }
             case matrixDrawsOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
                     if(count.games < 1) return errorCol;
-                    if(count["D"] == undefined) count["D"] = 0;
-                    return `hsl(0, 0%, ${100 * (count["D"] / count.total)}%)`;
+                    return {
+                        color: `hsl(0, 0%, ${50 * (count["D"] / count.total)}%)`,
+                        contrastColor: "#fff",
+                        deterministic: count.alwaysZero["D"] || count.alwaysMaximum["D"]
+                    };
                 }
             case matrixWLRatioOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
                     if(count.games < 1) return errorCol;
-                    if(count["W"] == undefined) count["W"] = 0;
-                    if(count["L"] == undefined) count["L"] = 0;
-                    if(count["D"] == undefined) count["D"] = 0;
-                    const rawWLRatio = (count["W"] - count["L"]) / count.total;
+                    const rawWLRatio = (count["W"] - count["L"]) / Math.max(1, (count.total - count["D"]));
                     const hue = 120 * ((rawWLRatio + 1) / 2);
                     const saturation = 100 * (1 - (count["D"] / count.total));
-                    return `hsl(${hue}, ${saturation}%, 50%)`;
+                    return {
+                        color: `hsl(${hue}, ${saturation}%, 50%)`,
+                        contrastColor: "#fff",   
+                        deterministic: count.alwaysMaximum["W"] || count.alwaysMaximum["L"] || count.alwaysMaximum["D"]
+                    };
                 }
             default:
-                return () => errorCol;
+                return () => { return { 
+                        color: errorCol, 
+                        contrastColor: "#fff",
+                        deterministic: false 
+                    };
+                };
         }
     }
 
     function countFirstLetterOccurencesInRecords (records) {
-        const output = { total: 0 };
+        const output = { total: 0, alwaysZero: [], alwaysMaximum: [] };
         records.forEach(record => {
             record.gameResults.forEach(resultString => {
                 const key = resultString[0];
@@ -251,6 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 output[key]++;
             });
             output.total += record.gameResults.length;
+        });
+        [ "W", "L", "D" ].forEach(key => {
+            if(output[key] == undefined) output[key] = 0;
+            output.alwaysZero[key] = (output[key] == 0);
+            output.alwaysMaximum[key] = (output[key] == output.total);
         });
         return output
     }
@@ -305,8 +338,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("fileInput").addEventListener("change", handleFileSelect, false);
-    initDropdown(displayOptionDropdown, displayOptions, onDisplayOptionChanged);
     initDropdown(rankingOptionsDropdown, rankingOptions, onRankingOptionChanged);
+    initDropdown(displayOptionDropdown, displayOptions, onMatrixOptionChanged);
+    initDropdown(highlightOptionsDropdown, highlightOptions, onMatrixOptionChanged);
     try{
         onDataLoaded(testData);
     }catch(e){
