@@ -200,7 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         if(info.deterministic && highlightFixed){
                             const overlay = document.createElement("div");
                             newField.appendChild(overlay);
-                            overlay.style = `position: relative; padding: 0; margin-bottom: 0; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; border: 2px solid ${info.contrastColor}; border-collapse: collapse; border-radius: 8px;`;
+                            overlay.className = "matrixDataFieldHighlightOverlay";
+                            overlay.style = `border-color: ${info.contrastColor}`;
                         }
                     });
                 });
