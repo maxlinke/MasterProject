@@ -203,6 +203,16 @@ document.addEventListener("DOMContentLoaded", () => {
                             overlay.className = "matrixDataFieldHighlightOverlay";
                             overlay.style = `border-color: ${info.contrastColor}`;
                         }
+                        const newPopup = document.createElement("div");
+                        newField.appendChild(newPopup);
+                        newPopup.innerHTML = info.popupText;
+                        newPopup.className = "matrixFieldPopup";
+                        newField.onmouseenter = () => {
+                            newPopup.style = "visibility: visible";
+                        };
+                        newField.onmouseleave = () => {
+                            newPopup.style = "";
+                        }
                     });
                 });
             }
@@ -210,83 +220,107 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getMatrixFieldElementInfoGetterFunction () {
-        const errorCol = "#FF00FF"
+        const errorOutput = {
+            color: "#f0f",
+            contrastColor: "#fff",
+            deterministic: false,
+            popupText: "Error"
+        };
         switch(getCurrentDisplayOption()){
             case matrixWinsOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorCol;
+                    if(count.games < 1) return errorOutput;
                     return { 
-                        color: `hsl(120, 100%, ${50 * (count["W"] / count.total)}%)`, 
+                        color: `hsl(120, 100%, ${50 * (count["W"][0] / count.total)}%)`, 
                         contrastColor: "#fff",
-                        deterministic: count.alwaysZero["W"] || count.alwaysMaximum["W"]
+                        deterministic: count.alwaysZero["W"] || count.alwaysMaximum["W"],
+                        popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
                     };
                 }
             case matrixLossesOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorCol;
+                    if(count.games < 1) return errorOutput;
                     return {
-                        color: `hsl(0, 100%, ${50 * (count["L"] / count.total)}%)`, 
+                        color: `hsl(0, 100%, ${50 * (count["L"][0] / count.total)}%)`, 
                         contrastColor: "#fff",
-                        deterministic: count.alwaysZero["L"] || count.alwaysMaximum["L"]
+                        deterministic: count.alwaysZero["L"] || count.alwaysMaximum["L"],
+                        popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
                     };
                 }
             case matrixDrawsOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorCol;
+                    if(count.games < 1) return errorOutput;
                     return {
-                        color: `hsl(0, 0%, ${50 * (count["D"] / count.total)}%)`,
+                        color: `hsl(0, 0%, ${50 * (count["D"][0] / count.total)}%)`,
                         contrastColor: "#fff",
-                        deterministic: count.alwaysZero["D"] || count.alwaysMaximum["D"]
+                        deterministic: count.alwaysZero["D"] || count.alwaysMaximum["D"],
+                        popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
                     };
                 }
             case matrixWLRatioOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorCol;
-                    const rawWLRatio = (count["W"] - count["L"]) / Math.max(1, (count.total - count["D"]));
+                    if(count.games < 1) return errorOutput;
+                    const rawWLRatio = (count["W"][0] - count["L"][0]) / Math.max(1, (count.total - count["D"][0]));
                     const hue = 120 * ((rawWLRatio + 1) / 2);
-                    const saturation = 100 * (1 - (count["D"] / count.total));
+                    const saturation = 100 * (1 - (count["D"][0] / count.total));
                     return {
                         color: `hsl(${hue}, ${saturation}%, 50%)`,
                         contrastColor: "#fff",   
-                        deterministic: count.alwaysMaximum["W"] || count.alwaysMaximum["L"] || count.alwaysMaximum["D"]
+                        deterministic: count.alwaysMaximum["W"] || count.alwaysMaximum["L"] || count.alwaysMaximum["D"],
+                        popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
                     };
                 }
             default:
-                return () => { return { 
-                        color: errorCol, 
-                        contrastColor: "#fff",
-                        deterministic: false 
-                    };
-                };
+                return () => { return errorOutput };
         }
     }
 
+    const gameResultCharacters = [ "W", "L", "D" ];
+    const gameResultCharacterMeanings = [ "Wins", "Losses", "Draws" ];
+
     function countFirstLetterOccurencesInRecords (records) {
         const output = { total: 0, alwaysZero: [], alwaysMaximum: [] };
+        gameResultCharacters.forEach(key => {
+            output[key] = Array(loadedData.matchupSize).fill(0);
+        });
         records.forEach(record => {
             record.gameResults.forEach(resultString => {
-                const key = resultString[0];
-                if(!output.hasOwnProperty(key)){
-                    output[key] = 0;
-                }
-                output[key]++;
+                [...resultString].forEach((character, index) => {
+                    output[character][index]++;
+                });
             });
             output.total += record.gameResults.length;
         });
-        [ "W", "L", "D" ].forEach(key => {
-            if(output[key] == undefined) output[key] = 0;
-            output.alwaysZero[key] = (output[key] == 0);
-            output.alwaysMaximum[key] = (output[key] == output.total);
+        gameResultCharacters.forEach(key => {
+            output.alwaysZero[key] = (output[key][0] == 0);
+            output.alwaysMaximum[key] = (output[key][0] == output.total);
         });
         return output
+    }
+
+    function getPopupTextForMatrixField (mainPlayer, secondaryPlayer, count) {
+        const fieldPlayers = [ mainPlayer, secondaryPlayer ].concat(...additionalMatrixDimensionPlayerIds);
+        let output = "";
+        fieldPlayers.forEach((player, matchupPlayerIndex) => {
+            output += `Player ${matchupPlayerIndex+1}: ${player.id}\n`;
+            gameResultCharacters.forEach((character, gameResultCharacterIndex) => {
+                const p = count[character][matchupPlayerIndex] / count.total;
+                if(p == 0 || p == 1){
+                    output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: <b>${(100 * p).toFixed(2)}%</b>\n`;
+                }else{
+                    output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: ${(100 * p).toFixed(2)}%\n`;
+                }
+            });
+        });
+        return output;
     }
 
     function getMatchupRecordsForMatrixField (mainPlayer, secondaryPlayer) {

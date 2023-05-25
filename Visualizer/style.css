@@ -1,4 +1,4 @@
-:not(h1, h2, h3, h4, h5, h6) {
+:not(b, i, h1, h2, h3, h4, h5, h6) {
     font-weight: normal;
     font-size: 10pt;
 }
@@ -78,8 +78,13 @@ label {
     text-align: center;
 }
 
-.fieldLabel {
-    display: inline;
-    font-size: 6pt;
-    font-style: normal;
+.matrixFieldPopup {
+    pointer-events: none;
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    border: 1px solid black;
+    background-color: white;
+    padding: 4px;
+    white-space: pre;
 }
