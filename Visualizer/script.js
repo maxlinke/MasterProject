@@ -226,12 +226,20 @@ document.addEventListener("DOMContentLoaded", () => {
             deterministic: false,
             popupText: "Error"
         };
+        const getNoGamesOutput = (mainPlayer, secondaryPlayer, count) => {
+            return {
+                color: 'transparent',
+                contrastColor: 'transparent',
+                deterministic: false,
+                popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
+            }
+        }
         switch(getCurrentDisplayOption()){
             case matrixWinsOption:
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorOutput;
+                    if(count.total < 1) return getNoGamesOutput(mainPlayer, secondaryPlayer, count);
                     return { 
                         color: `hsl(120, 100%, ${50 * (count["W"][0] / count.total)}%)`, 
                         contrastColor: "#fff",
@@ -243,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorOutput;
+                    if(count.total < 1) return getNoGamesOutput(mainPlayer, secondaryPlayer, count);
                     return {
                         color: `hsl(0, 100%, ${50 * (count["L"][0] / count.total)}%)`, 
                         contrastColor: "#fff",
@@ -255,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorOutput;
+                    if(count.total < 1) return getNoGamesOutput(mainPlayer, secondaryPlayer, count);
                     return {
                         color: `hsl(0, 0%, ${50 * (count["D"][0] / count.total)}%)`,
                         contrastColor: "#fff",
@@ -267,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
-                    if(count.games < 1) return errorOutput;
+                    if(count.total < 1) return getNoGamesOutput(mainPlayer, secondaryPlayer, count);
                     const rawWLRatio = (count["W"][0] - count["L"][0]) / Math.max(1, (count.total - count["D"][0]));
                     const hue = 120 * ((rawWLRatio + 1) / 2);
                     const saturation = 100 * (1 - (count["D"][0] / count.total));
@@ -311,15 +319,20 @@ document.addEventListener("DOMContentLoaded", () => {
         let output = "";
         fieldPlayers.forEach((player, matchupPlayerIndex) => {
             output += `Player ${matchupPlayerIndex+1}: ${player.id}\n`;
-            gameResultCharacters.forEach((character, gameResultCharacterIndex) => {
-                const p = count[character][matchupPlayerIndex] / count.total;
-                if(p == 0 || p == 1){
-                    output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: <b>${(100 * p).toFixed(2)}%</b>\n`;
-                }else{
-                    output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: ${(100 * p).toFixed(2)}%\n`;
-                }
-            });
+            if(count.total > 0){
+                gameResultCharacters.forEach((character, gameResultCharacterIndex) => {
+                    const p = count[character][matchupPlayerIndex] / count.total;
+                    if(p == 0 || p == 1){
+                        output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: <b>${(100 * p).toFixed(2)}%</b>\n`;
+                    }else{
+                        output += `\t${gameResultCharacterMeanings[gameResultCharacterIndex]}: ${(100 * p).toFixed(2)}%\n`;
+                    }
+                });
+            }
         });
+        if(count.total < 1){
+            output += 'No data for matchup';
+        }
         return output;
     }
 

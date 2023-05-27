@@ -54,8 +54,10 @@ public class Program {
         //}
         //game.GetRecord();
 
-        const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
-        const int numberOfGamesToPlay = 500;
+        //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
+        const string continueTournamentId = "";
+        const int numberOfGamesToPlay = 10;
+        const bool playMirrorMatches = false;
 
         Tournament<TTTGame> tournament;
         if (Tournament.TryLoadWinLossDrawRecord(continueTournamentId, out var loadedRecord)) {
@@ -78,7 +80,7 @@ public class Program {
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.5f),
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.8f),
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f),
-        }, numberOfGamesToPlay);
+        }, numberOfGamesToPlay, playMirrorMatches);
         tournament.SaveWinLossDrawRecord();
 
         DataSaver.Flush();

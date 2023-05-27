@@ -36,7 +36,7 @@ namespace MasterProject {
         protected static string GetProjectPathForResult (string id) => $"{ResultsDirectoryName}/{id}.{ResultsFileExtension}";
 
         public static bool TryLoadWinLossDrawRecord (string id, out WinLossDrawRecord output) {
-            if (DataLoader.TryLoadInProject(GetProjectPathForResult(id), out var loadedBytes)) {
+            if (!string.IsNullOrWhiteSpace(id) && DataLoader.TryLoadInProject(GetProjectPathForResult(id), out var loadedBytes)) {
                 output = WinLossDrawRecord.FromJsonBytes(loadedBytes);
                 return true;
             }
@@ -136,7 +136,7 @@ namespace MasterProject {
             return output;
         }
 
-        public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup) {
+        public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup, bool playMirrorMatches) {
             VerifyOnlyOneRun();
             this.agents = agentsToUse.ToArray();
             this.agentIds = new List<string>(agentsToUse.Select((agent) => (agent.Id))).ToArray();
@@ -144,22 +144,31 @@ namespace MasterProject {
             SetupRecord();
             hasRun = true;
             var startTime = System.DateTime.Now;
-            RunRemainingMatches(numberOfGamesPerMatchup, out var moveLimitReachedCounter, out var otherExceptions);
+            RunRemainingMatches(numberOfGamesPerMatchup, playMirrorMatches, out var moveLimitReachedCounter, out var otherExceptions);
             var endTime = System.DateTime.Now;
             IsFinished = true;
             DoEndLogs(endTime - startTime, moveLimitReachedCounter, otherExceptions);
         }
 
-        int CountNumberOfMatchesToRun (int targetRunsPerMatchup) {
+        int CountNumberOfMatchesToRun (int targetRunsPerMatchup, bool playMirrorMatches) {
             var output = 0;
             for (int i = 0; i < record.GetMatchupCount(); i++) {
-                output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup);
+                output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup, playMirrorMatches);
             }
             return output;
         }
 
-        int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup) {
+        int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup, bool playMirrorMatches) {
             var participantIds = record.GetMatchupFromIndex(matchupIndex);
+            if (!playMirrorMatches) {
+                var allIdentical = true;
+                for (int i = 1; i < participantIds.Count; i++) {
+                    allIdentical &= (participantIds[i - 1] == participantIds[i]);
+                }
+                if (allIdentical) {
+                    return 0;
+                }
+            }
             foreach (var id in participantIds) {
                 if (this.agentIds.Contains(id)) {
                     return Math.Max(0, targetRunsPerMatchup - record.GetNumberOfMatchesPlayedInMatchup(matchupIndex));
@@ -168,14 +177,14 @@ namespace MasterProject {
             return 0;
         }
 
-        void RunRemainingMatches (int numberOfGamesPerMatchup, out int moveLimitReachedCounter, out IReadOnlyList<Exception> otherExceptions) {
-            var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup);
+        void RunRemainingMatches (int numberOfGamesPerMatchup, bool playMirrorMatches, out int moveLimitReachedCounter, out IReadOnlyList<Exception> otherExceptions) {
+            var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup, playMirrorMatches);
             var runGameCounter = 0;
             moveLimitReachedCounter = 0;
             otherExceptions = new List<Exception>();
             List<GameRun> gameRuns = new();
             for (int i = 0; i < record.GetMatchupCount(); i++) {
-                var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup);
+                var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup, playMirrorMatches);
                 if (remaining > 0) {
                     var matchupAgentIds = record.GetMatchupFromIndex(i);
                     var agents = new Agent[playersPerGame];
