@@ -20,6 +20,8 @@ namespace MasterProject {
         }
 
         public override string Id => $"{innerAgent.Id}_{(100 * concentration):F2}%";
+        public override bool IsTournamentEligible => innerAgent.IsTournamentEligible;
+        public override bool IsStateless => innerAgent.IsStateless;
 
         public override Agent Clone () {
             var innerClone = (Agent<TGame, TGameState, TMove>)innerAgent.Clone();
@@ -31,10 +33,15 @@ namespace MasterProject {
         }
 
         public override int GetMoveIndex (TGameState gameState, IReadOnlyList<TMove> moves) {
-            var temp = innerAgent.GetMoveIndex(gameState, moves);
-            if (rng.NextDouble() <= concentration)
-                return temp;
-            return GetRandomMoveIndex(moves);
+            var returnRandom = rng.NextDouble() > concentration;
+            var agentMove = (innerAgent.IsStateless && returnRandom)
+                ? default
+                : innerAgent.GetMoveIndex(gameState, moves)
+            ;
+            return returnRandom
+                ? GetRandomMoveIndex(moves)
+                : agentMove
+            ;
         }
 
     }

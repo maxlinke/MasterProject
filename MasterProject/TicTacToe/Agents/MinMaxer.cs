@@ -10,6 +10,10 @@ namespace MasterProject.TicTacToe.Agents {
 
         // uses negamax
 
+        public override bool IsStateless => true;
+
+        public override bool IsTournamentEligible => false;
+
         public override Agent Clone () => new MinMaxer();
 
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {

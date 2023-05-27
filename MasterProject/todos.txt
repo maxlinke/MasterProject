@@ -1,5 +1,4 @@
 ﻿- option for diluted agent (always calculate agent move)
-- option for tournament (no mirror matches)
 - abstract property for agents (tournament-eligible)
 	-> maybe auto-generate a json-file for each game with tournament-eligible bots on app startup
 	-> could use that file in a tournament-configurer-webpage

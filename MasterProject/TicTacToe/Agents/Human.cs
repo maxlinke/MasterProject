@@ -8,6 +8,10 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class Human : TTTAgent {
 
+        public override bool IsStateless => true;
+
+        public override bool IsTournamentEligible => false;
+
         public override Agent Clone () => new Human();
 
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {

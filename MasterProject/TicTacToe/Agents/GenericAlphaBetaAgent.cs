@@ -8,6 +8,10 @@ namespace MasterProject.TicTacToe.Agents {
 
     public abstract class GenericAlphaBetaAgent : TTTAgent {
 
+        public override bool IsStateless => true;
+
+        public override bool IsTournamentEligible => true;
+
         public override int GetMoveIndex (TTTGameState gameState, IReadOnlyList<TTTMove> moves) {
             var ownIndex = gameState.CurrentPlayerIndex;
             var scores = AlphaBetaMinMax.RateMoves(

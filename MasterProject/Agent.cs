@@ -6,15 +6,11 @@ using System.Threading.Tasks;
 
 namespace MasterProject {
 
-    // TODO agentrecord
-    // for rating, number of games played and all that
-    // use a single db-file for all agents?
-    // pros: easy loading in web visulization
-    // pros: only one read and all agents are in memory
-    // cons: probably bad in terms of writing time
-    // cons: easy to corrupt? (version control at least prevents really bad stuff)
-
     public abstract class Agent {
+
+        public abstract bool IsStateless { get; }
+
+        public abstract bool IsTournamentEligible { get; }
 
         public virtual string Id => $"{this.GetType().FullName}";
 

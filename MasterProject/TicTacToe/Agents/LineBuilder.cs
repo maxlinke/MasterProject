@@ -8,6 +8,10 @@ namespace MasterProject.TicTacToe.Agents {
 
     public class LineBuilder : TTTAgent {
 
+        public override bool IsStateless => true;
+
+        public override bool IsTournamentEligible => true;
+
         public override Agent Clone () => new LineBuilder();
 
         public override int GetMoveIndex (TTTGameState gs, IReadOnlyList<TTTMove> moves) {
