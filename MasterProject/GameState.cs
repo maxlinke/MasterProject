@@ -40,6 +40,12 @@ namespace MasterProject {
 
         public abstract IReadOnlyList<TPlayerState> PlayerStates { get; }
 
+        public override bool GetPlayerHasWon (int index) => PlayerStates[index].HasWon;
+
+        public override bool GetPlayerHasLost (int index) => PlayerStates[index].HasLost;
+
+        public override bool GetPlayerHasDrawn (int index) => PlayerStates[index].HasDrawn;
+
     }
 
 }

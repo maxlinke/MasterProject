@@ -164,11 +164,13 @@ namespace MasterProject {
         int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup, bool playMirrorMatches) {
             var participantIds = record.GetMatchupFromIndex(matchupIndex);
             if (!playMirrorMatches) {
-                var allIdentical = true;
-                for (int i = 1; i < participantIds.Count; i++) {
-                    allIdentical &= (participantIds[i - 1] == participantIds[i]);
+                var anyIdentical = false;
+                for (int i = 0; i < participantIds.Count; i++) {
+                    for (int j = i + 1; j < participantIds.Count; j++) {
+                        anyIdentical |= (participantIds[i] == participantIds[j]);
+                    }
                 }
-                if (allIdentical) {
+                if (anyIdentical) {
                     return 0;
                 }
             }
