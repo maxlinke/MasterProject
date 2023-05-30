@@ -20,16 +20,37 @@ public class Program {
     public static void Main (string[] args) {
         //DoTTTTournament();
 
-        var gs = new G44PGameState();
-        gs.Initialize();
-        for (int i = 0; i < G44PGameState.PLAYER_COUNT; i++) {
-            foreach (var fieldIndex in G44PGameState.PlayerHomeRows[i]) {
-                gs.PlacePiece(fieldIndex, i);
-            }
-        }
-        Console.WriteLine(gs.GetPrintableState());
+        //var foo = new int[4];
+        //Console.WriteLine(foo[3]);
+        //var bar = new List<int>(4);
+        //Console.WriteLine(bar[3]);
+
+        TestG44P();
 
         DataSaver.Flush();
+    }
+
+    static void TestG44P () {
+        var gs = new G44PGameState();
+        const int testPlayerIndex = 0;
+        var otherPlayerIndex = (testPlayerIndex + 1) % G44PGameState.PLAYER_COUNT;
+        gs.Initialize(new string[] { "Jim" });
+        foreach (var fieldIndex in G44PGameState.PlayerHomeRows[testPlayerIndex]) {
+            gs.PlacePiece(fieldIndex, testPlayerIndex);
+        }
+        foreach (var fieldIndex in G44PGameState.PlayerHomeRows[otherPlayerIndex]) {
+            gs.PlacePiece(fieldIndex, otherPlayerIndex);
+        }
+        for (int i = 0; i < 10; i++) {
+            Console.WriteLine();
+            Console.WriteLine(gs.ToPrintableString());
+            gs.MovePieces(testPlayerIndex);
+            gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
+            Console.WriteLine();
+            Console.WriteLine(gs.ToPrintableString());
+            gs.MovePieces(otherPlayerIndex);
+            gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
+        }
     }
 
     static void DoTTTTournament () {

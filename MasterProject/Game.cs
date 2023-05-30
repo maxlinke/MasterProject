@@ -89,6 +89,8 @@ namespace MasterProject {
         private readonly List<TGameState> gameStates = new();
         private readonly List<MoveRecord> moveRecords = new();
 
+        protected IReadOnlyList<Agent<TGame, TGameState, TMove>> Agents => agents;
+
         public override int PlayerCount => agents.Count;
 
         public int MoveCounter => moveRecords.Count;
@@ -171,6 +173,7 @@ namespace MasterProject {
                     sw.Stop();
                 } else {
                     sw.Reset();
+                    moves = new TMove[] { default(TMove) }; // game state either needs to always return at least one move or be able to cope with this in case no moves are possible
                     moveIndex = 0;
                     moveTimeout = false;
                 }
@@ -178,11 +181,7 @@ namespace MasterProject {
                     TryLog(ConsoleOutputs.Move, $"Agent {currentAgent.Id} timed out after {sw.ElapsedMilliseconds}ms");
                 }
                 if (moveIndex < 0 || moveIndex >= moves.Count) {
-                    if (moves.Count < 1) {
-                        throw new NotSupportedException("A gamestate must provide at least one move!");
-                    } else {
-                        throw new NotSupportedException($"Invalid move index \"{moveIndex}\" chosen by agent \"{currentAgent.Id}\"!");
-                    }
+                    throw new NotSupportedException($"Invalid move index \"{moveIndex}\" chosen by agent \"{currentAgent.Id}\"!");
                 }
                 var possibleOutcomes = CurrentGameState.GetPossibleOutcomesForMove(moves[moveIndex]);
                 var p = rng.NextDouble();

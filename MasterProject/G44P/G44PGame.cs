@@ -8,7 +8,7 @@
 
         protected override G44PGameState GetInitialGameState () {
             var output = new G44PGameState();
-            output.Initialize();
+            output.Initialize(new List<string>(this.Agents.Select((agent) => agent.Id)));
             return output;
         }
 

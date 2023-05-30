@@ -8,6 +8,17 @@ namespace MasterProject.G44P {
 
     public class G44PGameState : GameState<G44PGameState, G44PMove, G44PPlayerState> {
 
+        // TODO make tests to see if all of this works
+        // start with the basics
+        //  - place a piece for a given player and see how many times it moves before it's gone
+        //  - test the ranking code, i think i can just set the things
+        //  - test the pushing code
+        //      - provide a starting board
+        //      - compare with outcome board
+        //      - also compare scores
+        //  - test that the empty move stuff works
+
+        // TODO are games longer with the reduced board size but same win score?
         public const int WIN_SCORE = 44;
         public const int PLAYER_COUNT = 4;
         public const int BOARD_SIZE = 6;        // reduced from the original 8-size board
@@ -53,18 +64,42 @@ namespace MasterProject.G44P {
             return (i % BOARD_SIZE, i / BOARD_SIZE);
         }
 
+        static bool CheckOffsetLeadsOutOfBounds (int fieldIndex, int offset, out int newFieldIndex) {
+            newFieldIndex = fieldIndex + offset;
+            if (newFieldIndex < 0) {
+                return true;
+            }
+            if (newFieldIndex >= (BOARD_SIZE * BOARD_SIZE)) {
+                return true;
+            }
+            var horizontalMove = Math.Abs(offset) < BOARD_SIZE;
+            if (horizontalMove) {
+                var onLeftEdge = (fieldIndex % BOARD_SIZE) == 0;
+                if (onLeftEdge && offset < 0) {
+                    return true;
+                }
+                var onRightEdge = ((fieldIndex + 1) % BOARD_SIZE) == 0;
+                if (onRightEdge && offset > 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public override IReadOnlyList<G44PPlayerState> PlayerStates => playerStates;
         public override int CurrentPlayerIndex => currentPlayerIndex;
 
         // public for json
         public G44PPlayerState[] playerStates { get; set; }
         public int currentPlayerIndex { get; set; }
+        public byte[] board { get; set; }
 
-        public byte[] board;
+        private string[] playerNames;   // just to make the printable string output a bit more readable ("player 0...3" is a bit hard to gauge when they're different ais and such)
 
-        public void Initialize () {
+        public void Initialize (IReadOnlyList<string> inputPlayerNames) {
             currentPlayerIndex = 0;
             playerStates = new G44PPlayerState[PLAYER_COUNT];
+            playerNames = new string[PLAYER_COUNT];
             for (int i = 0; i < playerStates.Length; i++) {
                 playerStates[i] = new G44PPlayerState() {
                     Points = 0,
@@ -72,6 +107,8 @@ namespace MasterProject.G44P {
                     HasLost = false,
                     HasDrawn = false
                 };
+                playerNames[i] = $"Player {i}{((inputPlayerNames == null || i >= inputPlayerNames.Count) ? "" : $" \"{inputPlayerNames[i]}\"")}";
+                ;
             }
             board = new byte[BOARD_SIZE * BOARD_SIZE];
             Array.Fill(board, EMPTY_FIELD);
@@ -80,6 +117,7 @@ namespace MasterProject.G44P {
         public G44PGameState Clone () {
             var output = new G44PGameState {
                 playerStates = new G44PPlayerState[this.playerStates.Length],
+                playerNames = this.playerNames, // no need to make a proper clone of this
                 board = new byte[this.board.Length]
             };
             for (int i = 0; i < output.playerStates.Length; i++) {
@@ -104,9 +142,6 @@ namespace MasterProject.G44P {
                     output.Add(new G44PMove() { fieldIndex = fieldIndex });
                 }
             }
-            if (output.Count < 1) {
-                output.Add(null);   // gamestate always has to return at least one move
-            }
             return output;
         }
 
@@ -123,44 +158,68 @@ namespace MasterProject.G44P {
             return this;
         }
 
-        // skip all the rotation code
-        // i predict it'll be faster if i just bite the bullet and write a few more lines of code
-        // i can also skip all the dq-logic as that was just a consequence of the multiplayer side of things
-        // here it's just about the strategy
-
-        public G44PGameState GetResultOfMove (G44PMove? move) {
+        public G44PGameState GetResultOfMove (G44PMove move) {
             var clone = this.Clone();
-            if (move != null) {
+            if (move != default(G44PMove)) {
                 clone.PlacePiece(move.fieldIndex, currentPlayerIndex);
             }
             clone.MovePieces(currentPlayerIndex);
-            clone.CheckScoresForGameOver();
+            clone.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
             clone.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             return clone;
         }
 
         public void MovePieces (int movingPlayer) {
-            // TODO
-            // how did this work again?
-            // start from the base line and push all the way through?
-            // do pushed pieces get to move on their own as well?
-            // does it go the other way from the other line?
-            // does it matter? probably not...
-            throw new NotImplementedException();
-        }
-
-        public void CheckScoresForGameOver () {
-            var winnerCount = 0;
-            var winnerScore = WIN_SCORE - 1;
-            foreach (var playerState in PlayerStates) {
-                if (playerState.Points > winnerScore) {
-                    winnerCount = 1;
-                    winnerScore = playerState.Points;
-                }else if (playerState.Points == winnerScore) {
-                    winnerCount ++;
+            var moveIndexOffset = moveIndexOffsets[movingPlayer];
+            if (moveIndexOffset > 0) {  // going in reverse order prevents moving pieces twice. it doesn't matter whether the moves are horizontal or vertical in this case, only whether the offset is positive or negative
+                for (int i = board.Length-1; i >= 0; i--) {
+                    if (board[i] == movingPlayer) {
+                        MovePiece(i, moveIndexOffset);
+                    }
+                }
+            } else {
+                for (int i = 0; i < board.Length; i++) {
+                    if (board[i] == movingPlayer) {
+                        MovePiece(i, moveIndexOffset);
+                    }
                 }
             }
-            if (winnerCount > 0) {
+        }
+
+        public void RecalculatePlayerRanksAndUpdateWinnerIfApplicable () {
+            var rankScores = new List<int>(PLAYER_COUNT);
+            var rankScoreCounters = new List<int>(PLAYER_COUNT);
+            foreach (var playerState in PlayerStates) {
+                var processed = false;
+                for(int i=0; i<rankScores.Count; i++){
+                    if (playerState.Points > rankScores[i]) {
+                        rankScores.Insert(i, playerState.Points);
+                        rankScoreCounters.Insert(i, 1);
+                        processed = true;
+                        break;
+                    } else if (playerState.Points == rankScores[i]) {
+                        rankScoreCounters[i]++;
+                        processed = true;
+                        break;
+                    }
+                }
+                if (!processed) {
+                    rankScores.Add(playerState.Points);
+                    rankScoreCounters.Add(1);
+                }
+            }
+            var rank = 0;
+            for (int i = 0; i < rankScores.Count; i++) {
+                foreach (var playerState in PlayerStates) {
+                    if (playerState.Points == rankScores[i]) {
+                        playerState.Rank = rank;
+                    }
+                }
+                rank += rankScoreCounters[i];
+            }
+            if (rankScores[0] >= WIN_SCORE) {
+                var winnerScore = rankScores[0];
+                var winnerCount = rankScoreCounters[0];
                 foreach (var playerState in PlayerStates) {
                     if (playerState.Points == winnerScore) {
                         playerState.HasWon = (winnerCount == 1);
@@ -176,30 +235,54 @@ namespace MasterProject.G44P {
             PlacePiece(CoordToFieldIndex(coord.x, coord.y), playerIndex);
         }
 
-        // i can use this in the recursive move function
-        // where i start the move call with a piece
-        // and this call checks if the target tile is empty and if not, it calls move on that tile and afterwards it sets itself where it used to be and removes itself from where it was
         public void PlacePiece (int fieldIndex, int playerIndex) {
             if (board[fieldIndex] != EMPTY_FIELD) {
                 var coord = FieldIndexToCoord(fieldIndex);
                 throw new InvalidOperationException($"Can't place piece for player \"{playerIndex}\" at ({coord.x}, {coord.y}) as there's already a piece from player \"{board[fieldIndex]}\" at that location!");
             }
             board[fieldIndex] = (byte)playerIndex;
-            // could count pieces here
         }
 
         public void MovePiece (int fieldIndex, int offset) {
-            if (board[fieldIndex] == EMPTY_FIELD) {
+            var piecePlayer = board[fieldIndex];
+            if (piecePlayer == EMPTY_FIELD) {
                 var coord = FieldIndexToCoord(fieldIndex);
                 throw new InvalidOperationException($"Can't move piece at ({coord.x}, {coord.y}) as there's nothing to move at that location!");
             }
-            // recursive loop, manage score in here
-            throw new NotImplementedException();
+            board[fieldIndex] = EMPTY_FIELD;
+            if (CheckOffsetLeadsOutOfBounds(fieldIndex, offset, out var newFieldIndex)) {
+                return;
+            }
+            var newFieldPlayer = board[newFieldIndex];
+            if (newFieldPlayer != EMPTY_FIELD) {
+                if (newFieldPlayer != piecePlayer) {
+                    playerStates[piecePlayer].Points++;
+                }
+                MovePiece(newFieldIndex, offset);
+            }
+            board[newFieldIndex] = piecePlayer;
         }
 
-        public string GetPrintableState () {
+        // piece counting is done this way as it means less work when calculating new game states
+        // piece counts are only evaluated by SOME bots at leaf nodes in the game tree anyways
+        public int CountNumberOfPiecesByPlayerIndex (int playerIndex) {
+            var output = 0;
+            for (int i = 0; i < board.Length; i++) {
+                if (board[i] == playerIndex) output++;
+            }
+            return output;
+        }
+
+        public string ToPrintableString () {
             var sb = new System.Text.StringBuilder();
             var outputLineCount = Math.Max(BOARD_SIZE, PLAYER_COUNT);
+            var sortedPlayers = new List<(G44PPlayerState state, string name)>();
+            var longestNameLength = 0;
+            for (int i = 0; i < PLAYER_COUNT; i++) {
+                sortedPlayers.Add((PlayerStates[i], playerNames[i]));
+                longestNameLength = Math.Max(longestNameLength, playerNames[i].Length);
+            }
+            sortedPlayers.Sort((a, b) => a.state.Rank - b.state.Rank);
             for (int i = 0; i < outputLineCount; i++) {
                 if (i < BOARD_SIZE) {
                     for (int j = 0; j < BOARD_SIZE; j++) {
@@ -214,13 +297,11 @@ namespace MasterProject.G44P {
                     sb.Append(new string(' ', BOARD_SIZE * 2));
                 }
                 if (i < PLAYER_COUNT) {
-                    sb.Append($"   Player {i}: {playerStates[i].Points}");
+                    var player = sortedPlayers[i];
+                    sb.Append($"   #{player.state.Rank + 1} {player.name}{new string(' ', longestNameLength - player.name.Length)} : {player.state.Points} Pts.");
                 }
                 sb.AppendLine();
             }
-            // TODO
-            // scores (and dq)
-            // board (use the coordtoindex lookup)
             return sb.ToString();
         }
 

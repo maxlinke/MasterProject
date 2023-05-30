@@ -10,6 +10,8 @@ namespace MasterProject.G44P {
 
         public int Points { get; set; }
 
+        public int Rank { get; set; }
+
     }
 
 }
