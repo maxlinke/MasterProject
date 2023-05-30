@@ -140,7 +140,7 @@ namespace MasterProject {
             return output;
         }
 
-        public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup, bool playMirrorMatches) {
+        public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup, IMatchupFilter matchupFilter) {
             VerifyOnlyOneRun();
             this.agents = agentsToUse.ToArray();
             this.agentIds = new List<string>(agentsToUse.Select((agent) => (agent.Id))).ToArray();
@@ -148,31 +148,23 @@ namespace MasterProject {
             SetupRecord();
             hasRun = true;
             startTime = System.DateTime.Now;
-            RunRemainingMatches(numberOfGamesPerMatchup, playMirrorMatches, out var moveLimitReachedCounter, out var otherExceptions);
+            RunRemainingMatches(numberOfGamesPerMatchup, matchupFilter, out var moveLimitReachedCounter, out var otherExceptions);
             IsFinished = true;
             DoEndLogs(moveLimitReachedCounter, otherExceptions);
         }
 
-        int CountNumberOfMatchesToRun (int targetRunsPerMatchup, bool playMirrorMatches) {
+        int CountNumberOfMatchesToRun (int targetRunsPerMatchup, IMatchupFilter matchupFilter) {
             var output = 0;
             for (int i = 0; i < record.GetMatchupCount(); i++) {
-                output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup, playMirrorMatches);
+                output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup, matchupFilter);
             }
             return output;
         }
 
-        int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup, bool playMirrorMatches) {
+        int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup, IMatchupFilter matchupFilter) {
             var participantIds = record.GetMatchupFromIndex(matchupIndex);
-            if (!playMirrorMatches) {
-                var anyIdentical = false;
-                for (int i = 0; i < participantIds.Count; i++) {
-                    for (int j = i + 1; j < participantIds.Count; j++) {
-                        anyIdentical |= (participantIds[i] == participantIds[j]);
-                    }
-                }
-                if (anyIdentical) {
-                    return 0;
-                }
+            if (matchupFilter.PreventMatchup(participantIds)){
+                return 0;
             }
             foreach (var id in participantIds) {
                 if (this.agentIds.Contains(id)) {
@@ -182,14 +174,14 @@ namespace MasterProject {
             return 0;
         }
 
-        void RunRemainingMatches (int numberOfGamesPerMatchup, bool playMirrorMatches, out int moveLimitReachedCounter, out IReadOnlyList<Exception> otherExceptions) {
-            var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup, playMirrorMatches);
+        void RunRemainingMatches (int numberOfGamesPerMatchup, IMatchupFilter matchupFilter, out int moveLimitReachedCounter, out IReadOnlyList<Exception> otherExceptions) {
+            var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup, matchupFilter);
             var runGameCounter = 0;
             moveLimitReachedCounter = 0;
             otherExceptions = new List<Exception>();
             List<GameRun> gameRuns = new();
             for (int i = 0; i < record.GetMatchupCount(); i++) {
-                var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup, playMirrorMatches);
+                var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup, matchupFilter);
                 if (remaining > 0) {
                     var matchupAgentIds = record.GetMatchupFromIndex(i);
                     var agents = new Agent[playersPerGame];

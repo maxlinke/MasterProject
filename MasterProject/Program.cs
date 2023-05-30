@@ -20,11 +20,6 @@ public class Program {
     public static void Main (string[] args) {
         //DoTTTTournament();
 
-        //var foo = new int[4];
-        //Console.WriteLine(foo[3]);
-        //var bar = new List<int>(4);
-        //Console.WriteLine(bar[3]);
-
         TestG44P();
 
         DataSaver.Flush();
@@ -56,8 +51,8 @@ public class Program {
     static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 100;
-        const bool playMirrorMatches = false;
+        const int numberOfGamesToPlay = 10;
+        var filter = MatchupFilter.AllowAllMatchups;
 
         Tournament<TTTGame> tournament;
         if (Tournament.TryLoadWinLossDrawRecord(continueTournamentId, out var loadedRecord)) {
@@ -80,8 +75,8 @@ public class Program {
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.5f),
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.8f),
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f),
-        }, numberOfGamesToPlay, playMirrorMatches);
-        //tournament.SaveWinLossDrawRecord();
+        }, numberOfGamesToPlay, filter);
+        tournament.SaveWinLossDrawRecord();
     }
 
 }

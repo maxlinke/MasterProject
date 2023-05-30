@@ -173,7 +173,9 @@ namespace MasterProject {
                     sw.Stop();
                 } else {
                     sw.Reset();
-                    moves = new TMove[] { default(TMove) }; // game state either needs to always return at least one move or be able to cope with this in case no moves are possible
+                    if (moves.Count < 1) {
+                        moves = new TMove[] { default(TMove) }; // game state either needs to always return at least one move or be able to cope with this in case no moves are possible
+                    }
                     moveIndex = 0;
                     moveTimeout = false;
                 }
