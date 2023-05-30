@@ -8,7 +8,7 @@ namespace MasterProject.G44P {
 
     public class G44PPlayerState : PlayerState {
 
-        public int points { get; set; }
+        public int Points { get; set; }
 
     }
 

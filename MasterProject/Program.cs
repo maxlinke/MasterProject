@@ -3,6 +3,7 @@
 using MasterProject;
 using MasterProject.TicTacToe;
 using MasterProject.TicTacToe.Agents;
+using MasterProject.G44P;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,6 +18,21 @@ public class Program {
     }
 
     public static void Main (string[] args) {
+        //DoTTTTournament();
+
+        var gs = new G44PGameState();
+        gs.Initialize();
+        for (int i = 0; i < G44PGameState.PLAYER_COUNT; i++) {
+            foreach (var fieldIndex in G44PGameState.PlayerHomeRows[i]) {
+                gs.PlacePiece(fieldIndex, i);
+            }
+        }
+        Console.WriteLine(gs.GetPrintableState());
+
+        DataSaver.Flush();
+    }
+
+    static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
         const int numberOfGamesToPlay = 100;
@@ -45,8 +61,6 @@ public class Program {
             new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new ABWinFast(), 0.9f),
         }, numberOfGamesToPlay, playMirrorMatches);
         //tournament.SaveWinLossDrawRecord();
-
-        DataSaver.Flush();
     }
 
 }

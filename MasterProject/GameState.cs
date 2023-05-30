@@ -46,6 +46,18 @@ namespace MasterProject {
 
         public override bool GetPlayerHasDrawn (int index) => PlayerStates[index].HasDrawn;
 
+        public override bool GameOver {
+            get {
+                var setStateCount = 0;
+                foreach (var playerState in PlayerStates) {
+                    if (playerState.HasWon || playerState.HasLost || playerState.HasDrawn) {
+                        setStateCount++;
+                    }
+                }
+                return setStateCount >= PlayerStates.Count;
+            }
+        }
+
     }
 
 }
