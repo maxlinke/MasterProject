@@ -91,6 +91,10 @@ namespace MasterProject {
 
         protected IReadOnlyList<Agent<TGame, TGameState, TMove>> Agents => agents;
 
+        protected IReadOnlyList<TGameState> GameStates => gameStates;
+
+        protected IReadOnlyList<MoveRecord> MoveRecords => moveRecords;
+
         public override int PlayerCount => agents.Count;
 
         public int MoveCounter => moveRecords.Count;
@@ -131,6 +135,16 @@ namespace MasterProject {
             }
         }
 
+        protected virtual void OnGameStarted () { }
+
+        protected virtual void OnBeforeMoveChosen (int agentIndex, IReadOnlyList<TMove> moves) { }
+
+        protected virtual void OnAfterMoveChosen (int agentIndex, IReadOnlyList<TMove> moves, int chosenMove) { }
+
+        protected virtual void OnGameStateUpdated () { }
+
+        protected virtual void OnGameOver () { }
+
         protected override async Task Run (IEnumerable<Agent> agentsTouse) {
             VerifyOnlyOneRun();
             TrySetAgents(agentsTouse);
@@ -142,14 +156,16 @@ namespace MasterProject {
             foreach (var agent in agents) {
                 agent.OnGameStarted((TGame)this);
             }
+            OnGameStarted();
             while (!CurrentGameState.GameOver) {
                 if (MoveLimitReached) {
                     throw new MoveLimitReachedException();
                 }
                 TryLog(ConsoleOutputs.Move, $"Move {MoveCounter}");
                 var currentAgent = agents[CurrentGameState.CurrentPlayerIndex];
-                TryLog(ConsoleOutputs.Move, $"Turn of player {CurrentGameState.CurrentPlayerIndex} ({currentAgent.GetType()})");
                 var moves = CurrentGameState.GetPossibleMovesForCurrentPlayer();
+                TryLog(ConsoleOutputs.Move, $"Turn of player {CurrentGameState.CurrentPlayerIndex} ({currentAgent.GetType()}) (Num. available moves: {moves.Count})");
+                OnBeforeMoveChosen(CurrentGameState.CurrentPlayerIndex, moves);
                 int moveIndex;
                 bool moveTimeout; 
                 if (moves.Count > 1) {
@@ -185,6 +201,7 @@ namespace MasterProject {
                 if (moveIndex < 0 || moveIndex >= moves.Count) {
                     throw new NotSupportedException($"Invalid move index \"{moveIndex}\" chosen by agent \"{currentAgent.Id}\"!");
                 }
+                OnAfterMoveChosen(CurrentGameState.CurrentPlayerIndex, moves, moveIndex);
                 var possibleOutcomes = CurrentGameState.GetPossibleOutcomesForMove(moves[moveIndex]);
                 var p = rng.NextDouble();
                 var newGameStateIndex = -1;
@@ -203,9 +220,11 @@ namespace MasterProject {
                 });
                 gameStates.Add(CurrentGameState);
                 CurrentGameState = possibleOutcomes[newGameStateIndex].GameState;
+                OnGameStateUpdated();
             }
             gameStates.Add(CurrentGameState);
             TryLog(ConsoleOutputs.GameOver, "Game Over");
+            OnGameOver();
         }
 
         public override GameRecord GetRecord () {

@@ -24,6 +24,7 @@ namespace MasterProject.G44P {
         public const int BOARD_SIZE = 6;        // reduced from the original 8-size board
         public const byte EMPTY_FIELD = 255;
         private static readonly int[][] playerHomeRows;
+        private static readonly G44PMove[][] playerMoves;
         private static readonly int[] moveIndexOffsets;
 
         public static IReadOnlyList<IReadOnlyList<int>> PlayerHomeRows => playerHomeRows;
@@ -36,6 +37,7 @@ namespace MasterProject.G44P {
                 CoordToFieldIndex(0, BOARD_SIZE - 1)
             };
             playerHomeRows = new int[PLAYER_COUNT][];
+            playerMoves = new G44PMove[PLAYER_COUNT][];
             moveIndexOffsets = new int[PLAYER_COUNT];
             for (int i = 0; i < PLAYER_COUNT; i++) {
                 var rightCornerCoords = FieldIndexToCoord(corners[i]);
@@ -43,11 +45,13 @@ namespace MasterProject.G44P {
                 var dx = Math.Sign(leftCornerCoords.x - rightCornerCoords.x);
                 var dy = Math.Sign(leftCornerCoords.y - rightCornerCoords.y);
                 playerHomeRows[i] = new int[BOARD_SIZE - 2];
+                playerMoves[i] = new G44PMove[BOARD_SIZE - 2];
                 for (int j = 0; j < playerHomeRows[i].Length; j++) {;
                     playerHomeRows[i][j] = CoordToFieldIndex(
                         rightCornerCoords.x + ((j + 1) * dx),
                         rightCornerCoords.y + ((j + 1) * dy)
                     );
+                    playerMoves[i][j] = new G44PMove() { fieldIndex = playerHomeRows[i][j] };
                 }
                 var nextLeftCorner = FieldIndexToCoord(corners[(i + 2) % corners.Length]);
                 var moveDx = Math.Sign(nextLeftCorner.x - leftCornerCoords.x);
@@ -136,13 +140,7 @@ namespace MasterProject.G44P {
         }
 
         public override IReadOnlyList<G44PMove> GetPossibleMovesForCurrentPlayer () {
-            var output = new List<G44PMove>();
-            foreach (var fieldIndex in playerHomeRows[currentPlayerIndex]) {
-                if (board[fieldIndex] == EMPTY_FIELD) {
-                    output.Add(new G44PMove() { fieldIndex = fieldIndex });
-                }
-            }
-            return output;
+            return playerMoves[currentPlayerIndex];
         }
 
         public override IReadOnlyList<PossibleOutcome<G44PGameState>> GetPossibleOutcomesForMove (G44PMove move) {
@@ -160,10 +158,10 @@ namespace MasterProject.G44P {
 
         public G44PGameState GetResultOfMove (G44PMove move) {
             var clone = this.Clone();
-            if (move != default(G44PMove)) {
-                clone.PlacePiece(move.fieldIndex, currentPlayerIndex);
-            }
             clone.MovePieces(currentPlayerIndex);
+            if (move != default(G44PMove)) {
+                clone.PlacePiece(move.fieldIndex, moveIndexOffsets[currentPlayerIndex], currentPlayerIndex);
+            }
             clone.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
             clone.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             return clone;
@@ -231,14 +229,16 @@ namespace MasterProject.G44P {
             }
         }
 
-        public void PlacePiece ((int x, int y) coord, int playerIndex) {
-            PlacePiece(CoordToFieldIndex(coord.x, coord.y), playerIndex);
+        public void PlacePiece ((int x, int y) coord, int offset, int playerIndex) {
+            PlacePiece(CoordToFieldIndex(coord.x, coord.y), offset, playerIndex);
         }
 
-        public void PlacePiece (int fieldIndex, int playerIndex) {
+        public void PlacePiece (int fieldIndex, int offset, int playerIndex) {
             if (board[fieldIndex] != EMPTY_FIELD) {
-                var coord = FieldIndexToCoord(fieldIndex);
-                throw new InvalidOperationException($"Can't place piece for player \"{playerIndex}\" at ({coord.x}, {coord.y}) as there's already a piece from player \"{board[fieldIndex]}\" at that location!");
+                if (board[fieldIndex] != playerIndex) {
+                    playerStates[playerIndex].Points++;
+                }
+                MovePiece(fieldIndex, offset);
             }
             board[fieldIndex] = (byte)playerIndex;
         }
@@ -250,17 +250,9 @@ namespace MasterProject.G44P {
                 throw new InvalidOperationException($"Can't move piece at ({coord.x}, {coord.y}) as there's nothing to move at that location!");
             }
             board[fieldIndex] = EMPTY_FIELD;
-            if (CheckOffsetLeadsOutOfBounds(fieldIndex, offset, out var newFieldIndex)) {
-                return;
+            if (!CheckOffsetLeadsOutOfBounds(fieldIndex, offset, out var newFieldIndex)) {
+                PlacePiece(newFieldIndex, offset, piecePlayer);
             }
-            var newFieldPlayer = board[newFieldIndex];
-            if (newFieldPlayer != EMPTY_FIELD) {
-                if (newFieldPlayer != piecePlayer) {
-                    playerStates[piecePlayer].Points++;
-                }
-                MovePiece(newFieldIndex, offset);
-            }
-            board[newFieldIndex] = piecePlayer;
         }
 
         // piece counting is done this way as it means less work when calculating new game states
@@ -273,9 +265,13 @@ namespace MasterProject.G44P {
             return output;
         }
 
-        public string ToPrintableString () {
+        public string ToPrintableString (bool appendScores) {
+            return ToPrintableString(-1, -1, appendScores);
+        }
+
+        public string ToPrintableString (int moveMarkPlayer, int moveMarkField, bool appendScores) {
             var sb = new System.Text.StringBuilder();
-            var outputLineCount = Math.Max(BOARD_SIZE, PLAYER_COUNT);
+            var outputLineCount = Math.Max(BOARD_SIZE + 1, (appendScores ? PLAYER_COUNT : 0));
             var sortedPlayers = new List<(G44PPlayerState state, string name)>();
             var longestNameLength = 0;
             for (int i = 0; i < PLAYER_COUNT; i++) {
@@ -283,7 +279,25 @@ namespace MasterProject.G44P {
                 longestNameLength = Math.Max(longestNameLength, playerNames[i].Length);
             }
             sortedPlayers.Sort((a, b) => a.state.Rank - b.state.Rank);
+            var preRow = GetMarkerArray();
+            var postRow = GetMarkerArray();
+            var preColumn = GetMarkerArray();
+            var postColumn = GetMarkerArray();
+            if (moveMarkPlayer != -1 && moveMarkField != -1) {
+                var coords = FieldIndexToCoord(moveMarkField);
+                switch (moveMarkPlayer) {
+                    case 0: preRow[coords.x] =     'v'; break;
+                    case 1: postColumn[coords.y] = '<'; break;
+                    case 2: postRow[coords.x] =    '^'; break;
+                    case 3: preColumn[coords.y] =  '>'; break;
+                }
+            }
+            sb.Append("  ");
+            foreach (var c in preRow) sb.Append($"{c} ");
+            sb.AppendLine();
             for (int i = 0; i < outputLineCount; i++) {
+                if (i < preColumn.Length) sb.Append($"{preColumn[i]} ");
+                else sb.Append("  ");
                 if (i < BOARD_SIZE) {
                     for (int j = 0; j < BOARD_SIZE; j++) {
                         var fieldIndex = CoordToFieldIndex(j, i);
@@ -293,16 +307,31 @@ namespace MasterProject.G44P {
                             sb.Append($"{board[fieldIndex]} ");
                         }
                     }
+                    if (i < postColumn.Length) sb.Append($"{postColumn[i]} ");
+                    else sb.Append("  ");
                 } else {
-                    sb.Append(new string(' ', BOARD_SIZE * 2));
+                    if (i == BOARD_SIZE) {
+                        foreach (var c in postRow) sb.Append($"{c} ");
+                    } else {
+                        sb.Append(new string(' ', BOARD_SIZE * 2));
+                    }
+                    sb.Append("  ");
                 }
-                if (i < PLAYER_COUNT) {
+                if (i < PLAYER_COUNT && appendScores) {
                     var player = sortedPlayers[i];
-                    sb.Append($"   #{player.state.Rank + 1} {player.name}{new string(' ', longestNameLength - player.name.Length)} : {player.state.Points} Pts.");
+                    sb.Append($"#{player.state.Rank + 1} {player.name}{new string(' ', longestNameLength - player.name.Length)} : {player.state.Points} Pts.");
                 }
                 sb.AppendLine();
             }
             return sb.ToString();
+
+            char[] GetMarkerArray () {
+                var output = new char[BOARD_SIZE];
+                for (int i = 0; i < BOARD_SIZE; i++) {
+                    output[i] = ' ';
+                }
+                return output;
+            }
         }
 
     }
