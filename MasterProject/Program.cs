@@ -24,6 +24,11 @@ public class Program {
         DataSaver.Flush();
     }
 
+    // TODO option for game log files
+    // TODO option for tournament log files
+    // TODO non-optional tournament error log files
+    // TODO make the visualizer adapt to a higher player count by not having 50% hardcoded as neutral but dependent on the player count per matchup with 25% being neutral for 4 players for example
+
     static void TestG44P () {
         //var gs = new G44PGameState();
         //const int testPlayerIndex = 0;
@@ -48,14 +53,19 @@ public class Program {
         DoTournament<G44PGame>(
             continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 1,
+            numberOfGamesToPlay: 250,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
-                new MasterProject.G44P.Agents.RandomAgent()
+                new MasterProject.G44P.Agents.RandomAgent(),
+                new MasterProject.G44P.Agents.Random2x(),
+                new MasterProject.G44P.Agents.ZigZag(),
+                new MasterProject.G44P.Agents.ZagZig(),
+                new MasterProject.G44P.Agents.OnlyFirst(),
+                new MasterProject.G44P.Agents.OnlyLast(),
             },
-            saveResult: false,
+            saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
+                //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
     }

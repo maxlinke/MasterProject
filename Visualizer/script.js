@@ -315,10 +315,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getPopupTextForMatrixField (mainPlayer, secondaryPlayer, count) {
-        const fieldPlayers = [ mainPlayer, secondaryPlayer ].concat(...additionalMatrixDimensionPlayerIds);
+        const fieldPlayers = [ mainPlayer.id, secondaryPlayer.id ].concat(...additionalMatrixDimensionPlayerIds);
         let output = "";
         fieldPlayers.forEach((player, matchupPlayerIndex) => {
-            output += `Player ${matchupPlayerIndex+1}: ${player.id}\n`;
+            output += `Player ${matchupPlayerIndex+1}: ${player}\n`;
             if(count.total > 0){
                 gameResultCharacters.forEach((character, gameResultCharacterIndex) => {
                     const p = count[character][matchupPlayerIndex] / count.total;
