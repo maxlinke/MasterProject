@@ -156,14 +156,23 @@ namespace MasterProject.G44P {
             return this;
         }
 
+        // it makes more sense to first move the pieces of the playing player and then insert that players piece
+        // and then update the winner and potentially end the game
+        // however
+        // when doing game-tree search, each time a move is analyzed, the piece movement before the different inserts is the same, wasting time
+        // to speed up that process, the piece moving of the next player can be done after inserting one's own piece
+        // since the board starts empty, this does not disadvantage the first player
+        // the only drawback of this is that it is slightly confusing to debug visually and scores may already be at or above 44, with nobody having won, since the next turn hasn't happened yet
         public G44PGameState GetResultOfMove (G44PMove move) {
             var clone = this.Clone();
-            clone.MovePieces(currentPlayerIndex);
             if (move != default(G44PMove)) {
                 clone.PlacePiece(move.fieldIndex, moveIndexOffsets[currentPlayerIndex], currentPlayerIndex);
             }
-            clone.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
-            clone.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
+            clone.RecalculatePlayerRanksAndUpdateWinnerIfApplicable(out var gameOverNow);
+            if (!gameOverNow) {
+                clone.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
+                clone.MovePieces(clone.currentPlayerIndex);
+            }
             return clone;
         }
 
@@ -184,7 +193,7 @@ namespace MasterProject.G44P {
             }
         }
 
-        public void RecalculatePlayerRanksAndUpdateWinnerIfApplicable () {
+        public void RecalculatePlayerRanksAndUpdateWinnerIfApplicable (out bool outputGameOver) {
             var rankScores = new List<int>(PLAYER_COUNT);
             var rankScoreCounters = new List<int>(PLAYER_COUNT);
             foreach (var playerState in PlayerStates) {
@@ -226,6 +235,9 @@ namespace MasterProject.G44P {
                         playerState.HasLost = true;
                     }
                 }
+                outputGameOver = true;
+            } else {
+                outputGameOver = false;
             }
         }
 

@@ -15,7 +15,7 @@ namespace MasterProject.G44P.Agents {
         // also i tried using an int? instead of bool and int and that worked, but SOMETIMES failed when running a massive number of games asynchronously
         // as in, i did a "HasValue" check, which returned true, but when i actually GOT the value, all i got was an InvalidOperationException telling me there was no value
         // but even the debugger showed there being a value
-        // i looked this up online and it seems to be a known issue
+        // i looked this up online and it seems to be a known issue https://stackoverflow.com/questions/33340308/invalidoperationexception-after-checking-for-null-in-async-actionresult
         // so the primitive solution it is...
 
         public override bool IsStateless => false;

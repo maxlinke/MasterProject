@@ -53,19 +53,19 @@ public class Program {
         DoTournament<G44PGame>(
             continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 250,
+            numberOfGamesToPlay: 1,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
                 new MasterProject.G44P.Agents.RandomAgent(),
-                new MasterProject.G44P.Agents.Random2x(),
-                new MasterProject.G44P.Agents.ZigZag(),
-                new MasterProject.G44P.Agents.ZagZig(),
-                new MasterProject.G44P.Agents.OnlyFirst(),
-                new MasterProject.G44P.Agents.OnlyLast(),
+                //new MasterProject.G44P.Agents.Random2x(),
+                //new MasterProject.G44P.Agents.ZigZag(),
+                //new MasterProject.G44P.Agents.ZagZig(),
+                //new MasterProject.G44P.Agents.OnlyFirst(),
+                //new MasterProject.G44P.Agents.OnlyLast(),
             },
-            saveResult: true,
+            saveResult: false,
             onBeforeRun: (tournament) => {
-                //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
+                tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
     }
