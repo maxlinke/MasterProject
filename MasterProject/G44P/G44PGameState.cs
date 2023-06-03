@@ -24,6 +24,7 @@ namespace MasterProject.G44P {
         public const int BOARD_SIZE = 6;        // reduced from the original 8-size board
         public const byte EMPTY_FIELD = 255;
         private static readonly int[][] playerHomeRows;
+        private static readonly (int x, int y)[][] playerHomeRowCoords;
         private static readonly G44PMove[][] playerMoves;
         private static readonly int[] moveIndexOffsets;
 
@@ -37,6 +38,7 @@ namespace MasterProject.G44P {
                 CoordToFieldIndex(0, BOARD_SIZE - 1)
             };
             playerHomeRows = new int[PLAYER_COUNT][];
+            playerHomeRowCoords = new (int x, int y)[PLAYER_COUNT][];
             playerMoves = new G44PMove[PLAYER_COUNT][];
             moveIndexOffsets = new int[PLAYER_COUNT];
             for (int i = 0; i < PLAYER_COUNT; i++) {
@@ -45,12 +47,14 @@ namespace MasterProject.G44P {
                 var dx = Math.Sign(leftCornerCoords.x - rightCornerCoords.x);
                 var dy = Math.Sign(leftCornerCoords.y - rightCornerCoords.y);
                 playerHomeRows[i] = new int[BOARD_SIZE - 2];
+                playerHomeRowCoords[i] = new (int x, int y)[BOARD_SIZE - 2];
                 playerMoves[i] = new G44PMove[BOARD_SIZE - 2];
-                for (int j = 0; j < playerHomeRows[i].Length; j++) {;
-                    playerHomeRows[i][j] = CoordToFieldIndex(
-                        rightCornerCoords.x + ((j + 1) * dx),
-                        rightCornerCoords.y + ((j + 1) * dy)
+                for (int j = 0; j < playerHomeRows[i].Length; j++) {
+                    playerHomeRowCoords[i][j] = (
+                        x: rightCornerCoords.x + ((j + 1) * dx),
+                        y: rightCornerCoords.y + ((j + 1) * dy)
                     );
+                    playerHomeRows[i][j] = CoordToFieldIndex(playerHomeRowCoords[i][j]);
                     playerMoves[i][j] = new G44PMove() { fieldIndex = playerHomeRows[i][j] };
                 }
                 var nextLeftCorner = FieldIndexToCoord(corners[(i + 2) % corners.Length]);
@@ -62,6 +66,10 @@ namespace MasterProject.G44P {
 
         static int CoordToFieldIndex (int x, int y) {
             return (y * BOARD_SIZE) + x;
+        }
+
+        static int CoordToFieldIndex ((int x, int y) coord) {
+            return CoordToFieldIndex(coord.x, coord.y);
         }
 
         static (int x, int y) FieldIndexToCoord (int i) {
@@ -281,6 +289,10 @@ namespace MasterProject.G44P {
             return ToPrintableString(-1, -1, appendScores);
         }
 
+        public string ToPrintableString (int markPlayer, bool appendScores) {
+            return ToPrintableString(markPlayer, -1, appendScores);
+        }
+
         public string ToPrintableString (int moveMarkPlayer, int moveMarkField, bool appendScores) {
             var sb = new System.Text.StringBuilder();
             var outputLineCount = Math.Max(BOARD_SIZE + 1, (appendScores ? PLAYER_COUNT : 0));
@@ -295,13 +307,18 @@ namespace MasterProject.G44P {
             var postRow = GetMarkerArray();
             var preColumn = GetMarkerArray();
             var postColumn = GetMarkerArray();
-            if (moveMarkPlayer != -1 && moveMarkField != -1) {
-                var coords = FieldIndexToCoord(moveMarkField);
+            if (moveMarkPlayer != -1) {
+                (int x, int y)[] coords;
+                if (moveMarkField != -1) {
+                    coords = new (int x, int y)[] { FieldIndexToCoord(moveMarkField) };
+                } else {
+                    coords = playerHomeRowCoords[moveMarkPlayer];
+                }
                 switch (moveMarkPlayer) {
-                    case 0: preRow[coords.x] =     'v'; break;
-                    case 1: postColumn[coords.y] = '<'; break;
-                    case 2: postRow[coords.x] =    '^'; break;
-                    case 3: preColumn[coords.y] =  '>'; break;
+                    case 0: foreach(var coord in coords) preRow[coord.x] =     'v'; break;
+                    case 1: foreach(var coord in coords) postColumn[coord.y] = '<'; break;
+                    case 2: foreach(var coord in coords) postRow[coord.x] =    '^'; break;
+                    case 3: foreach(var coord in coords) preColumn[coord.y] =  '>'; break;
                 }
             }
             sb.Append("  ");

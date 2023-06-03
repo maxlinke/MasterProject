@@ -20,7 +20,7 @@
             var latestMoveField = ((G44PMove)(latestMoveRecord.AvailableMoves[latestMoveRecord.ChosenMoveIndex])).fieldIndex;
             var log = previousGameState.ToPrintableString(previousPlayerIndex, latestMoveField, false);
             log = log.HorizontalConcat("\n\n\n ->  ".Replace("\n", System.Environment.NewLine));
-            log = log.HorizontalConcat(CurrentGameState.ToPrintableString(true));
+            log = log.HorizontalConcat(CurrentGameState.ToPrintableString(CurrentGameState.CurrentPlayerIndex, true));
             TryDebugLog($"\n{log}\n");
         }
 
