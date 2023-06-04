@@ -29,6 +29,11 @@ public class Program {
     // TODO non-optional tournament error log files
     // TODO make the visualizer adapt to a higher player count by not having 50% hardcoded as neutral but dependent on the player count per matchup with 25% being neutral for 4 players for example
 
+    // TODO continue the previous g44p tournament with a depth 4 and depth 8 simple ab agent
+    // then add more ab agents and play more
+    // then do the whole machine learning thing
+    // and finally put the winner of that into the tournament as well and see the performance of that compared to explicit solutions
+
     static void TestG44P () {
         //var gs = new G44PGameState();
         //const int testPlayerIndex = 0;
@@ -53,7 +58,7 @@ public class Program {
         DoTournament<G44PGame>(
             continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 1,
+            numberOfGamesToPlay: 10,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
                 new MasterProject.G44P.Agents.RandomAgent(),
@@ -62,10 +67,11 @@ public class Program {
                 //new MasterProject.G44P.Agents.ZagZig(),
                 //new MasterProject.G44P.Agents.OnlyFirst(),
                 //new MasterProject.G44P.Agents.OnlyLast(),
+                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8)
             },
-            saveResult: false,
+            saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
+                //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
     }
