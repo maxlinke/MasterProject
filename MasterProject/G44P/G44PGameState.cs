@@ -130,7 +130,8 @@ namespace MasterProject.G44P {
             var output = new G44PGameState {
                 playerStates = new G44PPlayerState[this.playerStates.Length],
                 playerNames = this.playerNames, // no need to make a proper clone of this
-                board = new byte[this.board.Length]
+                board = new byte[this.board.Length],
+                currentPlayerIndex = this.currentPlayerIndex,
             };
             for (int i = 0; i < output.playerStates.Length; i++) {
                 var src = this.playerStates[i];
@@ -173,15 +174,19 @@ namespace MasterProject.G44P {
         // the only drawback of this is that it is slightly confusing to debug visually and scores may already be at or above 44, with nobody having won, since the next turn hasn't happened yet
         public G44PGameState GetResultOfMove (G44PMove move) {
             var clone = this.Clone();
-            if (move != default(G44PMove)) {
-                clone.PlacePiece(move.fieldIndex, moveIndexOffsets[currentPlayerIndex], currentPlayerIndex);
-            }
-            clone.RecalculatePlayerRanksAndUpdateWinnerIfApplicable(out var gameOverNow);
-            if (!gameOverNow) {
-                clone.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
-                clone.MovePieces(clone.currentPlayerIndex);
-            }
+            clone.ApplyMove(move);
             return clone;
+        }
+
+        public void ApplyMove (G44PMove move) {
+            if (move != default(G44PMove)) {
+                PlacePiece(move.fieldIndex, moveIndexOffsets[currentPlayerIndex], currentPlayerIndex);
+            }
+            RecalculatePlayerRanksAndUpdateWinnerIfApplicable(out var gameOverNow);
+            if (!gameOverNow) {
+                currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
+                MovePieces(currentPlayerIndex);
+            }
         }
 
         public void MovePieces (int movingPlayer) {

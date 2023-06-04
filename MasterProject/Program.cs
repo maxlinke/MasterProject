@@ -34,6 +34,9 @@ public class Program {
     // then do the whole machine learning thing
     // and finally put the winner of that into the tournament as well and see the performance of that compared to explicit solutions
 
+    // TODO if log enabled method
+    // so i don't have to comment and uncomment the nice debug output
+
     static void TestG44P () {
         //var gs = new G44PGameState();
         //const int testPlayerIndex = 0;
@@ -56,8 +59,8 @@ public class Program {
         //    gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
         //}
         DoTournament<G44PGame>(
-            //continueId: "MasterProject.G44P.G44PGame_638214976155565919",
-            continueId: "",
+            continueId: "MasterProject.G44P.G44PGame_638215017097988058",
+            //continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
             numberOfGamesToPlay: 10,
             filter: MatchupFilter.AllowAllMatchups,
@@ -72,6 +75,8 @@ public class Program {
                 new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
                 new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
                 new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
