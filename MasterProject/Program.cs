@@ -56,18 +56,22 @@ public class Program {
         //    gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
         //}
         DoTournament<G44PGame>(
+            //continueId: "MasterProject.G44P.G44PGame_638214976155565919",
             continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
             numberOfGamesToPlay: 10,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
                 new MasterProject.G44P.Agents.RandomAgent(),
-                //new MasterProject.G44P.Agents.Random2x(),
+                new MasterProject.G44P.Agents.Random2x(),
                 //new MasterProject.G44P.Agents.ZigZag(),
                 //new MasterProject.G44P.Agents.ZagZig(),
                 //new MasterProject.G44P.Agents.OnlyFirst(),
                 //new MasterProject.G44P.Agents.OnlyLast(),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8)
+                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 4),
+                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
+                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
