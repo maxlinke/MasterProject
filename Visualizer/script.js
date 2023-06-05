@@ -5,15 +5,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const matrixWinsOption = "Wins";
     const matrixLossesOption = "Losses";
     const matrixDrawsOption = "Draws";
-    const matrixWLRatioOption = "W/L/D-Ratio";
-    const displayOptions = [ matrixWinsOption, matrixLossesOption, matrixDrawsOption, matrixWLRatioOption ];
+    const matrixWLBalanceOption = "W/L/D-Balance";
+    const displayOptions = [ matrixWinsOption, matrixLossesOption, matrixDrawsOption, matrixWLBalanceOption ];
     const displayOptionDropdown = document.getElementById("displayOptionsSelection");
     function getCurrentDisplayOption () { return displayOptionDropdown.value; }
 
     const winPercentMetric = "Win%";
-    const wlRatioMetric = "W/L-Ratio";
+    const wlBalanceMetric = "W/L-Balance";
     const eloMetric = "Elo";
-    const rankingOptions = [ winPercentMetric, wlRatioMetric, eloMetric ];
+    const rankingOptions = [ winPercentMetric, wlBalanceMetric, eloMetric ];
     const rankingOptionsDropdown = document.getElementById("rankingOptionsSelection");
     function getCurrentRankingOption () { return rankingOptionsDropdown.value; }
 
@@ -27,7 +27,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const matchupMatrix = document.getElementById("matchupMatrix");
     const matchupMatrixControlsParent = document.getElementById("additionalMatchupMatrixControls");
 
-    const rankingColumnLabels = [ "", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Ratio", "Elo" ];
+    const ignoreMatchupSize = "Ignore";
+    const adjustForMatchupSize = "Take Into Account";
+    const matchupOptions = [ ignoreMatchupSize, adjustForMatchupSize ];
+    const matchupOptionsDropdown = document.getElementById("matchupOptionsSelection");
+    function getAdjustForMatchupSize () { return matchupOptionsDropdown.value == adjustForMatchupSize; }
+
+    const rankingColumnLabels = [ "", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Balance", "Elo" ];
     function getRankingColumnData (playerData, column) {
         switch(column){
             case 0: return playerData.id;
@@ -37,11 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
             case 4: return `${(100 * playerData.lossPercentage).toFixed(2)}`;
             case 5: return playerData.totalDraws;
             case 6: return `${(100 * playerData.drawPercentage).toFixed(2)}`;
-            case 7: return playerData.winLossRatio.toFixed(5);
+            case 7: return (getAdjustForMatchupSize() ? playerData.adjustedWinLossBalance : playerData.rawWinLossBalance).toFixed(5);
             case 8: return playerData.elo.toFixed(1);
         }
     }
 
+    let loadedInput = undefined;
     let loadedData = undefined;
     let sortedPlayerIndices = [];
     let additionalMatrixDimensionPlayerIds = [];
@@ -53,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // TODO if i support also displaying not just tournament results but other things (agent records?) i need to discriminate what file i just opened
                 const rawText = e.target.result;
                 const parsedObject = JSON.parse(rawText);
-                onDataLoaded(parsedObject);
+                onInputLoaded(parsedObject);
             }catch(error){
                 // TODO display this somewhere
                 console.error(error);
@@ -63,11 +70,13 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsText(evt.target.files[0]);
     }
 
-    function onDataLoaded (input) {
+    function onInputLoaded (input) {
         if(input == undefined){
+            loadedInput = undefined;
             loadedData = undefined;
         }else{
             console.log(input);
+            loadedInput = input;
             loadedData = processData(input);
             console.log(loadedData);
         }
@@ -89,6 +98,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function onMatchupOptionChanged () {
+        if(loadedData != undefined){
+            updateRankingTable();
+            updateMatrix();
+        }
+    }
+
     function updateSortedPlayerIndices () {
         const tempMap = loadedData.players.map((v, i) => { return v; });
         const currentRankingOption = getCurrentRankingOption();
@@ -96,9 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
             let aVal = NaN;
             let bVal = NaN;
             switch(currentRankingOption){
-                case winPercentMetric: aVal = a.winPercentage; bVal = b.winPercentage; break;
-                case wlRatioMetric:    aVal = a.winLossRatio;  bVal = b.winLossRatio;  break;
-                case eloMetric:        aVal = a.elo;           bVal = b.elo;           break;
+                case winPercentMetric: aVal = a.winPercentage;     bVal = b.winPercentage;     break;
+                case wlBalanceMetric:  aVal = a.rawWinLossBalance; bVal = b.rawWinLossBalance; break;
+                case eloMetric:        aVal = a.elo;               bVal = b.elo;               break;
             }
             return (aVal > bVal ? 1 : (aVal < bVal) ? -1 : 0);
         });
@@ -271,13 +287,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         popupText: getPopupTextForMatrixField(mainPlayer, secondaryPlayer, count)
                     };
                 }
-            case matrixWLRatioOption:
+            case matrixWLBalanceOption:
+                let getWlRatio;
+                if(getAdjustForMatchupSize()){
+                    getWlRatio = getAdjustedWinLossBalance;
+                }else{
+                    getWlRatio = (w, l, _) => (w - l) / Math.max(w + l, 1);
+                }
                 return (mainPlayer, secondaryPlayer) => {
                     const records = getMatchupRecordsForMatrixField(mainPlayer, secondaryPlayer);
                     const count = countFirstLetterOccurencesInRecords(records);
                     if(count.total < 1) return getNoGamesOutput(mainPlayer, secondaryPlayer, count);
-                    const rawWLRatio = (count["W"][0] - count["L"][0]) / Math.max(1, (count.total - count["D"][0]));
-                    const hue = 120 * ((rawWLRatio + 1) / 2);
+                    // const rawWLRatio = (count["W"][0] - count["L"][0]) / Math.max(1, (count.total - count["D"][0]));
+                    const wlRatio = getWlRatio(count["W"][0], count["L"][0], loadedData.matchupSize);
+                    const hue = 120 * ((wlRatio + 1) / 2);
                     const saturation = 100 * (1 - (count["D"][0] / count.total));
                     return {
                         color: `hsl(${hue}, ${saturation}%, 50%)`,
@@ -389,10 +412,11 @@ document.addEventListener("DOMContentLoaded", () => {
     initDropdown(rankingOptionsDropdown, rankingOptions, onRankingOptionChanged);
     initDropdown(displayOptionDropdown, displayOptions, onMatrixOptionChanged);
     initDropdown(highlightOptionsDropdown, highlightOptions, onMatrixOptionChanged);
+    initDropdown(matchupOptionsDropdown, matchupOptions, onMatchupOptionChanged);
     try{
-        onDataLoaded(testData);
+        onInputLoaded(testData);
     }catch(e){
-        onDataLoaded(undefined);
+        onInputLoaded(undefined);
         if(!(e instanceof ReferenceError)) throw e;
     }
 

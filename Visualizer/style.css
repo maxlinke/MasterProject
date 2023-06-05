@@ -21,7 +21,7 @@ div {
 
 label {
     display: inline-block;
-    width: 5em;
+    width: 6em;
 }
 
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
@@ -42,7 +42,7 @@ label {
 
 .rankingTableDataField {
     text-align: right;
-    width: 80px;
+    width: 100px;
 }
 
 #matchupMatrix, .matrixColumnLabel, .matrixRowLabel, .matrixDataField {
