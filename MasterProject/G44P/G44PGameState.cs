@@ -120,7 +120,6 @@ namespace MasterProject.G44P {
                     HasDrawn = false
                 };
                 playerNames[i] = $"Player {i}{((inputPlayerNames == null || i >= inputPlayerNames.Count) ? "" : $" \"{inputPlayerNames[i]}\"")}";
-                ;
             }
             board = new byte[BOARD_SIZE * BOARD_SIZE];
             Array.Fill(board, EMPTY_FIELD);

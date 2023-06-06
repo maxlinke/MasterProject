@@ -45,6 +45,10 @@ namespace MasterProject {
             throw new NotImplementedException();
         }
 
+        // so, again
+        // just one kind of agent with one parametrized thing? no. that's too restrictive
+        // a boot camp more or less just does a tournament, gives the result to someone else, then repeats until a limit is reached
+
     }
 
 }

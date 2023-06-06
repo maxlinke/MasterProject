@@ -163,7 +163,7 @@ namespace MasterProject {
             return output;
         }
 
-        public static void MeasureSingleAgentSpeed (Agent testAgent, int parallelGameCount = 16, int totalGameCountPerMatchup = 10) {
+        public static Tournament<TGame> RunSingleAgentTournamentVsRandom (Agent testAgent, int parallelGameCount = 16, int totalGameCountPerMatchup = 10) {
             var tournament = new Tournament<TGame>();
             var tempGame = new TGame();
             tournament.playersPerGame = tempGame.MinimumNumberOfAgentsRequired;
@@ -179,6 +179,7 @@ namespace MasterProject {
                 numberOfGamesPerMatchup: totalGameCountPerMatchup,
                 matchupFilter: MatchupFilter.EnsureAgentIsContainedOncePerMatchup(testAgent)
             );
+            return tournament;
         }
 
         public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup, IMatchupFilter matchupFilter) {
