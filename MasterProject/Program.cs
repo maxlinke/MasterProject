@@ -17,9 +17,9 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        //DoTTTTournament();
+        DoTTTTournament();
 
-        TestG44P();
+        //TestG44P();
 
         DataSaver.Flush();
     }
@@ -88,9 +88,8 @@ public class Program {
     static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 10;
+        const int numberOfGamesToPlay = 500;
         var filter = MatchupFilter.AllowAllMatchups;
-
         DoTournament<TTTGame>(
             continueId: continueTournamentId,
             numberOfPlayersPerMatchup: 2,
@@ -108,7 +107,11 @@ public class Program {
                 new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.8f),
                 new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.9f),
             },
-            saveResult: true
+            saveResult: true,
+            onBeforeRun: (tournament) => {
+                tournament.playEachMatchupToCompletionBeforeMovingOntoNext = false;
+                tournament.autosaveIntervalMinutes = 1;
+            }
         );
     }
 
