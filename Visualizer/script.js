@@ -355,6 +355,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if(count.total < 1){
             output += 'No data for matchup';
+        }else{
+            output += `${count.total} games played in this matchup`;
         }
         return output;
     }
