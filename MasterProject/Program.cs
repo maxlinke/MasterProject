@@ -17,9 +17,9 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        DoTTTTournament();
+        //DoTTTTournament();
 
-        //TestG44P();
+        DoG44PTournament();
 
         DataSaver.Flush();
     }
@@ -37,32 +37,12 @@ public class Program {
     // TODO if log enabled method
     // so i don't have to comment and uncomment the nice debug output
 
-    static void TestG44P () {
-        //var gs = new G44PGameState();
-        //const int testPlayerIndex = 0;
-        //var otherPlayerIndex = (testPlayerIndex + 1) % G44PGameState.PLAYER_COUNT;
-        //gs.Initialize(new string[] { "Jim" });
-        //foreach (var fieldIndex in G44PGameState.PlayerHomeRows[testPlayerIndex]) {
-        //    gs.PlacePiece(fieldIndex, testPlayerIndex);
-        //}
-        //foreach (var fieldIndex in G44PGameState.PlayerHomeRows[otherPlayerIndex]) {
-        //    gs.PlacePiece(fieldIndex, otherPlayerIndex);
-        //}
-        //for (int i = 0; i < 10; i++) {
-        //    Console.WriteLine();
-        //    Console.WriteLine(gs.ToPrintableString());
-        //    gs.MovePieces(testPlayerIndex);
-        //    gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
-        //    Console.WriteLine();
-        //    Console.WriteLine(gs.ToPrintableString());
-        //    gs.MovePieces(otherPlayerIndex);
-        //    gs.RecalculatePlayerRanksAndUpdateWinnerIfApplicable();
-        //}
+    static void DoG44PTournament () {
         DoTournament<G44PGame>(
-            continueId: "MasterProject.G44P.G44PGame_638215017097988058",
+            continueId: "MasterProject.G44P.G44PGame_638215217298322126",
             //continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 10,
+            numberOfGamesToPlay: 2,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
                 new MasterProject.G44P.Agents.RandomAgent(),
@@ -77,9 +57,12 @@ public class Program {
                 new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
                 new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
                 new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
+                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
+                tournament.autosaveIntervalMinutes = 1;
                 //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
