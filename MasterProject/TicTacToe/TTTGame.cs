@@ -8,9 +8,11 @@ namespace MasterProject.TicTacToe {
 
     public class TTTGame : Game<TTTGame, TTTGameState, TTTMove> {
 
-        protected override int MinimumNumberOfAgentsRequired => TTTGameState.PLAYER_COUNT;
+        public override int MinimumNumberOfAgentsRequired => TTTGameState.PLAYER_COUNT;
 
-        protected override int MaximumNumberOfAgentsAllowed => TTTGameState.PLAYER_COUNT;
+        public override int MaximumNumberOfAgentsAllowed => TTTGameState.PLAYER_COUNT;
+
+        public override Agent GetRandomAgent () => new MasterProject.TicTacToe.Agents.RandomAgent();
 
         protected override TTTGameState GetInitialGameState () {
             var output = new TTTGameState();

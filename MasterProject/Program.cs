@@ -19,7 +19,8 @@ public class Program {
     public static void Main (string[] args) {
         //DoTTTTournament();
 
-        DoG44PTournament();
+        TestG44P();
+        //DoG44PTournament();
 
         DataSaver.Flush();
     }
@@ -36,6 +37,11 @@ public class Program {
 
     // TODO if log enabled method
     // so i don't have to comment and uncomment the nice debug output
+
+    static void TestG44P () {
+        //Tournament<G44PGame>.MeasureSingleAgentSpeed(new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8));      // 1m 30s
+        Tournament<G44PGame>.MeasureSingleAgentSpeed(new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8));  // 0m 0s (too fast to measure)
+    }
 
     static void DoG44PTournament () {
         DoTournament<G44PGame>(

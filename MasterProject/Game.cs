@@ -59,6 +59,10 @@ namespace MasterProject {
 
         public abstract int PlayerCount { get; }
 
+        public abstract int MinimumNumberOfAgentsRequired { get; }
+
+        public abstract int MaximumNumberOfAgentsAllowed { get; }
+
         protected abstract Task Run (IEnumerable<Agent> agents);
 
         public abstract GameRecord GetRecord ();
@@ -66,6 +70,8 @@ namespace MasterProject {
         public abstract GameState GetFinalGameState ();
 
         public class MoveLimitReachedException : System.Exception { }
+
+        public abstract Agent GetRandomAgent ();
 
     }
 
@@ -102,10 +108,6 @@ namespace MasterProject {
         public bool MoveLimitReached => MoveCounter >= MoveLimit;
 
         protected abstract TGameState GetInitialGameState ();
-
-        protected abstract int MinimumNumberOfAgentsRequired { get; }
-
-        protected abstract int MaximumNumberOfAgentsAllowed { get; }
 
         public TGameState GetCurrentGameStateVisibleForAgent (Agent<TGame, TGameState, TMove> agent) {
             return CurrentGameState.GetVisibleGameStateForPlayer(agents.IndexOf(agent));

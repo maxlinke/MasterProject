@@ -43,6 +43,18 @@ namespace MasterProject {
             return false;
         });
 
+        public static IMatchupFilter EnsureAgentIsContainedOncePerMatchup (Agent agent) {
+            return new DynamicFilter(agentIds => {
+                var count = 0;
+                foreach (var id in agentIds) {
+                    if (id == agent.Id) {
+                        count++;
+                    }
+                }
+                return count == 1;
+            });
+        }
+
     }
 
 }

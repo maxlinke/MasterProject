@@ -163,6 +163,24 @@ namespace MasterProject {
             return output;
         }
 
+        public static void MeasureSingleAgentSpeed (Agent testAgent, int parallelGameCount = 16, int totalGameCountPerMatchup = 10) {
+            var tournament = new Tournament<TGame>();
+            var tempGame = new TGame();
+            tournament.playersPerGame = tempGame.MinimumNumberOfAgentsRequired;
+            tournament.record = null;
+            tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Nothing;
+            tournament.autosaveIntervalMinutes = NO_AUTOSAVE;
+            tournament.MaxNumberOfGamesToRunInParallel = parallelGameCount;
+            tournament.Run(
+                agentsToUse: new Agent[]{
+                    testAgent,
+                    tempGame.GetRandomAgent()
+                },
+                numberOfGamesPerMatchup: totalGameCountPerMatchup,
+                matchupFilter: MatchupFilter.EnsureAgentIsContainedOncePerMatchup(testAgent)
+            );
+        }
+
         public void Run (IEnumerable<Agent> agentsToUse, int numberOfGamesPerMatchup, IMatchupFilter matchupFilter) {
             VerifyOnlyOneRun();
             this.agents = agentsToUse.ToArray();
