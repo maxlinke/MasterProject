@@ -8,7 +8,7 @@ namespace MasterProject.G44P.RatingFunctions {
 
     public class ParametrizedRatingFunction : RatingFunction {
 
-        public override string Id => base.Id;   // TODO with hash code of parameters
+        public override string Id => $"{base.Id}_RatingParamsHash{this.GetHashCode()}";
 
         public class Parameters {
 

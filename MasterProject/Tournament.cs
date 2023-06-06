@@ -163,7 +163,7 @@ namespace MasterProject {
             return output;
         }
 
-        public static Tournament<TGame> RunSingleAgentTournamentVsRandom (Agent testAgent, int parallelGameCount = 16, int totalGameCountPerMatchup = 10) {
+        public static Tournament<TGame> RunSingleAgentTournamentVsRandom (Agent testAgent, int totalGameCountPerMatchup, int parallelGameCount = 16) {
             var tournament = new Tournament<TGame>();
             var tempGame = new TGame();
             tournament.playersPerGame = tempGame.MinimumNumberOfAgentsRequired;
