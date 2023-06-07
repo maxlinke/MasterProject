@@ -62,13 +62,9 @@ namespace MasterProject {
 
     public class Tournament<TGame> : Tournament where TGame : Game, new() {
 
-        // options
-        // what agents
-        // what matchups
-        // how many matches total/per matchup
-        // recording gamerecords (optional)
-        // recording win/loss/draw-matrix (NOT optional)
         public bool IsFinished { get; private set; } = false;
+
+        public event System.Action<string> onAutosave = delegate {};
 
         private bool hasRun = false;
         private DateTime startTime = default;
@@ -102,6 +98,10 @@ namespace MasterProject {
                 id = $"{id}_autosave";
             }
             DataSaver.SaveInProject(GetProjectPathForResult(id), record.ToJsonBytes());
+            DataSaver.Flush();
+            if (isAutoSave) {
+                onAutosave(id);
+            }
         }
 
         private void VerifyOnlyOneRun () {
@@ -254,7 +254,6 @@ namespace MasterProject {
                                 if (System.DateTime.Now > nextAutoSaveTime) {
                                     Console.WriteLine(" ---- AUTOSAVING! ----");
                                     SaveWinLossDrawRecord(isAutoSave: true);
-                                    DataSaver.Flush();
                                     Console.WriteLine(" ---- AUTOSAVE DONE ----");
                                     nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(autosaveIntervalMinutes);
                                 }

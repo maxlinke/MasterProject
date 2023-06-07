@@ -20,8 +20,16 @@ public class Program {
     public static void Main (string[] args) {
         //DoTTTTournament();
 
-        TestG44P();
+        //TestG44P();
         //DoG44PTournament();
+
+        var list = new List<int>() {
+            5, 1, 2, 6, 4, 4, 2, 8,
+        };
+        list.Sort((a, b) => a - b);
+        foreach (var item in list) {
+            Console.WriteLine(item);
+        }
 
         DataSaver.Flush();
     }

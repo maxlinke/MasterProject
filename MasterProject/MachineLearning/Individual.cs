@@ -6,15 +6,55 @@ using System.Threading.Tasks;
 
 namespace MasterProject.MachineLearning {
 
-    public class Individual {
+    public abstract class Individual {
 
-        // so, it would be NICE to do things like put the "type" in here (new, mutation, combination, clone, invertedclone)
-        // but is that general enough?
-        // at the very least, don't make it an enum
-        // so it becomes possible to add more types
-        // i mean, the generation + individual approach is pretty specific already
-        // because some machine learning is just "one" agent that "learns", right?
-        // OR i just say fuck it and make genetic algorithms this framework's definition of machine learning
+        public IndividualType IndividualType { get; set; }
+
+        public float fitness { get; set; }
+
+        public abstract Agent CreateAgent ();
+
+        public void InitializeWithRandomCoefficients () {
+            RandomizeCoefficients();
+            this.IndividualType = IndividualType.NewRandom;
+        }
+
+        protected abstract void RandomizeCoefficients ();
+
+        public Individual Clone () {
+            var output = GetClone();
+            output.IndividualType = IndividualType.Clone;
+            return output;
+        }
+
+        protected abstract Individual GetClone ();
+
+        public Individual CombinedClone (Individual other) {
+            var output = GetClone();
+            output.CombineCoefficients(other);
+            output.IndividualType = IndividualType.Combination;
+            return output;
+        }
+
+        protected abstract void CombineCoefficients (Individual other);
+
+        public Individual MutatedClone () {
+            var output = GetClone();
+            output.MutateCoefficients();
+            output.IndividualType = IndividualType.Mutation;
+            return output;
+        }
+
+        protected abstract void MutateCoefficients ();
+
+        public Individual InvertedClone () {
+            var output = GetClone();
+            output.InvertCoefficients();
+            output.IndividualType = IndividualType.InvertedClone;
+            return output;
+        }
+
+        protected abstract void InvertCoefficients ();
 
     }
 
