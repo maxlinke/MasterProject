@@ -23,15 +23,30 @@ public class Program {
         //TestG44P();
         //DoG44PTournament();
 
-        var list = new List<int>() {
-            5, 1, 2, 6, 4, 4, 2, 8,
-        };
-        list.Sort((a, b) => a - b);
-        foreach (var item in list) {
-            Console.WriteLine(item);
-        }
+        //var list = new List<int>() {
+        //    5, 1, 2, 6, 4, 4, 2, 8,
+        //};
+        //list.Sort((a, b) => a - b);
+        //foreach (var item in list) {
+        //    Console.WriteLine(item);
+        //}
+        var tc = new TestClass();
+        tc.myPresetInt = 1;
+        tc.myNormalInt = 2;
+        var json1 = JsonSerializer.Serialize(tc);
+        Console.WriteLine(json1);
+        var clone = JsonSerializer.Deserialize<TestClass>(json1);
+        var json2 = JsonSerializer.Serialize(clone);
+        Console.WriteLine(json2);
 
         DataSaver.Flush();
+    }
+
+    public class TestClass {
+
+        public int myPresetInt { get; set; } = 5;
+        public int myNormalInt { get; set; }
+
     }
 
     // TODO option for game log files
@@ -149,7 +164,7 @@ public class Program {
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.autosaveIntervalMinutes = 1;
+                tournament.AutosaveIntervalMinutes = 1;
                 //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
@@ -179,8 +194,8 @@ public class Program {
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.playEachMatchupToCompletionBeforeMovingOntoNext = false;
-                tournament.autosaveIntervalMinutes = 1;
+                tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = false;
+                tournament.AutosaveIntervalMinutes = 1;
             }
         );
     }

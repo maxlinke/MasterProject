@@ -30,13 +30,13 @@ namespace MasterProject {
         }
 
         int _autosaveIntervalMinutes = NO_AUTOSAVE;
-        public int autosaveIntervalMinutes {
+        public int AutosaveIntervalMinutes {
             get => _autosaveIntervalMinutes;
             set => _autosaveIntervalMinutes = Math.Max(1, value);
         }
 
         bool _playEachMatchupToCompletionBeforeMovingOntoNext = false;
-        public bool playEachMatchupToCompletionBeforeMovingOntoNext {
+        public bool PlayEachMatchupToCompletionBeforeMovingOntoNext {
             get => _playEachMatchupToCompletionBeforeMovingOntoNext;
             set => _playEachMatchupToCompletionBeforeMovingOntoNext = value;
         }
@@ -64,7 +64,7 @@ namespace MasterProject {
 
         public bool IsFinished { get; private set; } = false;
 
-        public event System.Action<string> onAutosave = delegate {};
+        public event System.Action<string> onSaved = delegate {};
 
         private bool hasRun = false;
         private DateTime startTime = default;
@@ -99,9 +99,7 @@ namespace MasterProject {
             }
             DataSaver.SaveInProject(GetProjectPathForResult(id), record.ToJsonBytes());
             DataSaver.Flush();
-            if (isAutoSave) {
-                onAutosave(id);
-            }
+            onSaved(id);
         }
 
         private void VerifyOnlyOneRun () {
@@ -169,7 +167,7 @@ namespace MasterProject {
             tournament.playersPerGame = tempGame.MinimumNumberOfAgentsRequired;
             tournament.record = null;
             tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Nothing;
-            tournament.autosaveIntervalMinutes = NO_AUTOSAVE;
+            tournament.AutosaveIntervalMinutes = NO_AUTOSAVE;
             tournament.MaxNumberOfGamesToRunInParallel = parallelGameCount;
             tournament.Run(
                 agentsToUse: new Agent[]{
@@ -220,7 +218,7 @@ namespace MasterProject {
             var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup, matchupFilter);
             var runGameCounter = 0;
             var done = false;   // keeping a separate bool rather than relying on runGameCounter reaching totalGameCount
-            var nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(autosaveIntervalMinutes);
+            var nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(AutosaveIntervalMinutes);
             moveLimitReachedCounter = 0;
             otherExceptions = new List<Exception>();
             List<GameRun> gameRuns = new();
@@ -235,7 +233,7 @@ namespace MasterProject {
                         for (int k = 0; k < agents.Length; k++) {
                             agents[k] = this.agents[Array.IndexOf(agentIds, matchupAgentIds[k])].Clone();
                         }
-                        var newGameCount = (playEachMatchupToCompletionBeforeMovingOntoNext ? remaining : 1);
+                        var newGameCount = (PlayEachMatchupToCompletionBeforeMovingOntoNext ? remaining : 1);
                         for (int j = 0; j < newGameCount; j++) {
                             var game = new TGame();
                             game.AllowedConsoleOutputs = AllowedGameConsoleOutputs;
@@ -255,7 +253,7 @@ namespace MasterProject {
                                     Console.WriteLine(" ---- AUTOSAVING! ----");
                                     SaveWinLossDrawRecord(isAutoSave: true);
                                     Console.WriteLine(" ---- AUTOSAVE DONE ----");
-                                    nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(autosaveIntervalMinutes);
+                                    nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(AutosaveIntervalMinutes);
                                 }
                             }
                         }
