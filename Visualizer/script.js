@@ -33,18 +33,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const matchupOptionsDropdown = document.getElementById("matchupOptionsSelection");
     function getAdjustForMatchupSize () { return matchupOptionsDropdown.value == adjustForMatchupSize; }
 
-    const rankingColumnLabels = [ "", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Balance", "Elo" ];
+    const rankingColumnLabels = [ "", "Games Played", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Balance", "Elo" ];
     function getRankingColumnData (playerData, column) {
         switch(column){
             case 0: return playerData.id;
-            case 1: return playerData.totalWins;
-            case 2: return `${(100 * playerData.winPercentage).toFixed(2)}`;
-            case 3: return playerData.totalLosses;
-            case 4: return `${(100 * playerData.lossPercentage).toFixed(2)}`;
-            case 5: return playerData.totalDraws;
-            case 6: return `${(100 * playerData.drawPercentage).toFixed(2)}`;
-            case 7: return (getAdjustForMatchupSize() ? playerData.adjustedWinLossBalance : playerData.rawWinLossBalance).toFixed(5);
-            case 8: return playerData.elo.toFixed(1);
+            case 1: return playerData.totalGamesPlayed;
+            case 2: return playerData.totalWins;
+            case 3: return `${(100 * playerData.winPercentage).toFixed(2)}`;
+            case 4: return playerData.totalLosses;
+            case 5: return `${(100 * playerData.lossPercentage).toFixed(2)}`;
+            case 6: return playerData.totalDraws;
+            case 7: return `${(100 * playerData.drawPercentage).toFixed(2)}`;
+            case 8: return (getAdjustForMatchupSize() ? playerData.adjustedWinLossBalance : playerData.rawWinLossBalance).toFixed(5);
+            case 9: return playerData.elo.toFixed(1);
         }
     }
 

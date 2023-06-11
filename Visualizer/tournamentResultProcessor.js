@@ -34,7 +34,6 @@ function processData (input) {
         totalWins: input.totalWins[i],
         totalLosses: input.totalLosses[i],
         totalDraws: input.totalDraws[i],
-        totalGamesPlayed: playerGameCounts[i],
         winPercentage: input.totalWins[i] / playerGameCounts[i],
         lossPercentage: input.totalLosses[i] / playerGameCounts[i],
         drawPercentage: input.totalDraws[i] / playerGameCounts[i],
