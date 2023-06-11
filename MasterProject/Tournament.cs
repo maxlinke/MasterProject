@@ -41,6 +41,12 @@ namespace MasterProject {
             set => _playEachMatchupToCompletionBeforeMovingOntoNext = value;
         }
 
+        string _saveIdPrefix = string.Empty;
+        public string SaveIdPrefix {
+            get => _saveIdPrefix;
+            set => _saveIdPrefix = (value ?? string.Empty).Trim();
+        }
+
         public Game.ConsoleOutputs AllowedGameConsoleOutputs { get; set; } = Game.ConsoleOutputs.Nothing;
 
         public const string ResultsDirectoryName = "TournamentResults";
@@ -96,6 +102,9 @@ namespace MasterProject {
             var id = $"{typeof(TGame).FullName}_{System.DateTime.Now.Ticks}";
             if (isAutoSave) {
                 id = $"{id}_autosave";
+            }
+            if (!string.IsNullOrWhiteSpace(SaveIdPrefix)) {
+                id = $"{SaveIdPrefix}_{id}";
             }
             DataSaver.SaveInProject(GetProjectPathForResult(id), record.ToJsonBytes());
             DataSaver.Flush();
@@ -193,14 +202,6 @@ namespace MasterProject {
             DoEndLogs(moveLimitReachedCounter, otherExceptions);
         }
 
-        int CountNumberOfMatchesToRun (int targetRunsPerMatchup, IMatchupFilter matchupFilter) {
-            var output = 0;
-            for (int i = 0; i < record.GetMatchupCount(); i++) {
-                output += CountNumberOfMatchesRemainingForMatchup(i, targetRunsPerMatchup, matchupFilter);
-            }
-            return output;
-        }
-
         int CountNumberOfMatchesRemainingForMatchup (int matchupIndex, int targetRunsPerMatchup, IMatchupFilter matchupFilter) {
             var participantIds = record.GetMatchupFromIndex(matchupIndex);
             if (matchupFilter.PreventMatchup(participantIds)){
@@ -215,7 +216,13 @@ namespace MasterProject {
         }
 
         void RunRemainingMatches (int numberOfGamesPerMatchup, IMatchupFilter matchupFilter, out int moveLimitReachedCounter, out IReadOnlyList<Exception> otherExceptions) {
-            var totalGameCount = CountNumberOfMatchesToRun(numberOfGamesPerMatchup, matchupFilter);
+            var remainingGameCounter = new int[record.GetMatchupCount()];
+            var totalGameCount = 0;
+            for (int i = 0; i < record.GetMatchupCount(); i++) {
+                var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup, matchupFilter);
+                remainingGameCounter[i] = remaining;
+                totalGameCount += remaining;
+            }
             var runGameCounter = 0;
             var done = false;   // keeping a separate bool rather than relying on runGameCounter reaching totalGameCount
             var nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(AutosaveIntervalMinutes);
@@ -225,15 +232,14 @@ namespace MasterProject {
             while (!done) {
                 done = true;
                 for (int i = 0; i < record.GetMatchupCount(); i++) {
-                    var remaining = CountNumberOfMatchesRemainingForMatchup(i, numberOfGamesPerMatchup, matchupFilter);
-                    if (remaining > 0) {
+                    if (remainingGameCounter[i] > 0) {
                         done = false;
                         var matchupAgentIds = record.GetMatchupFromIndex(i);
                         var agents = new Agent[playersPerGame];
                         for (int k = 0; k < agents.Length; k++) {
                             agents[k] = this.agents[Array.IndexOf(agentIds, matchupAgentIds[k])].Clone();
                         }
-                        var newGameCount = (PlayEachMatchupToCompletionBeforeMovingOntoNext ? remaining : 1);
+                        var newGameCount = (PlayEachMatchupToCompletionBeforeMovingOntoNext ? remainingGameCounter[i] : 1);
                         for (int j = 0; j < newGameCount; j++) {
                             var game = new TGame();
                             game.AllowedConsoleOutputs = AllowedGameConsoleOutputs;
@@ -244,6 +250,7 @@ namespace MasterProject {
                                 agentIds = matchupAgentIds.ToArray(),
                                 runTask = game.RunAsync(agents)
                             });
+                            remainingGameCounter[i]--;
                             if (gameRuns.Count >= MaxNumberOfGamesToRunInParallel) {
                                 LogTournamentProgress(runGameCounter, gameRuns.Count, totalGameCount);
                                 RunCurrentRuns(gameRuns, ref moveLimitReachedCounter, (List<Exception>)otherExceptions);
