@@ -55,6 +55,18 @@ namespace MasterProject {
             });
         }
 
+        public static IMatchupFilter OnlyThisAgentExceptOneOther (Agent agent) {
+            return new DynamicFilter(agentIds => {
+                var count = 0;
+                foreach (var id in agentIds) {
+                    if (id == agent.Id) {
+                        count++;
+                    }
+                }
+                return count != (agentIds.Count - 1);
+            });
+        }
+
     }
 
 }

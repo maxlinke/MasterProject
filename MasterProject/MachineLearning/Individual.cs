@@ -8,6 +8,14 @@ namespace MasterProject.MachineLearning {
 
     public abstract class Individual {
 
+        public struct TournamentResult {
+
+            public int totalWins { get; set; }
+            public int totalDraws { get; set; }
+            public int totalLosses { get; set; }
+
+        }
+
         public IndividualType IndividualType { get; set; }
 
         public int index { get; set; }
@@ -15,6 +23,10 @@ namespace MasterProject.MachineLearning {
         public int[] parentIndices { get; set; }
 
         public float finalFitness { get; set; }
+
+        public TournamentResult peerTournamentResult { get; set; }
+
+        public TournamentResult randomTournamentResult { get; set; }
 
         public abstract Agent CreateAgent ();
 

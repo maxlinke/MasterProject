@@ -12,11 +12,11 @@ namespace MasterProject.MachineLearning {
 
         public class GenerationConfiguration {
 
-            public int newIndividualCount      { get; set; } = BootCamp.DEFAULT_NEW_INDIVIDUAL_COUNT;
-            public int bestCloneCount          { get; set; } = BootCamp.DEFAULT_BEST_CLONE_COUNT;
-            public int invertedWorstCloneCount { get; set; } = BootCamp.DEFAULT_INVERTED_WORST_CLONE_COUNT;
-            public int mutationCount           { get; set; } = BootCamp.DEFAULT_MUTATION_COUNT;
-            public int combinationCount        { get; set; } = BootCamp.DEFAULT_COMBINATION_COUNT;
+            public int newIndividualCount      { get; set; } = DEFAULT_NEW_INDIVIDUAL_COUNT;
+            public int bestCloneCount          { get; set; } = DEFAULT_BEST_CLONE_COUNT;
+            public int invertedWorstCloneCount { get; set; } = DEFAULT_INVERTED_WORST_CLONE_COUNT;
+            public int mutationCount           { get; set; } = DEFAULT_MUTATION_COUNT;
+            public int combinationCount        { get; set; } = DEFAULT_COMBINATION_COUNT;
 
             public int generationSize => newIndividualCount
                                        + bestCloneCount
@@ -26,16 +26,40 @@ namespace MasterProject.MachineLearning {
 
         }
 
-        public const int DEFAULT_GAMES_PER_MATCHUP = 10;
+        public const int DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS = 10;
+        public const int DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS = 10;
 
         public class TournamentConfiguration {
 
             public int playersPerGame    { get; set; }
-            public int gamesPerMatchup   { get; set; } = DEFAULT_GAMES_PER_MATCHUP;
+            public int peerTournamentMatchupRepetitionCount   { get; set; } = DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS;
+            public int randomTournamentMatchupRepetitionCount { get; set; } = DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS;
             public int maxMoveCount      { get; set; } = Game.NO_MOVE_LIMIT;
             public int maxMoveMillis     { get; set; } = Game.NO_TIMEOUT;
             public int autosaveInterval  { get; set; } = 5;
             public int parallelGameCount { get; set; } = 16;
+
+        }
+
+        public class FitnessWeighting {
+
+            public float peerTournamentWeight { get; set; }   = 1f;
+            public float randomTournamentWeight { get; set; } = 1f;
+            public float winrateWeight { get; set; }  = 1f;
+            public float drawRateWeight { get; set; } = 0.5f;
+            public float lossRateWeight { get; set; } = 0f;
+
+            public float GetRatingForIndividual (Individual individual) {
+                return  (peerTournamentWeight * GetTournamentRating(individual.peerTournamentResult))
+                      + (randomTournamentWeight * GetTournamentRating(individual.randomTournamentResult));
+
+                float GetTournamentRating (Individual.TournamentResult tournamentResult) {
+                    float tournamentTotal = Math.Max(1, tournamentResult.totalWins + tournamentResult.totalDraws + tournamentResult.totalLosses);
+                    return (winrateWeight * (tournamentResult.totalWins / tournamentTotal))
+                         + (drawRateWeight * (tournamentResult.totalDraws / tournamentTotal))
+                         + (lossRateWeight * (tournamentResult.totalLosses / tournamentTotal));
+                }
+            }
 
         }
 
@@ -50,14 +74,28 @@ namespace MasterProject.MachineLearning {
 
         public TournamentConfiguration tournamentConfig { get; set; }
 
+        public FitnessWeighting fitnessWeighting { get; set; }
+
         public List<TIndividual[]> generations { get; set; }
 
         public string latestRecordId { get; set; }
 
-        public static BootCamp<TGame, TIndividual> Create (GenerationConfiguration generationConfig, TournamentConfiguration tournamentConfig) {
+        public bool peerTournamentFinished { get; set; }
+
+        public bool randomTournamentFinished { get; set; }
+
+        public string id { get; set; }
+
+        public static BootCamp<TGame, TIndividual> Create (
+            GenerationConfiguration generationConfig, 
+            TournamentConfiguration tournamentConfig,
+            FitnessWeighting fitnessWeighting
+        ) {
             var output = new BootCamp<TGame, TIndividual>();
+            output.id = $"BC_{System.DateTime.Now.Ticks}";
             output.generationConfig = generationConfig;
             output.tournamentConfig = tournamentConfig;
+            output.fitnessWeighting = fitnessWeighting;
             var firstGen = new TIndividual[generationConfig.generationSize];
             for (int i = 0; i < firstGen.Length; i++) {
                 firstGen[i] = new TIndividual();
@@ -66,126 +104,172 @@ namespace MasterProject.MachineLearning {
             }
             output.generations = new List<TIndividual[]>() { firstGen };
             output.latestRecordId = string.Empty;
+            output.peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
+            output.randomTournamentFinished = tournamentConfig.randomTournamentMatchupRepetitionCount <= 0;
             return output;
         }
 
-        // still needs a way to save and load
+        void Save () {
+            // TODO
+            throw new NotImplementedException();
+        }
 
-        // possibly refactor this into more explicit finishing conditions
-        // like matchupfilter
-        // so, one for a limited number of generations
-        // one for a given fitness
-        // although for that i might have to have the bots play against random bots to determine fitness
-        // which would be another parameter to the tournament config
-        // so one run against all the other bots to find who's best
-        // then one to determine fitness against random bots
-        // with the "onlyone" matchupfilter
-        // now, with the thing being random and all
-        // there is the possibility that the random-bot-tournament yields a different "result" than the first one
-        // should fitness be the combination of both?
-        // with the first tournament determining who's best among the generation
-        // and the second tournament determining who's good overall?
-        // i think i should do some research on common strategies here...
-        public void RunUntil (System.Func<BootCamp<TGame, TIndividual>, bool> endRun) {
-            while (!endRun(this)) {
-                var record = DoTournament();
-                CreateNextGeneration(record);
+        public void RunUntil (IBootCampTerminationCondition<TGame, TIndividual> terminationCondition) {
+            while (true) {
+                var currentGen = generations[generations.Count - 1];
+                var currentAgents = new List<Agent>(currentGen.Select(individual => individual.CreateAgent()));
+                if (!peerTournamentFinished) {
+                    var peerRecord = RunPeerTournament(currentAgents);
+                    for (int i = 0; i < currentGen.Length; i++) {
+                        ApplyTournamentResult(
+                            peerRecord, 
+                            currentGen[i], 
+                            currentAgents[i].Id, 
+                            (individual, result) => individual.peerTournamentResult = result
+                        );
+                    }
+                    peerTournamentFinished = true;
+                    Save();
+                }
+                if (!randomTournamentFinished) {
+                    var randomRecord = RunRandomTournament(currentAgents);
+                    for (int i = 0; i < currentGen.Length; i++) {
+                        ApplyTournamentResult(
+                            randomRecord,
+                            currentGen[i],
+                            currentAgents[i].Id,
+                            (individual, result) => individual.randomTournamentResult = result
+                        );
+                    }
+                    randomTournamentFinished = true;
+                    Save();
+                }
+                if (terminationCondition.EndTraining(this)) {
+                    Save();
+                    break;
+                }
+                CreateNextGeneration();
+                latestRecordId = string.Empty;
+                peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
+                randomTournamentFinished = tournamentConfig.randomTournamentMatchupRepetitionCount <= 0;
+                Save();
             }
         }
 
-        WinLossDrawRecord DoTournament () {
-            Tournament<TGame> tournament = null;
-            var currentGen = generations[generations.Count - 1];
-            var currentAgents = new List<Agent>(currentGen.Select(individual => individual.CreateAgent()));
-            if(Tournament.TryLoadWinLossDrawRecord(latestRecordId, out var loadedRecord)){
+        bool TryLoadLatestRecord (out WinLossDrawRecord output, out bool isRandomRecord) {
+            output = null;
+            isRandomRecord = false;
+            if (Tournament.TryLoadWinLossDrawRecord(latestRecordId, out var loadedRecord)) {
                 if (loadedRecord.matchupSize == this.tournamentConfig.playersPerGame) {
-                    if (loadedRecord.playerIds.Length == currentAgents.Count) {
-                        var isRecordForCurrentGen = true;
-                        foreach (var agent in currentAgents) {
-                            if (!loadedRecord.playerIds.Contains(agent.Id)) {
-                                isRecordForCurrentGen = false;
-                                break;
-                            }
-                        }
-                        if (isRecordForCurrentGen) {
-                            tournament = Tournament<TGame>.Continue(loadedRecord);
-                        }
-                    }
+                    var randomId = new TGame().GetRandomAgent().Id;
+                    output = loadedRecord;
+                    isRandomRecord = loadedRecord.playerIds.Contains(randomId);
+                    return true;
                 }
             }
-            if (tournament == null) {
-                tournament = Tournament<TGame>.New(this.tournamentConfig.playersPerGame);
+            return false;
+        }
+
+        WinLossDrawRecord RunPeerTournament (IReadOnlyList<Agent> currentAgents) {
+            var gotRecord = TryLoadLatestRecord(out var latestRecord, out var latestRecordIsRandomRecord);
+            Tournament<TGame> peerTournament;
+            if (gotRecord && !latestRecordIsRandomRecord) {
+                peerTournament = Tournament<TGame>.Continue(latestRecord);
+            } else {
+                peerTournament = Tournament<TGame>.New(tournamentConfig.playersPerGame);
             }
+            return DoTournament(
+                peerTournament, 
+                currentAgents, 
+                tournamentConfig.peerTournamentMatchupRepetitionCount, 
+                MatchupFilter.PreventAnyDuplicateAgents
+            );
+        }
+
+        WinLossDrawRecord RunRandomTournament (IReadOnlyList<Agent> currentAgents) {
+            var randomAgent = new TGame().GetRandomAgent();
+            var tournamentAgents = new List<Agent>() { randomAgent };
+            tournamentAgents.AddRange(currentAgents);
+            var gotRecord = TryLoadLatestRecord(out var latestRecord, out var latestRecordIsRandomRecord);
+            Tournament<TGame> randomTournament;
+            if (gotRecord && latestRecordIsRandomRecord) {
+                randomTournament = Tournament<TGame>.Continue(latestRecord);
+            } else {
+                randomTournament = Tournament<TGame>.New(tournamentConfig.playersPerGame);
+            }
+            return DoTournament(
+                randomTournament,
+                tournamentAgents,
+                tournamentConfig.randomTournamentMatchupRepetitionCount,
+                MatchupFilter.OnlyThisAgentExceptOneOther(randomAgent)
+            );
+        }
+
+        void ApplyTournamentResult (WinLossDrawRecord record, Individual individual, string agentId, System.Action<Individual, Individual.TournamentResult> apply) {
+            var recordIndex = Array.IndexOf(record.playerIds, agentId);
+            var result = new Individual.TournamentResult();
+            result.totalWins = record.totalWins[recordIndex];
+            result.totalDraws = record.totalDraws[recordIndex];
+            result.totalLosses = record.totalLosses[recordIndex];
+            apply(individual, result);
+        }
+
+        WinLossDrawRecord DoTournament (Tournament<TGame> tournament, IReadOnlyList<Agent> agents, int matchupRepetitons, IMatchupFilter filter) {
             tournament.AgentMoveTimeoutMilliseconds = tournamentConfig.maxMoveMillis;
             tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Nothing;
             tournament.AutosaveIntervalMinutes = tournamentConfig.autosaveInterval;
             tournament.MaxNumberOfGamesToRunInParallel = tournamentConfig.parallelGameCount;
             tournament.MaxNumberOfMovesPerGame = tournamentConfig.maxMoveCount;
             tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = false;
+            tournament.SaveIdPrefix = this.id;
             tournament.onSaved += (id) => latestRecordId = id;
-            tournament.Run(currentAgents, tournamentConfig.gamesPerMatchup, MatchupFilter.PreventAnyDuplicateAgents);
+            tournament.Run(agents, matchupRepetitons, filter);
             tournament.SaveWinLossDrawRecord();
             return tournament.GetWinLossDrawRecord();
         }
 
-        void CreateNextGeneration (WinLossDrawRecord record) {
-            var prevGen = generations[generations.Count - 1];
-            var individualMap = new Dictionary<string, TIndividual>();
-            foreach (var individual in prevGen) {
-                var tempAgent = individual.CreateAgent();
-                individualMap.Add(tempAgent.Id, individual);
-            }
-            var performanceList = new List<(string id, float winRate, float drawRate)>();
-            foreach (var individualId in individualMap.Keys) {
-                var index = Array.IndexOf(record.playerIds, individualId);
-                var gameCount = record.totalWins[index] + record.totalLosses[index] + record.totalDraws[index];
-                performanceList.Add((
-                    id: individualId,
-                    winRate: (float)(record.totalWins[index]) / gameCount,
-                    drawRate: (float)(record.totalDraws[index]) / gameCount
-                ));
-            }
-            performanceList.Sort((a, b) => {    // sort with highest coming first
-                if (a.winRate != b.winRate)   return Math.Sign(b.winRate - a.winRate);
-                if (a.drawRate != b.drawRate) return Math.Sign(b.drawRate - a.drawRate);
-                return 0;
-            });
-
-            // just for testing
-            Console.WriteLine("Rated by performance");
-            for (int i = 0; i < performanceList.Count; i++) {
-                Console.WriteLine($" > {i}: {performanceList[i].id} (wr {performanceList[i].winRate}) (dr {performanceList[i].drawRate})");
-            }
-
+        void CreateNextGeneration () {
+            var currGen = generations[generations.Count - 1];
+            SortCurrentGenerationByFitness();
             var nextGen = new List<TIndividual>(generationConfig.generationSize);
-            var nextIndividualIndex = prevGen[prevGen.Length - 1].index + 1;
-            AddIndividuals(generationConfig.newIndividualCount, _ => {
+            var nextIndividualIndex = currGen[currGen.Length - 1].index + 1;
+            AddIndividualsToNextGen(generationConfig.newIndividualCount, _ => {
                 var newAgent = new TIndividual();
                 newAgent.InitializeWithRandomCoefficients();
                 return newAgent;
             });
-            AddIndividuals(generationConfig.bestCloneCount, i => {
+            AddIndividualsToNextGen(generationConfig.bestCloneCount, i => {
                 return GetIndividualByPerformance(i).Clone();
             });
-            AddIndividuals(generationConfig.invertedWorstCloneCount, i => {
-                return GetIndividualByPerformance(performanceList.Count - i - 1).InvertedClone();
+            AddIndividualsToNextGen(generationConfig.invertedWorstCloneCount, i => {
+                return GetIndividualByPerformance(currGen.Length - i - 1).InvertedClone();
             });
-            AddIndividuals(generationConfig.mutationCount, i => {
+            AddIndividualsToNextGen(generationConfig.mutationCount, i => {
                 return GetIndividualByPerformance(i).MutatedClone();
             });
-            AddIndividuals(generationConfig.combinationCount, i => {
+            AddIndividualsToNextGen(generationConfig.combinationCount, i => {
                 var src = GetIndividualByPerformance(i);
-                var other = GetIndividualByPerformance((i + 1) % performanceList.Count);
+                var other = GetIndividualByPerformance((i + 1) % currGen.Length);
                 return src.CombinedClone(other);
             });
             generations.Add(nextGen.ToArray());
 
-            TIndividual GetIndividualByPerformance (int index) {
-                var id = performanceList[index].id;
-                return individualMap[id];
+            void SortCurrentGenerationByFitness () {
+                foreach (var individual in currGen) {
+                    individual.finalFitness = fitnessWeighting.GetRatingForIndividual(individual);
+                }
+                var sortedList = new List<TIndividual>(currGen);
+                sortedList.Sort((a, b) => Math.Sign(b.finalFitness - a.finalFitness));
+                for (int i = 0; i < currGen.Length; i++) {
+                    currGen[i] = sortedList[i];
+                }
             }
 
-            void AddIndividuals (int count, System.Func<int, Individual> createIndividual) {
+            TIndividual GetIndividualByPerformance (int index) {
+                return currGen[index];
+            }
+
+            void AddIndividualsToNextGen (int count, System.Func<int, Individual> createIndividual) {
                 for (int i = 0; i < count; i++) {
                     var newIndividual = (TIndividual)(createIndividual(i));
                     newIndividual.index = nextIndividualIndex;

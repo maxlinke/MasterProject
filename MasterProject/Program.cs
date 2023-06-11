@@ -23,21 +23,25 @@ public class Program {
         //TestG44P();
         //DoG44PTournament();
 
-        //var list = new List<int>() {
-        //    5, 1, 2, 6, 4, 4, 2, 8,
-        //};
-        //list.Sort((a, b) => a - b);
-        //foreach (var item in list) {
-        //    Console.WriteLine(item);
-        //}
-        var tc = new TestClass();
-        tc.myPresetInt = 1;
-        tc.myNormalInt = 2;
-        var json1 = JsonSerializer.Serialize(tc);
-        Console.WriteLine(json1);
-        var clone = JsonSerializer.Deserialize<TestClass>(json1);
-        var json2 = JsonSerializer.Serialize(clone);
-        Console.WriteLine(json2);
+        var list = new List<int>() {
+            5, 1, 2, 6, 4, 4, 2, 8,
+        };
+        list.Sort((a, b) => b - a);
+        foreach (var item in list) {
+            Console.WriteLine(item);
+        }
+
+        //var tc = new TestClass();
+        //tc.myPresetInt = 1;
+        //tc.myNormalInt = 2;
+        ////var s = tc.myStruct;
+        ////s.structInt = 3;
+        ////tc.myStruct = s;
+        //var json1 = JsonSerializer.Serialize(tc);
+        //Console.WriteLine(json1);
+        //var clone = JsonSerializer.Deserialize<TestClass>(json1);
+        //var json2 = JsonSerializer.Serialize(clone);
+        //Console.WriteLine(json2);
 
         DataSaver.Flush();
     }
@@ -46,6 +50,13 @@ public class Program {
 
         public int myPresetInt { get; set; } = 5;
         public int myNormalInt { get; set; }
+        public InternalStruct myStruct { get; set; }
+
+        public struct InternalStruct {
+
+            public int structInt { get; set; }
+
+        }
 
     }
 
@@ -173,7 +184,7 @@ public class Program {
     static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 500;
+        const int numberOfGamesToPlay = 100;
         var filter = MatchupFilter.AllowAllMatchups;
         DoTournament<TTTGame>(
             continueId: continueTournamentId,

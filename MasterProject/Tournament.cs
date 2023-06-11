@@ -78,6 +78,8 @@ namespace MasterProject {
         private string[] agentIds = new string[0];
         private WinLossDrawRecord? record;
         private int playersPerGame;
+        private string id;
+        private int autosaveCounter;
 
         public WinLossDrawRecord? GetWinLossDrawRecord () {
             if (!IsFinished || record == null) {
@@ -99,16 +101,17 @@ namespace MasterProject {
                 }
                 record.CalculateElo();
             }
-            var id = $"{typeof(TGame).FullName}_{System.DateTime.Now.Ticks}";
+            var saveId = this.id;
             if (isAutoSave) {
-                id = $"{id}_autosave";
+                saveId = $"{saveId}_autosave{autosaveCounter}";
+                autosaveCounter++;
             }
             if (!string.IsNullOrWhiteSpace(SaveIdPrefix)) {
-                id = $"{SaveIdPrefix}_{id}";
+                saveId = $"{SaveIdPrefix}_{saveId}";
             }
-            DataSaver.SaveInProject(GetProjectPathForResult(id), record.ToJsonBytes());
+            DataSaver.SaveInProject(GetProjectPathForResult(saveId), record.ToJsonBytes());
             DataSaver.Flush();
-            onSaved(id);
+            onSaved(saveId);
         }
 
         private void VerifyOnlyOneRun () {
@@ -156,8 +159,13 @@ namespace MasterProject {
 
         private Tournament () { }
 
+        private static string GenerateId () {
+            return $"{nameof(Tournament)}_{typeof(TGame).Name}_{System.DateTime.Now.Ticks}";
+        }
+
         public static Tournament<TGame> New (int playersPerGame) {
             var output = new Tournament<TGame>();
+            output.id = GenerateId();
             output.playersPerGame = playersPerGame;
             output.record = null;
             return output;
@@ -165,6 +173,7 @@ namespace MasterProject {
 
         public static Tournament<TGame> Continue (WinLossDrawRecord existingRecord) {
             var output = new Tournament<TGame>();
+            output.id = GenerateId();
             output.playersPerGame = existingRecord.matchupSize;
             output.record = existingRecord;
             return output;
