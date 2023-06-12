@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MasterProject.MachineLearning {
+﻿namespace MasterProject.MachineLearning {
 
     public abstract class Individual {
 
@@ -27,6 +21,8 @@ namespace MasterProject.MachineLearning {
         public TournamentResult peerTournamentResult { get; set; }
 
         public TournamentResult randomTournamentResult { get; set; }
+
+        protected static readonly System.Random rng = new System.Random();
 
         public abstract Agent CreateAgent ();
 

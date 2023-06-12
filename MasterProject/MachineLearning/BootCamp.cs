@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MasterProject.MachineLearning {
 
-    public class BootCamp {
+    public abstract class BootCamp {
 
         public const int DEFAULT_NEW_INDIVIDUAL_COUNT = 2;
         public const int DEFAULT_BEST_CLONE_COUNT = 3;
@@ -14,11 +14,11 @@ namespace MasterProject.MachineLearning {
 
         public class GenerationConfiguration {
 
-            public int newIndividualCount      { get; set; } = DEFAULT_NEW_INDIVIDUAL_COUNT;
-            public int bestCloneCount          { get; set; } = DEFAULT_BEST_CLONE_COUNT;
-            public int invertedWorstCloneCount { get; set; } = DEFAULT_INVERTED_WORST_CLONE_COUNT;
-            public int mutationCount           { get; set; } = DEFAULT_MUTATION_COUNT;
-            public int combinationCount        { get; set; } = DEFAULT_COMBINATION_COUNT;
+            public int newIndividualCount { get; set; }
+            public int bestCloneCount { get; set; }
+            public int invertedWorstCloneCount { get; set; }
+            public int mutationCount { get; set; }
+            public int combinationCount { get; set; }
 
             public int generationSize => newIndividualCount
                                        + bestCloneCount
@@ -28,8 +28,16 @@ namespace MasterProject.MachineLearning {
 
         }
 
+        public static GenerationConfiguration DefaultGenerationConfig => new GenerationConfiguration() {
+            newIndividualCount      = DEFAULT_NEW_INDIVIDUAL_COUNT,
+            bestCloneCount          = DEFAULT_BEST_CLONE_COUNT,
+            invertedWorstCloneCount = DEFAULT_INVERTED_WORST_CLONE_COUNT,
+            mutationCount           = DEFAULT_MUTATION_COUNT,
+            combinationCount        = DEFAULT_COMBINATION_COUNT,
+        };
+
         public const int DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS = 10;
-        public const int DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS = 10;
+        public const int DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS = 100;
 
         public class TournamentConfiguration {
 
@@ -43,13 +51,31 @@ namespace MasterProject.MachineLearning {
 
         }
 
+        public static TournamentConfiguration DefaultTournamentConfig (int playersPerGame) {
+            return new TournamentConfiguration() {
+                playersPerGame = playersPerGame, 
+                peerTournamentMatchupRepetitionCount = DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS,
+                randomTournamentMatchupRepetitionCount = DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS,
+                maxMoveCount = Game.NO_MOVE_LIMIT,
+                maxMoveMillis = Game.NO_TIMEOUT,
+                autosaveInterval = 5,
+                parallelGameCount = 16,
+            };
+        }
+
+        public const float DEFAULT_PEER_TOURNAMENT_FITNESS_WEIGHT = 1f;
+        public const float DEFAULT_RANDOM_TOURNAMENT_FITNESS_WEIGHT = 1f;
+        public const float DEFAULT_FITNESS_WINRATE_WEIGHT  = 1.0f;
+        public const float DEFAULT_FITNESS_DRAWRATE_WEIGHT = 0.5f;
+        public const float DEFAULT_FITNESS_LOSSRATE_WEIGHT = 0.0f;
+
         public class FitnessWeighting {
 
-            public float peerTournamentWeight { get; set; }   = 1f;
-            public float randomTournamentWeight { get; set; } = 1f;
-            public float winrateWeight { get; set; }  = 1f;
-            public float drawRateWeight { get; set; } = 0.5f;
-            public float lossRateWeight { get; set; } = 0f;
+            public float peerTournamentWeight { get; set; }
+            public float randomTournamentWeight { get; set; }
+            public float winrateWeight { get; set; }
+            public float drawRateWeight { get; set; }
+            public float lossRateWeight { get; set; }
 
             public float GetRatingForIndividual (Individual individual) {
                 return  (peerTournamentWeight * GetTournamentRating(individual.peerTournamentResult))
@@ -64,6 +90,14 @@ namespace MasterProject.MachineLearning {
             }
 
         }
+
+        public static FitnessWeighting DefaultFitnessWeighting => new FitnessWeighting() {
+            peerTournamentWeight = DEFAULT_PEER_TOURNAMENT_FITNESS_WEIGHT,
+            randomTournamentWeight = DEFAULT_RANDOM_TOURNAMENT_FITNESS_WEIGHT,
+            winrateWeight = DEFAULT_FITNESS_WINRATE_WEIGHT,
+            drawRateWeight = DEFAULT_FITNESS_DRAWRATE_WEIGHT,
+            lossRateWeight = DEFAULT_FITNESS_LOSSRATE_WEIGHT,
+        };
 
         public const string SavedataDirectoryName = "BootCampData";
 
@@ -127,16 +161,23 @@ namespace MasterProject.MachineLearning {
         }
 
         void Save () {
+            Log("Saving Progress!");
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(this);
             DataSaver.SaveInProject(GetProjectPathForSavedata(this.id), jsonBytes);
             DataSaver.Flush();
         }
 
+        void Log (string msg) {
+            Console.WriteLine($"{nameof(BootCamp)}<{typeof(TGame).Name}, {typeof(TIndividual).Name}>: {msg}");
+        }
+
         public void RunUntil (IBootCampTerminationCondition<TGame, TIndividual> terminationCondition) {
             while (true) {
+                Log($"Training Generation {generations.Count - 1}");
                 var currentGen = generations[generations.Count - 1];
                 var currentAgents = new List<Agent>(currentGen.Select(individual => individual.CreateAgent()));
                 if (!peerTournamentFinished) {
+                    Log("Starting Peer Tournament");
                     var peerRecord = RunPeerTournament(currentAgents);
                     for (int i = 0; i < currentGen.Length; i++) {
                         ApplyTournamentResult(
@@ -149,7 +190,9 @@ namespace MasterProject.MachineLearning {
                     peerTournamentFinished = true;
                     Save();
                 }
+                Log($"Peer Tournament Finished");
                 if (!randomTournamentFinished) {
+                    Log("Starting Random Tournament");
                     var randomRecord = RunRandomTournament(currentAgents);
                     for (int i = 0; i < currentGen.Length; i++) {
                         ApplyTournamentResult(
@@ -162,10 +205,14 @@ namespace MasterProject.MachineLearning {
                     randomTournamentFinished = true;
                     Save();
                 }
+                Log($"Random Tournament Finished");
                 if (terminationCondition.EndTraining(this)) {
+                    SetCurrentGenerationFitnessAndSort();
                     Save();
+                    Log($"Training Finished");
                     break;
                 }
+                Log($"Creating Next Generation");
                 CreateNextGeneration();
                 latestRecordId = string.Empty;
                 peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
@@ -232,6 +279,18 @@ namespace MasterProject.MachineLearning {
             apply(individual, result);
         }
 
+        void SetCurrentGenerationFitnessAndSort () {
+            var currGen = generations[generations.Count - 1];
+            foreach (var individual in currGen) {
+                individual.finalFitness = fitnessWeighting.GetRatingForIndividual(individual);
+            }
+            var sortedList = new List<TIndividual>(currGen);
+            sortedList.Sort((a, b) => Math.Sign(b.finalFitness - a.finalFitness));
+            for (int i = 0; i < currGen.Length; i++) {
+                currGen[i] = sortedList[i];
+            }
+        }
+
         WinLossDrawRecord DoTournament (Tournament<TGame> tournament, IReadOnlyList<Agent> agents, int matchupRepetitons, IMatchupFilter filter) {
             tournament.AgentMoveTimeoutMilliseconds = tournamentConfig.maxMoveMillis;
             tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Nothing;
@@ -248,7 +307,7 @@ namespace MasterProject.MachineLearning {
 
         void CreateNextGeneration () {
             var currGen = generations[generations.Count - 1];
-            SortCurrentGenerationByFitness();
+            SetCurrentGenerationFitnessAndSort();
             var nextGen = new List<TIndividual>(generationConfig.generationSize);
             var nextIndividualIndex = currGen[currGen.Length - 1].index + 1;
             AddIndividualsToNextGen(generationConfig.newIndividualCount, _ => {
@@ -271,17 +330,6 @@ namespace MasterProject.MachineLearning {
                 return src.CombinedClone(other);
             });
             generations.Add(nextGen.ToArray());
-
-            void SortCurrentGenerationByFitness () {
-                foreach (var individual in currGen) {
-                    individual.finalFitness = fitnessWeighting.GetRatingForIndividual(individual);
-                }
-                var sortedList = new List<TIndividual>(currGen);
-                sortedList.Sort((a, b) => Math.Sign(b.finalFitness - a.finalFitness));
-                for (int i = 0; i < currGen.Length; i++) {
-                    currGen[i] = sortedList[i];
-                }
-            }
 
             TIndividual GetIndividualByPerformance (int index) {
                 return currGen[index];

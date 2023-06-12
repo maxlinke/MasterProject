@@ -4,8 +4,10 @@ using MasterProject;
 using MasterProject.TicTacToe;
 using MasterProject.G44P;
 using MasterProject.Records;
+using MasterProject.MachineLearning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TTTIndividual = MasterProject.TicTacToe.MachineLearning.TTTIndividual;
 
 public class Program {
 
@@ -18,49 +20,44 @@ public class Program {
     }
 
     public static void Main (string[] args) {
+        //var foo = new MasterProject.TicTacToe.MachineLearning.AgentParameters();
+        //var bar = new MasterProject.TicTacToe.MachineLearning.AgentParameters();
+        //Console.WriteLine(foo.GetHashCode());
+        //Console.WriteLine(bar.GetHashCode());
+        //foo.winScore = 1;
+        //Console.WriteLine(foo.GetHashCode());
+        //var json = JsonSerializer.SerializeToUtf8Bytes(foo);
+        //var fooClone = JsonSerializer.Deserialize<MasterProject.TicTacToe.MachineLearning.AgentParameters>(json);
+        //Console.WriteLine(foo.GetHashCode());
+
         //DoTTTTournament();
+        DoTTTBootCamp();
 
         //TestG44P();
         //DoG44PTournament();
 
-        var list = new List<int>() {
-            5, 1, 2, 6, 4, 4, 2, 8,
-        };
-        list.Sort((a, b) => b - a);
-        foreach (var item in list) {
-            Console.WriteLine(item);
-        }
-
-        //var tc = new TestClass();
-        //tc.myPresetInt = 1;
-        //tc.myNormalInt = 2;
-        ////var s = tc.myStruct;
-        ////s.structInt = 3;
-        ////tc.myStruct = s;
-        //var json1 = JsonSerializer.Serialize(tc);
-        //Console.WriteLine(json1);
-        //var clone = JsonSerializer.Deserialize<TestClass>(json1);
-        //var json2 = JsonSerializer.Serialize(clone);
-        //Console.WriteLine(json2);
+        // TODO
+        // make simple ttt-individuals
+        // a weighting for winning, drawing and losing
+        // and a weight for how often a random move should be played anyways
+        // and for starters, just check if the serialization even works
+        // and the deserialization of course
+        // so do a bootcamp with the absolute minimum
+        // also maybe add some console logs to whenever a generation is done training
+        // then, when the serialization reliably works, do the ttt-tournament in earnest
+        // and if that works, do one for g44p
+        // the individuals (thanks to inheritance) need to be their own classes, containing the ratingparameters objects
+        // shouldn't be too hard though. 
 
         DataSaver.Flush();
     }
 
-    public class TestClass {
-
-        public int myPresetInt { get; set; } = 5;
-        public int myNormalInt { get; set; }
-        public InternalStruct myStruct { get; set; }
-
-        public struct InternalStruct {
-
-            public int structInt { get; set; }
-
-        }
-
-    }
-
     // TODO option for game log files
+    //  -> not even an option
+    //  -> just make a logger class
+    //  -> and when main terminates, write the log to file
+    //  -> https://stackoverflow.com/questions/4470700/how-to-save-console-writeline-output-to-text-file
+    //  -> but do it with the manual logger instead
     // TODO option for tournament log files
     // TODO non-optional tournament error log files
     // TODO make the visualizer adapt to a higher player count by not having 50% hardcoded as neutral but dependent on the player count per matchup with 25% being neutral for 4 players for example
@@ -184,24 +181,32 @@ public class Program {
     static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 100;
-        var filter = MatchupFilter.AllowAllMatchups;
+        const int numberOfGamesToPlay = 10;
+        var filter = MatchupFilter.PreventMirrorMatches;
         DoTournament<TTTGame>(
             continueId: continueTournamentId,
             numberOfPlayersPerMatchup: 2,
             numberOfGamesToPlay: numberOfGamesToPlay,
             filter: filter,
             agents: new Agent<TTTGame, TTTGameState, TTTMove>[]{
-                new MasterProject.TicTacToe.Agents.RandomAgent(),
-                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
-                new MasterProject.TicTacToe.Agents.LineBuilder(),
+                //new MasterProject.TicTacToe.Agents.RandomAgent(),
+                //new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+                //new MasterProject.TicTacToe.Agents.LineBuilder(),
                 //new MasterProject.TicTacToe.Agents.ABWin(),
                 //new MasterProject.TicTacToe.Agents.ABLose(),
                 new MasterProject.TicTacToe.Agents.ABWinFast(),
-                new MasterProject.TicTacToe.Agents.ABLoseFast(),
-                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.5f),
-                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.8f),
-                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.9f),
+                //new MasterProject.TicTacToe.Agents.ABLoseFast(),
+                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.5f),
+                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.8f),
+                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.9f),
+                new MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(
+                    new MasterProject.TicTacToe.MachineLearning.AgentParameters(){
+                        winScore = 1,
+                        drawScore = 0,
+                        lossScore = -1,
+                        randomProbability = 0
+                    }
+                )
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
@@ -209,6 +214,44 @@ public class Program {
                 tournament.AutosaveIntervalMinutes = 1;
             }
         );
+    }
+
+    // TODO continuing the bootcamp gives this exception (invaliddataexception in tournament.verifyagents or something)
+    // Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent (MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_28297030)!
+	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_-2114008383)!
+	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_7672059)!
+	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_28297030)!
+	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_-2114008383)!
+	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_7672059)!
+    // either somehow my offspring creation results in duplicates (the only good explanation with the ids being hashcodes)
+    // or something else is happening that i'll need to debug
+    // it is very unlikely that this is random chance though
+    // i could get the agent types and parent indices for one, see what kind of agents are causing the problems
+    // and on another hand, i could just use guids for them and the parameters instead of auto-generated hashcodes
+
+    // TODO test both running a single generation, saving and running the second generation from loaded data
+    // and just doing two generations from the get-go
+    static void DoTTTBootCamp () {
+        //var bcId = "";
+        var bcId = "BC_638221826463201548";
+        var genCount = 2;
+        BootCamp<TTTGame, TTTIndividual> bc;
+        if (!BootCamp<TTTGame, TTTIndividual>.TryLoad(bcId, out bc)) {
+            Console.WriteLine("NEW BOOTCAMP!!!");
+            bc = BootCamp<TTTGame, TTTIndividual>.Create(
+                BootCamp.DefaultGenerationConfig,
+                BootCamp.DefaultTournamentConfig(2),
+                BootCamp.DefaultFitnessWeighting
+            );
+        } else {
+            Console.WriteLine("CONTINUING!!!");
+        }
+        // TODO analyze the individuals of the current generation and their agents here
+        // see who's a duplicate
+        // as an easy solution, i can just give individuals a guid
+        // and have that be set by the bootcamp on creation
+        // that should more or less make sure i don't get duplicates
+        bc.RunUntil(BootCampTerminationCondition<TTTGame, TTTIndividual>.AfterFixedNumberOfGenerations(genCount));
     }
 
     static void DoTournament<TGame> (string continueId, int numberOfPlayersPerMatchup, int numberOfGamesToPlay, IMatchupFilter filter, IReadOnlyList<Agent> agents, bool saveResult, System.Action<Tournament<TGame>> onBeforeRun = null) where TGame : Game, new() {
