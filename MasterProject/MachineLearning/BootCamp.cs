@@ -126,6 +126,21 @@ namespace MasterProject.MachineLearning {
 
         public bool randomTournamentFinished { get; set; }
 
+        public IReadOnlyList<TIndividual> previousGeneration {
+            get {
+                if (generations.Count < 2) {
+                    return null;
+                }
+                return generations[generations.Count - 2];
+            }
+        }
+
+        public IReadOnlyList<TIndividual> currentGeneration {
+            get {
+                return generations[generations.Count - 1];
+            }
+        }
+
         public string id { get; set; }
 
         public static BootCamp<TGame, TIndividual> Create (
@@ -138,16 +153,8 @@ namespace MasterProject.MachineLearning {
             output.generationConfig = generationConfig;
             output.tournamentConfig = tournamentConfig;
             output.fitnessWeighting = fitnessWeighting;
-            var firstGen = new TIndividual[generationConfig.generationSize];
-            for (int i = 0; i < firstGen.Length; i++) {
-                firstGen[i] = new TIndividual();
-                firstGen[i].index = i;
-                firstGen[i].InitializeWithRandomCoefficients();
-            }
-            output.generations = new List<TIndividual[]>() { firstGen };
-            output.latestRecordId = string.Empty;
-            output.peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
-            output.randomTournamentFinished = tournamentConfig.randomTournamentMatchupRepetitionCount <= 0;
+            output.generations = new List<TIndividual[]>();
+            output.CreateNextGeneration();
             return output;
         }
 
@@ -163,7 +170,7 @@ namespace MasterProject.MachineLearning {
         void Save () {
             Log("Saving Progress!");
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(this);
-            DataSaver.SaveInProject(GetProjectPathForSavedata(this.id), jsonBytes);
+            DataSaver.SaveInProject(GetProjectPathForSavedata($"{this.id}_Generation{generations.Count}"), jsonBytes);
             DataSaver.Flush();
         }
 
@@ -214,11 +221,13 @@ namespace MasterProject.MachineLearning {
                 }
                 Log($"Creating Next Generation");
                 CreateNextGeneration();
-                latestRecordId = string.Empty;
-                peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
-                randomTournamentFinished = tournamentConfig.randomTournamentMatchupRepetitionCount <= 0;
                 Save();
             }
+        }
+
+        public void RecreateCurrentGeneration () {
+            generations.RemoveAt(generations.Count - 1);
+            CreateNextGeneration();
         }
 
         bool TryLoadLatestRecord (out WinLossDrawRecord output, out bool isRandomRecord) {
@@ -306,41 +315,62 @@ namespace MasterProject.MachineLearning {
         }
 
         void CreateNextGeneration () {
-            var currGen = generations[generations.Count - 1];
-            SetCurrentGenerationFitnessAndSort();
-            var nextGen = new List<TIndividual>(generationConfig.generationSize);
-            var nextIndividualIndex = currGen[currGen.Length - 1].index + 1;
-            AddIndividualsToNextGen(generationConfig.newIndividualCount, _ => {
-                var newAgent = new TIndividual();
-                newAgent.InitializeWithRandomCoefficients();
-                return newAgent;
-            });
-            AddIndividualsToNextGen(generationConfig.bestCloneCount, i => {
-                return GetIndividualByPerformance(i).Clone();
-            });
-            AddIndividualsToNextGen(generationConfig.invertedWorstCloneCount, i => {
-                return GetIndividualByPerformance(currGen.Length - i - 1).InvertedClone();
-            });
-            AddIndividualsToNextGen(generationConfig.mutationCount, i => {
-                return GetIndividualByPerformance(i).MutatedClone();
-            });
-            AddIndividualsToNextGen(generationConfig.combinationCount, i => {
-                var src = GetIndividualByPerformance(i);
-                var other = GetIndividualByPerformance((i + 1) % currGen.Length);
-                return src.CombinedClone(other);
-            });
-            generations.Add(nextGen.ToArray());
+            if (generations.Count < 1) {
+                generations.Add(CreateFirstGeneration());
+            } else {
+                generations.Add(CreateOffspringGeneration());
+            }
+            latestRecordId = string.Empty;
+            peerTournamentFinished = tournamentConfig.peerTournamentMatchupRepetitionCount <= 0;
+            randomTournamentFinished = tournamentConfig.randomTournamentMatchupRepetitionCount <= 0;
 
-            TIndividual GetIndividualByPerformance (int index) {
-                return currGen[index];
+            TIndividual[] CreateFirstGeneration () {
+                var firstGen = new TIndividual[generationConfig.generationSize];
+                for (int i = 0; i < firstGen.Length; i++) {
+                    firstGen[i] = new TIndividual();
+                    firstGen[i].InitializeWithRandomCoefficients();
+                    firstGen[i].guid = System.Guid.NewGuid().ToString();
+                    firstGen[i].agentId = firstGen[i].CreateAgent().Id;
+                }
+                return firstGen;
             }
 
-            void AddIndividualsToNextGen (int count, System.Func<int, Individual> createIndividual) {
-                for (int i = 0; i < count; i++) {
-                    var newIndividual = (TIndividual)(createIndividual(i));
-                    newIndividual.index = nextIndividualIndex;
-                    nextGen.Add(newIndividual);
-                    nextIndividualIndex++;
+            TIndividual[] CreateOffspringGeneration () {
+                var currGen = generations[generations.Count - 1];
+                SetCurrentGenerationFitnessAndSort();
+                var nextGen = new List<TIndividual>(generationConfig.generationSize);
+                AddIndividualsToNextGen(generationConfig.newIndividualCount, _ => {
+                    var newAgent = new TIndividual();
+                    newAgent.InitializeWithRandomCoefficients();
+                    return newAgent;
+                });
+                AddIndividualsToNextGen(generationConfig.bestCloneCount, i => {
+                    return GetIndividualByPerformance(i).Clone();
+                });
+                AddIndividualsToNextGen(generationConfig.invertedWorstCloneCount, i => {
+                    return GetIndividualByPerformance(currGen.Length - i - 1).InvertedClone();
+                });
+                AddIndividualsToNextGen(generationConfig.mutationCount, i => {
+                    return GetIndividualByPerformance(i).MutatedClone();
+                });
+                AddIndividualsToNextGen(generationConfig.combinationCount, i => {
+                    var src = GetIndividualByPerformance(i);
+                    var other = GetIndividualByPerformance((i + 1) % currGen.Length);
+                    return src.CombinedClone(other);
+                });
+                return nextGen.ToArray();
+
+                TIndividual GetIndividualByPerformance (int index) {
+                    return currGen[index];
+                }
+
+                void AddIndividualsToNextGen (int count, System.Func<int, Individual> createIndividual) {
+                    for (int i = 0; i < count; i++) {
+                        var newIndividual = (TIndividual)(createIndividual(i));
+                        newIndividual.guid = System.Guid.NewGuid().ToString();
+                        newIndividual.agentId = newIndividual.CreateAgent().Id;
+                        nextGen.Add(newIndividual);
+                    }
                 }
             }
         }

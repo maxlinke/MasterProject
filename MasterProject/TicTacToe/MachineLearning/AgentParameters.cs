@@ -1,4 +1,6 @@
-﻿namespace MasterProject.TicTacToe.MachineLearning {
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace MasterProject.TicTacToe.MachineLearning {
 
     public struct AgentParameters {
 
@@ -8,21 +10,28 @@
         public float randomProbability { get; set; }
 
         public override bool Equals (object? obj) {
-            return obj is AgentParameters parameters &&
-                   winScore == parameters.winScore &&
-                   drawScore == parameters.drawScore &&
-                   lossScore == parameters.lossScore &&
-                   randomProbability == parameters.randomProbability;
+            return obj is AgentParameters parameters
+                && winScore == parameters.winScore
+                && drawScore == parameters.drawScore
+                && lossScore == parameters.lossScore
+                && randomProbability == parameters.randomProbability;
         }
 
-        // the default hashcode combine thing is not consistent between running the program multiple times... what?
         public override int GetHashCode () {
             return winScore.GetHashCode()
-                ^ drawScore.GetHashCode()
-                ^ lossScore.GetHashCode()
-                ^ randomProbability.GetHashCode()
-            ;
+                 ^ drawScore.GetHashCode()
+                 ^ lossScore.GetHashCode()
+                 ^ randomProbability.GetHashCode();
         }
+
+        public static bool operator == (AgentParameters a, AgentParameters b) {
+            return a.Equals(b);
+        }
+
+        public static bool operator != (AgentParameters a, AgentParameters b) {
+            return !(a.Equals(b));
+        }
+
     }
 
 }

@@ -131,8 +131,8 @@ namespace MasterProject {
                     sb.AppendLine($"Clone of agent type {agents[i].GetType()} returned type {testClone.GetType()}!");
                 }
                 var agentId = agentIds[i];
-                for (int j = 0; j < agentIds.Length; j++) {
-                    if (i != j && agentIds[j] == agentId) {
+                for (int j = i + 1; j < agentIds.Length; j++) {
+                    if (agentIds[j] == agentId) {
                         sb.AppendLine($"Agent type {agents[i].GetType()} returned same id as agent type {agents[j].GetType()} ({agentId})!");
                     }
                 }

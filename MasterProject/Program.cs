@@ -205,7 +205,8 @@ public class Program {
                         drawScore = 0,
                         lossScore = -1,
                         randomProbability = 0
-                    }
+                    },
+                    System.Guid.NewGuid().ToString()
                 )
             },
             saveResult: true,
@@ -232,8 +233,8 @@ public class Program {
     // TODO test both running a single generation, saving and running the second generation from loaded data
     // and just doing two generations from the get-go
     static void DoTTTBootCamp () {
-        //var bcId = "";
-        var bcId = "BC_638221826463201548";
+        var bcId = "";
+        //var bcId = "BC_638222022448911356_Generation1";
         var genCount = 2;
         BootCamp<TTTGame, TTTIndividual> bc;
         if (!BootCamp<TTTGame, TTTIndividual>.TryLoad(bcId, out bc)) {
@@ -246,11 +247,37 @@ public class Program {
         } else {
             Console.WriteLine("CONTINUING!!!");
         }
-        // TODO analyze the individuals of the current generation and their agents here
-        // see who's a duplicate
-        // as an easy solution, i can just give individuals a guid
-        // and have that be set by the bootcamp on creation
-        // that should more or less make sure i don't get duplicates
+
+        //var prettyPrint = new JsonSerializerOptions { WriteIndented = true };
+        //for (int i = 0; i < bc.currentGeneration.Count; i++) {
+        //    var individualI = bc.currentGeneration[i];
+        //    var agentI = individualI.CreateAgent();
+        //    for (int j = i + 1; j < bc.currentGeneration.Count; j++) {
+        //        var individualJ = bc.currentGeneration[j];
+        //        var agentJ = individualJ.CreateAgent();
+        //        if (agentI.Id == agentJ.Id) {
+        //            Console.WriteLine($">>> {i} and {j} create agents with the same id!");
+        //            Console.WriteLine($"{i} is {individualI.IndividualType} with parents {GetParents(individualI)}");
+        //            Console.WriteLine($"parameters for {i} are {JsonSerializer.Serialize(individualI.agentParams, prettyPrint)}");
+        //            Console.WriteLine($"{j} is {individualJ.IndividualType} with parents {GetParents(individualJ)}");
+        //            Console.WriteLine($"parameters for {j} are {JsonSerializer.Serialize(individualJ.agentParams, prettyPrint)}");
+        //            Console.WriteLine();
+        //        }
+        //    }
+        //}
+        //
+        //string GetParents (TTTIndividual individual) {
+        //    var sb = new System.Text.StringBuilder();
+        //    if (individual.parentIndices.Length > 0) {
+        //        sb.Append(individual.parentIndices[0]);
+        //        for (int i = 1; i < individual.parentIndices.Length; i++) {
+        //            sb.Append($", {individual.parentIndices[i]}");
+        //        }
+        //    }
+        //    return sb.ToString();
+        //}
+        //return; // TODO remove
+
         bc.RunUntil(BootCampTerminationCondition<TTTGame, TTTIndividual>.AfterFixedNumberOfGenerations(genCount));
     }
 

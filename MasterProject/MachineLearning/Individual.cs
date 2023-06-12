@@ -12,9 +12,11 @@
 
         public IndividualType IndividualType { get; set; }
 
-        public int index { get; set; }
+        public string guid { get; set; }
 
-        public int[] parentIndices { get; set; }
+        public string agentId { get; set; }
+
+        public string[] parentGuids { get; set; }
 
         public float finalFitness { get; set; }
 
@@ -29,7 +31,7 @@
         public void InitializeWithRandomCoefficients () {
             RandomizeCoefficients();
             this.IndividualType = IndividualType.NewRandom;
-            this.parentIndices = new int[0];
+            this.parentGuids = new string[0];
         }
 
         protected abstract void RandomizeCoefficients ();
@@ -37,7 +39,7 @@
         public Individual Clone () {
             var output = GetClone();
             output.IndividualType = IndividualType.Clone;
-            output.parentIndices = new int[] { this.index };
+            output.parentGuids = new string[] { this.guid };
             return output;
         }
 
@@ -47,7 +49,7 @@
             var output = GetClone();
             output.CombineCoefficients(other);
             output.IndividualType = IndividualType.Combination;
-            output.parentIndices = new int[] { this.index, other.index };
+            output.parentGuids = new string[] { this.guid, other.guid };
             return output;
         }
 
@@ -57,7 +59,7 @@
             var output = GetClone();
             output.MutateCoefficients();
             output.IndividualType = IndividualType.Mutation;
-            output.parentIndices = new int[] { this.index };
+            output.parentGuids = new string[] { this.guid };
             return output;
         }
 
@@ -67,7 +69,7 @@
             var output = GetClone();
             output.InvertCoefficients();
             output.IndividualType = IndividualType.InvertedClone;
-            output.parentIndices = new int[] { this.index };
+            output.parentGuids = new string[] { this.guid };
             return output;
         }
 

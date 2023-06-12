@@ -5,15 +5,17 @@ namespace MasterProject.TicTacToe.MachineLearning {
     public class ParametrizedABAgent : GenericAlphaBetaAgent {
 
         private readonly AgentParameters agentParams;
+        private readonly string guid;
 
-        public override string Id => $"{base.Id}_{agentParams.GetHashCode()}";
+        public override string Id => $"{base.Id}_{this.guid}";
 
-        public ParametrizedABAgent (AgentParameters agentParams) {
+        public ParametrizedABAgent (AgentParameters agentParams, string guid) {
             this.agentParams = agentParams;
+            this.guid = guid;
         }
 
         public override Agent Clone () {
-            return new ParametrizedABAgent(this.agentParams);
+            return new ParametrizedABAgent(this.agentParams, this.guid);
         }
 
         protected override float EvaluateState (int ownIndex, TTTGameState gameState, int depth) {

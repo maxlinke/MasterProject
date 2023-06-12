@@ -10,7 +10,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
         public AgentParameters agentParams { get; set; }
 
         public override Agent CreateAgent () {
-            return new ParametrizedABAgent(this.agentParams);
+            return new ParametrizedABAgent(this.agentParams, this.guid);
         }
 
         protected override void CombineCoefficients (Individual otherIndividual) {
@@ -36,7 +36,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
                     return true;
                 } else {
                     remainingFromOther--;
-                    return true;
+                    return false;
                 }
             }
         }
