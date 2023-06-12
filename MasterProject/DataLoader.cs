@@ -10,6 +10,10 @@ namespace MasterProject {
     public static class DataLoader {
 
         public static bool TryLoadInProject (string path, out byte[] output) {
+            if (string.IsNullOrWhiteSpace(path)) {
+                output = null;
+                return false;
+            }
             if (!path.StartsWith(Program.GetProjectPath())) {
                 path = Path.Combine(Program.GetProjectPath(), path);
             }

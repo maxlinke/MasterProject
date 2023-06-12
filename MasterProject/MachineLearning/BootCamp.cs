@@ -1,4 +1,6 @@
 ﻿using MasterProject.Records;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MasterProject.MachineLearning {
 
@@ -63,6 +65,12 @@ namespace MasterProject.MachineLearning {
 
         }
 
+        public const string SavedataDirectoryName = "BootCampData";
+
+        public const string SavedataFileExtension = "bootCampData";
+
+        protected static string GetProjectPathForSavedata (string id) => $"{SavedataDirectoryName}/{id}.{SavedataFileExtension}";
+
     }
 
     public class BootCamp<TGame, TIndividual> : BootCamp
@@ -109,9 +117,19 @@ namespace MasterProject.MachineLearning {
             return output;
         }
 
+        public static bool TryLoad (string id, out BootCamp<TGame, TIndividual> output) {
+            if (!string.IsNullOrWhiteSpace(id) && DataLoader.TryLoadInProject(GetProjectPathForSavedata(id), out var loadedBytes)) {
+                output = JsonSerializer.Deserialize<BootCamp<TGame, TIndividual>>(loadedBytes);
+                return true;
+            }
+            output = default;
+            return false;
+        }
+
         void Save () {
-            // TODO
-            throw new NotImplementedException();
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(this);
+            DataSaver.SaveInProject(GetProjectPathForSavedata(this.id), jsonBytes);
+            DataSaver.Flush();
         }
 
         public void RunUntil (IBootCampTerminationCondition<TGame, TIndividual> terminationCondition) {
