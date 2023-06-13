@@ -384,7 +384,7 @@ function onTournamentResultFileLoaded (input) {
     initDropdown(matchupOptionsDropdown, matchupOptions, onMatchupOptionChanged);
 
     loadedData = processTournamentData(input);
-    console.log(loadedData);
+    // console.log(loadedData);
     updateRankingTable();
     updateAdditionalMatrixControls();
     updateMatrix();

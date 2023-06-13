@@ -24,6 +24,10 @@ label {
     width: 6em;
 }
 
+svg {
+    display: block;
+}
+
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
     border: 0px;
     padding: 4px;

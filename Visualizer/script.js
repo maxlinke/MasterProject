@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function handleFileSelect(evt) {
-        console.log(getCurrentFileName());
         const reader = new FileReader();
         reader.onload = function(e) {
             try{
@@ -38,7 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     onTournamentResultFileLoaded(input);
                     break;
                 case "bootCampData":
-                    throw new Error("TODO implement boot camp data visualization!");    // TODO
+                    appendTemplate("bootCampDataVisualization");
+                    onBootCampDataFileLoaded(input);
                     break;
                 default:
                     throw new Error(`Unknown file extension \"${extension}\"!`);
