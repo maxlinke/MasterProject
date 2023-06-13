@@ -5,6 +5,14 @@ function onBootCampDataFileLoaded (input) {
     // https://stackoverflow.com/questions/23588384/dynamically-created-svg-element-not-displaying
     function createSvgElement (tagName) { return document.createElementNS("http://www.w3.org/2000/svg", tagName); }
 
+    let loadedData = undefined;
+
+    const displayLineageMode = "Lineage";
+    const displayPerformanceMode = "Performance";
+    const svgDisplayModes = [ displayLineageMode, displayPerformanceMode ];
+    const svgDisplayModeDropdown = document.getElementById("svgDisplayModeSelection");
+    function getSvgDisplayMode () { return svgDisplayModeDropdown.value; }
+
     // what do i want to visualize?
     // - performance with increasing generations
     //      - point clouds for individual agents
@@ -44,7 +52,9 @@ function onBootCampDataFileLoaded (input) {
     // make a parent group, define the general look
     // then the circles just have their positions
 
-    console.log("TODO");
+    loadedData = processBootCampData(input);
+    console.log(loadedData);
+    console.log("TODO visualizer");
 
     const svg = document.getElementById("overviewSvg");
 
@@ -80,5 +90,9 @@ function onBootCampDataFileLoaded (input) {
 
     circle.onmouseenter = () => { console.log("enter"); };
     circle.onmouseleave = () => { console.log("leave"); };
+
+// ----- init -----
+
+    initDropdown(svgDisplayModeDropdown, svgDisplayModes, console.log);
 
 }

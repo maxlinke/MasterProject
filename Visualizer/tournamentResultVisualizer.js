@@ -367,17 +367,6 @@ function onTournamentResultFileLoaded (input) {
 
 //  ----- init -----
 
-    function initDropdown (dropdown, options, onValueChanged) {
-        options.forEach((option) => {
-            const newOption = document.createElement("option");
-            dropdown.appendChild(newOption);
-            newOption.value = option;
-            newOption.innerHTML = option;
-        });
-        dropdown.value = options[0];
-        dropdown.addEventListener("change", () => onValueChanged());
-    }
-
     initDropdown(rankingOptionsDropdown, rankingOptions, onRankingOptionChanged);
     initDropdown(displayOptionDropdown, displayOptions, onMatrixOptionChanged);
     initDropdown(highlightOptionsDropdown, highlightOptions, onMatrixOptionChanged);

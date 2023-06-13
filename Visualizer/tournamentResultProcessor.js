@@ -5,27 +5,7 @@ function processTournamentData (input) {
     const playerGameCounts = input.playerIds.map((id, i) => {
         return input.totalWins[i] + input.totalLosses[i] + input.totalDraws[i];
     });
-    let shortestIdLength = Infinity;
-    let shortestId = "";
-    input.playerIds.forEach(id => {
-        if(id.length < shortestIdLength){
-            shortestIdLength = id.length;
-            shortestId = id;
-        }
-    });
-    let commonPrefix = "";
-    if(shortestId.includes(".")){
-        commonPrefix = shortestId.substring(0, shortestId.lastIndexOf(".") + 1);
-        input.playerIds.forEach(id => {
-            while(commonPrefix.length > 0){
-                if(id.startsWith(commonPrefix)){
-                    return;
-                }
-                commonPrefix = commonPrefix.substring(0, commonPrefix.length - 1);
-                commonPrefix = commonPrefix.substring(0, commonPrefix.lastIndexOf(".") + 1);
-            }
-        });
-    }
+    const commonPrefix = findCommonNamespacePrefix(input.playerIds);
     output.players = input.playerIds.map((id, i) => { return { 
         id: id.substring(commonPrefix.length),
         index: i,

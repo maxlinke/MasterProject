@@ -126,6 +126,7 @@ namespace MasterProject.MachineLearning {
 
         public bool randomTournamentFinished { get; set; }
 
+        [JsonIgnore]
         public IReadOnlyList<TIndividual> previousGeneration {
             get {
                 if (generations.Count < 2) {
@@ -135,6 +136,7 @@ namespace MasterProject.MachineLearning {
             }
         }
 
+        [JsonIgnore]
         public IReadOnlyList<TIndividual> currentGeneration {
             get {
                 return generations[generations.Count - 1];

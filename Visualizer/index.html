@@ -8,7 +8,9 @@
     <script src="tournamentResultVisualizer.js"></script>
     <script src="tournamentResultProcessor.js"></script>
     <script src="bootCampDataVisualizer.js"></script>
+    <script src="bootCampDataProcessor.js"></script>
     <script src="testData.js"></script>
+    <script src="utils.js"></script>
 
     <template id="tournamentResultVisualization">
         <section>
@@ -58,7 +60,11 @@
         <section>
             <h2 class="sectionHeader">Overview</h2>
             <div class="sectionContent">
-                <div>TODO</div>
+                <div class="horizontalControlGroup">
+                    <label for="svgDisplayModeSelection">Display</label>
+                    <select id="svgDisplayModeSelection"></select>
+                </div>
+                <!-- TODO additional (optional) svg controls -->
                 <svg id="overviewSvg">
                     <!-- stuff added in script -->
                 </svg>
