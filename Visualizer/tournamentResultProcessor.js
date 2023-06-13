@@ -1,7 +1,6 @@
 'use strict';
 
-function processData (input) {
-    // TODO unpack the compact data
+function processTournamentData (input) {
     const output = {};
     const playerGameCounts = input.playerIds.map((id, i) => {
         return input.totalWins[i] + input.totalLosses[i] + input.totalDraws[i];
