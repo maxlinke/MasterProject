@@ -64,10 +64,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fileInput.addEventListener("change", handleFileSelect, false);
     try{
-        onInputLoaded(testData, testDataType);
+        if((typeof testData !== 'undefined') && (typeof testDataType !== 'undefined')){
+            onInputLoaded(testData, testDataType);
+        }else{
+            onInputLoaded(undefined);
+        }
     }catch(e){
+        alert("Error!");
         onInputLoaded(undefined);
-        if(!(e instanceof ReferenceError)) throw e;
+        throw e;
     }
 
 });
