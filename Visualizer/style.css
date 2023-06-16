@@ -92,3 +92,25 @@ svg {
     padding: 4px;
     white-space: pre;
 }
+
+.svgYAxisMainLabel {
+    text-anchor: middle;
+    font-weight: bold;
+    font-size: 8pt;
+}
+
+.svgYAxisMinorLabel {
+    text-anchor: end;
+    font-size: 8pt;
+}
+
+.svgXAxisMainLabel {
+    text-anchor: start;
+    font-weight: bold;
+    font-size: 8pt;
+}
+
+.svgXAxisMinorLabel {
+    text-anchor: middle;
+    font-size: 8pt;
+}

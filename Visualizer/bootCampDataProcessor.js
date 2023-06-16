@@ -21,6 +21,21 @@ function processBootCampData (input) {
             individual.individualType = output.individualTypes[individual.IndividualType];
             delete individual.IndividualType;
             individual.agentId = individual.agentId.substring(agentIdPrefix.length);
+            individual.lineageGuids = [];
+            individual.parentGuids.forEach((parentGuid) => {
+                individual.lineageGuids.push(parentGuid);
+                if(generationIndex > 0){
+                    input.generations[generationIndex-1].forEach((prevGenIndividual) => {
+                        if(prevGenIndividual.guid == parentGuid){
+                            prevGenIndividual.lineageGuids.forEach((lineageGuid) => {
+                                if(!individual.lineageGuids.includes(lineageGuid)){
+                                    individual.lineageGuids.push(lineageGuid);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
             return individual;
         });
     });

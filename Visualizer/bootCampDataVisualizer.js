@@ -28,6 +28,16 @@ function onBootCampDataFileLoaded (input) {
         return newLine;
     }
 
+    function svgText (textParent, actualText, x, y, className) {
+        const newText = createSvgElement("text", textParent);
+        newText.innerHTML = actualText;
+        newText.setAttribute("x", x);
+        newText.setAttribute("y", y);
+        if(className != undefined){
+            newText.setAttribute("class", className);
+        }
+    }
+
     let loadedData = undefined;
 
     const displayLineageMode = "Lineage";
@@ -56,29 +66,15 @@ function onBootCampDataFileLoaded (input) {
     // and can do chess
     // and godfield
 
-    // i might want to take the prefix processor out into its own thing because this is bound to have the same issues
-    // which means, i probably also want to process these files before doing stuff with them here
-    // okay, definitely do that
-    // shorten the names
-    // resolve the individual types from int back to a string
-    // add a map from guid to individual to make the cross referencing easier
-
     // https://www.w3schools.com/tags/tag_svg.asp
     // https://www.w3schools.com/html/html5_svg.asp
     // https://www.w3schools.com/graphics/svg_intro.asp
     // https://stackoverflow.com/questions/19254520/hover-effect-on-svg-group-elements
 
-    // when drawing all the circles and stuff, don't define everything for every circle
-    // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/g
-    // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
-    // i think g is enough
-    // make a parent group, define the general look
-    // then the circles just have their positions
-
     // arrows: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
 
     const svg = document.getElementById("overviewSvg");
-    svg.style = "border: 1px solid black";  // TODO remove this later
+    // svg.style = "border: 1px solid black";  // TODO remove this later
 
     function updateSvg () {
         svg.replaceChildren();
@@ -96,13 +92,45 @@ function onBootCampDataFileLoaded (input) {
         }
     }
 
-    // TODO some sort of parameter for marks along the axes
-    // at least for the lineage i'd like "best" and "worst"
-    function setupSvgSizeDrawAxesAndGetContentOffsets (xAxisLabel, yAxisLabel, contentWidth, contentHeight) {
-        console.log("TODO");
-        svg.setAttribute("width", contentWidth);
-        svg.setAttribute("height", contentHeight);
-        return {x: 0, y: 0};
+    function setupSvgSizeDrawAxesAndGetContentOffsets (xAxisLabel, yAxisLabel, contentWidth, contentHeight, minorXLabels, minorYLabels) {
+        const majorLabelFontSizePixels = 8; // copy of the corresponding font size (pt) in the css
+        const minorFontSizePixels = 8;      // copy of the corresponding font size (pt) in the css
+        const axisWidthIncludingSpace = 16;
+        const axisSpace = (axisWidthIncludingSpace - 1) / 2;
+        const topSpace = (2 * axisSpace) + majorLabelFontSizePixels;
+        const leftSpace = 70;
+        const bottomSpace = axisWidthIncludingSpace + minorFontSizePixels + axisSpace;
+        const rightSpace = 70;
+         
+        // the lines
+        const lineGroup = createSvgElement("g", svg);
+        lineGroup.setAttribute("stroke", "black");
+        const yAxisX = leftSpace - axisSpace - 1;
+        const xAxisY = topSpace + contentHeight + axisSpace + 1;
+        svgLine(lineGroup, yAxisX, topSpace, yAxisX, xAxisY);
+        svgLine(lineGroup, yAxisX, xAxisY, yAxisX + contentWidth + axisSpace + 1, xAxisY);
+        
+        // the labels
+        const labelGroup = createSvgElement("g", svg);
+        svgText(labelGroup, yAxisLabel, yAxisX, axisSpace + majorLabelFontSizePixels, "svgYAxisMainLabel");
+        svgText(labelGroup, xAxisLabel, leftSpace + contentWidth + axisSpace, xAxisY + (majorLabelFontSizePixels / 2) - 1, "svgXAxisMainLabel");
+        if(minorXLabels != undefined){
+            const labelY = topSpace + contentHeight + bottomSpace - axisSpace;
+            minorXLabels.forEach(minorXLabel => {
+                svgText(labelGroup, minorXLabel.text, minorXLabel.x + leftSpace, labelY, "svgXAxisMinorLabel");
+            });
+        }
+        if(minorYLabels != undefined){
+            const labelX = leftSpace - axisWidthIncludingSpace;
+            const yOffset = topSpace + (minorFontSizePixels / 2);
+            minorYLabels.forEach(minorYLabel => {
+                svgText(labelGroup, minorYLabel.text, labelX, minorYLabel.y + yOffset, "svgYAxisMinorLabel");
+            });
+        }
+        
+        svg.setAttribute("width", contentWidth + leftSpace + rightSpace);
+        svg.setAttribute("height", contentHeight + topSpace + bottomSpace);
+        return {x: leftSpace, y: topSpace};
     }
 
     // potentially add an option to push the generations closer together
@@ -111,7 +139,7 @@ function onBootCampDataFileLoaded (input) {
     function drawSvgLineage () {
         const bubbleRadius = 8;
         const individualSpacing = 4;
-        const generationSpacing = 64;
+        const generationSpacing = 40;
         const defaultOpacity = 0.5;
 
         const genCount = loadedData.generations.length;
@@ -119,7 +147,14 @@ function onBootCampDataFileLoaded (input) {
         // TODO the axes + labels + a bubble color legend
         const bubbleRectWidth = (genCount * 2 * bubbleRadius) + ((genCount - 1) * generationSpacing);
         const bubbleRectHeight = (individualCount * 2 * bubbleRadius) + ((individualCount - 1) * individualSpacing);
-        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("", "Rank", bubbleRectWidth, bubbleRectHeight);
+        const minorXLabels = loadedData.generations.map((gen, genIndex) => {
+            return { text: genIndex, x: bubbleRadius + (genIndex * ((2 * bubbleRadius) + generationSpacing)) };
+        });
+        const minorYLabels = [
+            { text: "Best", y: bubbleRadius },
+            { text: "Worst", y: bubbleRadius + ((individualCount - 1) * ((2 * bubbleRadius) + individualSpacing)) }
+        ];
+        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Rank", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
 
         const bubbleGroup = createSvgElement("g", svg);
         bubbleGroup.setAttribute("stroke", "black");
@@ -149,11 +184,7 @@ function onBootCampDataFileLoaded (input) {
                 allLines[individual.guid] = [];
                 const highlightBubbles = [ newBubble ];
                 const highlightLines = [];
-                // TODO actually do the highlighting for the entire lineage
-                // this parentguids stuff needs to stay for creating the lines
-                // but add a new lineageGuids property in the processor (recursively gotten)
-                // and use that for the highlights
-                individual.parentGuids.forEach(parentGuid => {
+                individual.lineageGuids.forEach(parentGuid => {
                     const parentXY = prevGenIndividualCoords[parentGuid];
                     const newLine = svgLine(lineGroup, parentXY.x + bubbleRadius, parentXY.y, x - bubbleRadius, y);
                     highlightLines.push(newLine);
