@@ -63,6 +63,18 @@ namespace MasterProject.MachineLearning {
             };
         }
 
+        public static TournamentConfiguration FastTournamentConfig (int playersPerGame) {
+            return new TournamentConfiguration() {
+                playersPerGame = playersPerGame,
+                peerTournamentMatchupRepetitionCount = DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS / 4,
+                randomTournamentMatchupRepetitionCount = DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS / 4,
+                maxMoveCount = Game.NO_MOVE_LIMIT,
+                maxMoveMillis = Game.NO_TIMEOUT,
+                autosaveInterval = 5,
+                parallelGameCount = 16,
+            };
+        }
+
         public const float DEFAULT_PEER_TOURNAMENT_FITNESS_WEIGHT = 1f;
         public const float DEFAULT_RANDOM_TOURNAMENT_FITNESS_WEIGHT = 1f;
         public const float DEFAULT_FITNESS_WINRATE_WEIGHT  = 1.0f;

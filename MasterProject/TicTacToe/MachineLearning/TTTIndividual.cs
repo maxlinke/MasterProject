@@ -55,7 +55,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
         }
 
         protected override void MutateCoefficients () {
-            var mag = rng.NextDouble();
+            var mag = 0.25 * rng.NextDouble();  // to make the progress a bit slower (just for the graphs)
             AlterCoeffs(
                 (rng.NextDouble() - 0.5) * 4 * mag,
                 (rng.NextDouble() - 0.5) * 4 * mag,

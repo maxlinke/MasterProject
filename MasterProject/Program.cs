@@ -235,13 +235,14 @@ public class Program {
     static void DoTTTBootCamp () {
         var bcId = "";
         //var bcId = "BC_638222022448911356_Generation1";
-        var genCount = 2;
+        var genCount = 10;
         BootCamp<TTTGame, TTTIndividual> bc;
         if (!BootCamp<TTTGame, TTTIndividual>.TryLoad(bcId, out bc)) {
             Console.WriteLine("NEW BOOTCAMP!!!");
             bc = BootCamp<TTTGame, TTTIndividual>.Create(
                 BootCamp.DefaultGenerationConfig,
-                BootCamp.DefaultTournamentConfig(2),
+                //BootCamp.DefaultTournamentConfig(2),
+                BootCamp.FastTournamentConfig(2),
                 BootCamp.DefaultFitnessWeighting
             );
         } else {

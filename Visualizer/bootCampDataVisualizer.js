@@ -171,8 +171,7 @@ function onBootCampDataFileLoaded (input) {
         lineGroup.setAttribute("stroke", "black");
         lineGroup.setAttribute("stroke-opacity", defaultOpacity);
 
-        let prevGenIndividualCoords = {};
-        let currGenIndividualCoords = {};
+        let individualCoords = {};
         let allBubbles = {};
         let allLines = {};
         loadedData.generations.forEach((generation, genIndex) => {
@@ -184,22 +183,27 @@ function onBootCampDataFileLoaded (input) {
                 allLines[individual.guid] = [];
                 const highlightBubbles = [ newBubble ];
                 const highlightLines = [];
-                individual.lineageGuids.forEach(parentGuid => {
-                    const parentXY = prevGenIndividualCoords[parentGuid];
+                individual.parentGuids.forEach(parentGuid => {
+                    const parentXY = individualCoords[parentGuid];
                     const newLine = svgLine(lineGroup, parentXY.x + bubbleRadius, parentXY.y, x - bubbleRadius, y);
                     highlightLines.push(newLine);
-                    highlightBubbles.push(allBubbles[parentGuid]);
                     allLines[individual.guid].push(newLine);
                 });
-                currGenIndividualCoords[individual.guid] = {x: x, y: y};
+                individual.lineageGuids.forEach(parentGuid => {
+                    allLines[parentGuid].forEach(parentLine => highlightLines.push(parentLine));
+                    highlightBubbles.push(allBubbles[parentGuid]);
+                });
+                individualCoords[individual.guid] = {x: x, y: y};
 
                 newBubble.onmouseenter = () => {
                     highlightBubbles.forEach(bubble => {
                         bubble.setAttribute("stroke-opacity", 1);
+                        bubble.setAttribute("stroke-width", 2);
                         bubble.setAttribute("fill-opacity", 1);
                     });
                     highlightLines.forEach(line => {
                         line.setAttribute("stroke-opacity", 1);
+                        line.setAttribute("stroke-width", 2);
                     });
                     // TODO info popup with ALL the info
                     // this time i can't just make it a child of the bubble
@@ -211,16 +215,16 @@ function onBootCampDataFileLoaded (input) {
                 newBubble.onmouseleave = () => {
                     highlightBubbles.forEach(bubble => {
                         bubble.removeAttribute("stroke-opacity");
+                        bubble.removeAttribute("stroke-width");
                         bubble.removeAttribute("fill-opacity");
                     });
                     highlightLines.forEach(line => {
-                        line.removeAttribute("stroke-opacity", 1);
+                        line.removeAttribute("stroke-opacity");
+                        line.removeAttribute("stroke-width");
                     });
                     // TODO remove the popup
                 };
             });
-            prevGenIndividualCoords = currGenIndividualCoords;
-            currGenIndividualCoords = {};
         });
     }
 
