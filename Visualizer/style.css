@@ -24,10 +24,6 @@ label {
     width: 6em;
 }
 
-svg {
-    display: block;
-}
-
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
     border: 0px;
     padding: 4px;
@@ -93,6 +89,27 @@ svg {
     white-space: pre;
 }
 
+svg {
+    display: block;
+}
+
+#overviewSvgParent {
+    /* setting position relative so that the overlay works. otherwise the position is static and the absolute position of the overlay will reference the body */
+    /* https://stackoverflow.com/questions/2941189/how-to-overlay-one-div-over-another-div */
+    position: relative; 
+}
+
+#overviewSvgOverlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
 .svgYAxisMainLabel {
     text-anchor: middle;
     font-weight: bold;
@@ -112,5 +129,10 @@ svg {
 
 .svgXAxisMinorLabel {
     text-anchor: middle;
+    font-size: 8pt;
+}
+
+.svgLegendLabel {
+    text-anchor: start;
     font-size: 8pt;
 }

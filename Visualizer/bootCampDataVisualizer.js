@@ -45,7 +45,7 @@ function onBootCampDataFileLoaded (input) {
     const displayWinPercentMode = "Win%";
     const displayDrawPercentMode = "Draw%";
     const displayLossPercentMode = "Loss%";
-    // add a "custom" metric where one can define a string separated with periods and i look that up in the object?
+    // TODO add a "custom" metric where one can define a string separated with periods and i look that up in the object
     // that would allow me to get the randomness for example for ttt individuals
     // i would have to check if that metric 
     // a) exists
@@ -86,6 +86,9 @@ function onBootCampDataFileLoaded (input) {
     const svg = document.getElementById("overviewSvg");
     // svg.style = "border: 1px solid black";  // TODO remove this later
 
+    const legendSvg = document.getElementById("colorLegendSvg");
+    let legendInitialized = false;
+
     function updateSvg () {
         svg.replaceChildren();
         if(loadedData.generations.length > 0){
@@ -95,6 +98,7 @@ function onBootCampDataFileLoaded (input) {
                     break;
                 case displayFitnessMode:
                     drawSvgMetric((individual) => { return individual.fitness; });
+                    setLegendVisible(false);    // TODO remove, this is just for testing
                     break;
                 // case displayWinPercentMode:      // TODO ensure additional dropdown to set up which percentage
                 //     drawSvgMetric((individual) => { return individual.
@@ -151,6 +155,36 @@ function onBootCampDataFileLoaded (input) {
         svg.setAttribute("height", contentHeight + topSpace + bottomSpace);
         return {x: leftSpace, y: topSpace};
     }
+
+    function setLegendVisible (shouldBeVisible) {
+        if(!shouldBeVisible){
+            legendSvg.style = "visibility: hidden; position: absolute;";
+            return;
+        }
+        legendSvg.style = "";
+        if(!legendInitialized){
+            const leftSidePadding = 70; // from axes
+            const textWidth = 80;
+            const textHeight = 8;   // copy from css
+            const spacing = 8;
+            const singleElementHeight = 2 * svgBubbleRadius + 2;    // + 2 to prevent bubble outline from being cut off on top and bottom
+            const singleElementWidth = 2 * svgBubbleRadius + spacing + textWidth;
+
+            legendSvg.setAttribute("height", singleElementHeight);
+            legendSvg.setAttribute("width", leftSidePadding + (loadedData.individualTypes.length * singleElementWidth) + ((loadedData.individualTypes.length) * spacing));
+            const bubbleParent = createSvgElement("g", legendSvg);
+            bubbleParent.setAttribute("stroke", "black");
+            bubbleParent.setAttribute("stroke-width", 1);
+            const textParent = createSvgElement("g", legendSvg);
+            loadedData.individualTypes.forEach((individualType, index) => {
+                const xOffset = leftSidePadding + (index * (singleElementWidth + spacing));
+                const newCircle = svgCircle(bubbleParent, xOffset + svgBubbleRadius, singleElementHeight / 2, svgBubbleRadius);
+                newCircle.setAttribute("fill", loadedData.individualTypeColors[individualType]);
+                const newLabel = svgText(textParent, individualType, xOffset + (2 * svgBubbleRadius) + spacing, (singleElementHeight + textHeight) / 2, "svgLegendLabel");
+            });
+            legendInitialized = true;
+        }
+    }
     
     const svgBubbleRadius = 8;
     const svgGenerationSpacing = 40;
@@ -181,12 +215,12 @@ function onBootCampDataFileLoaded (input) {
         const defaultOpacity = 0.5;
 
         const individualCount = loadedData.generations[0].length;
-        // TODO a bubble color legend ? 
         const bubbleRectWidth = getBubbleRectWidthForBubbleDisplayFromGenerationCount();
         const bubbleRectHeight = (individualCount * 2 * svgBubbleRadius) + ((individualCount - 1) * individualSpacing);
         const minorXLabels = getDefaultGenerationXAxisMinorLabels();
         const minorYLabels = getCustomMinAndMaxYAxisMinorLabels("Worst", "Best", bubbleRectHeight);
         const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Fitness", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
+        setLegendVisible(true);
 
         const bubbleGroup = createSvgElement("g", svg);
         bubbleGroup.setAttribute("stroke", "black");
@@ -268,8 +302,17 @@ function onBootCampDataFileLoaded (input) {
     // it scales the svg
     // draws the axes (+ main labels)
     // and this returns the x and y offsets for your content rect
-    function drawSvgMetric (getValueFromIndividual, minValue, maxValue) {
-        // gather min and max values from all individuals (if not defined)
+    //
+    // options:
+    // dot spacing (from 0 to 1 with 1 being the default)
+    // dot scatter (0 to 1 with 1 being between the halfway marks of the normal lines)
+    // dot size (also 0 to 1)
+    // dot opacity
+    // dot color (yes or no, tint based on individual type)
+    function drawSvgMetric (getValueFromIndividual, minMax) {
+        if(minMax == undefined){
+            minMax = getMinAndMaxValuesFromIndividualMetric(getValueFromIndividual);
+        }
         // value label is just dropdown value
 
         const genCount = loadedData.generations.length;
@@ -280,6 +323,23 @@ function onBootCampDataFileLoaded (input) {
         // TODO the minor labels again
         setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight);
         console.log("TODO");
+    }
+
+    function getMinAndMaxValuesFromIndividualMetric (getValueFromIndividual) {
+        const output = { min: Infinity, max: -Infinity };
+        loadedData.generations.forEach(generation => {
+            generation.forEach(individual => {
+                const newValue = Number(getValueFromIndividual(individual));
+                if(newValue != NaN){
+                    output.min = Math.min(output.min, newValue);
+                    output.max = Math.max(output.max, newValue);
+                }
+            });
+        });
+        if(output.min == Infinity && output.max == -Infinity){
+            throw new Error("No numbers detected!");
+        }
+        return output;
     }
 
 // ----- init -----

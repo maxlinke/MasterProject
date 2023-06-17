@@ -9,7 +9,7 @@ function processBootCampData (input) {
         });
     });
     const agentIdPrefix = findCommonNamespacePrefix(allAgentIds);
-    output.individualTypes = [ "New Random", "Mutation", "Combination", "Clone", "InvertedClone" ];  // just a copy of the c# enum
+    output.individualTypes = [ "New Random", "Mutation", "Combination", "Clone", "Inverted Clone" ];  // just a copy of the c# enum
     output.individualTypeColors = {};
     output.individualTypeColors[output.individualTypes[0]] = "#af0";    // yellow-green
     output.individualTypeColors[output.individualTypes[1]] = "#f00";    // red
