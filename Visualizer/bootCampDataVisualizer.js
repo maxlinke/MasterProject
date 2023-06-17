@@ -41,8 +41,18 @@ function onBootCampDataFileLoaded (input) {
     let loadedData = undefined;
 
     const displayLineageMode = "Lineage";
-    const displayPerformanceMode = "Performance";
-    const svgDisplayModes = [ displayLineageMode, displayPerformanceMode ];
+    const displayFitnessMode = "Fitness";
+    const displayWinPercentMode = "Win%";
+    const displayDrawPercentMode = "Draw%";
+    const displayLossPercentMode = "Loss%";
+    // add a "custom" metric where one can define a string separated with periods and i look that up in the object?
+    // that would allow me to get the randomness for example for ttt individuals
+    // i would have to check if that metric 
+    // a) exists
+    // b) is a number
+    // put a div next to the string input field though that displays why it can't display the current string
+    // according to the checks above
+    const svgDisplayModes = [ displayLineageMode, displayFitnessMode ];
     const svgDisplayModeDropdown = document.getElementById("svgDisplayModeSelection");
     function getSvgDisplayMode () { return svgDisplayModeDropdown.value; }
 
@@ -83,9 +93,18 @@ function onBootCampDataFileLoaded (input) {
                 case displayLineageMode:
                     drawSvgLineage();
                     break;
-                case displayPerformanceMode:
-                    drawSvgPerformance();
+                case displayFitnessMode:
+                    drawSvgMetric((individual) => { return individual.fitness; });
                     break;
+                // case displayWinPercentMode:      // TODO ensure additional dropdown to set up which percentage
+                //     drawSvgMetric((individual) => { return individual.
+                //     break;
+                // case displayDrawPercentMode:
+
+                //     break;
+                // case displayLossPercentMode:
+
+                //     break;
                 default:
                     throw new Error(`Unknown mode ${getSvgDisplayMode()}`);
             }
@@ -132,29 +151,42 @@ function onBootCampDataFileLoaded (input) {
         svg.setAttribute("height", contentHeight + topSpace + bottomSpace);
         return {x: leftSpace, y: topSpace};
     }
+    
+    const svgBubbleRadius = 8;
+    const svgGenerationSpacing = 40;
+    
+    function getBubbleRectWidthForBubbleDisplayFromGenerationCount () {
+        const genCount = loadedData.generations.length;
+        return (genCount * 2 * svgBubbleRadius) + ((genCount - 1) * svgGenerationSpacing);
+    }
+
+    function getDefaultGenerationXAxisMinorLabels () {
+        return loadedData.generations.map((gen, genIndex) => {
+            return { text: genIndex, x: svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing)) };
+        });
+    }
+
+    function getCustomMinAndMaxYAxisMinorLabels (minLabel, maxLabel, rectHeight) {
+        return [
+            { text: maxLabel, y: svgBubbleRadius },
+            { text: minLabel, y: rectHeight - svgBubbleRadius }
+        ];
+    }
 
     // potentially add an option to push the generations closer together
     // or only show a subset of generations
     // in case there are a lot of generations..
     function drawSvgLineage () {
-        const bubbleRadius = 8;
         const individualSpacing = 4;
-        const generationSpacing = 40;
         const defaultOpacity = 0.5;
 
-        const genCount = loadedData.generations.length;
         const individualCount = loadedData.generations[0].length;
-        // TODO the axes + labels + a bubble color legend
-        const bubbleRectWidth = (genCount * 2 * bubbleRadius) + ((genCount - 1) * generationSpacing);
-        const bubbleRectHeight = (individualCount * 2 * bubbleRadius) + ((individualCount - 1) * individualSpacing);
-        const minorXLabels = loadedData.generations.map((gen, genIndex) => {
-            return { text: genIndex, x: bubbleRadius + (genIndex * ((2 * bubbleRadius) + generationSpacing)) };
-        });
-        const minorYLabels = [
-            { text: "Best", y: bubbleRadius },
-            { text: "Worst", y: bubbleRadius + ((individualCount - 1) * ((2 * bubbleRadius) + individualSpacing)) }
-        ];
-        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Rank", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
+        // TODO a bubble color legend ? 
+        const bubbleRectWidth = getBubbleRectWidthForBubbleDisplayFromGenerationCount();
+        const bubbleRectHeight = (individualCount * 2 * svgBubbleRadius) + ((individualCount - 1) * individualSpacing);
+        const minorXLabels = getDefaultGenerationXAxisMinorLabels();
+        const minorYLabels = getCustomMinAndMaxYAxisMinorLabels("Worst", "Best", bubbleRectHeight);
+        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Fitness", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
 
         const bubbleGroup = createSvgElement("g", svg);
         bubbleGroup.setAttribute("stroke", "black");
@@ -175,22 +207,22 @@ function onBootCampDataFileLoaded (input) {
         let allBubbles = {};
         let allLines = {};
         loadedData.generations.forEach((generation, genIndex) => {
-            const x = contentOffset.x + bubbleRadius + (genIndex * ((2 * bubbleRadius) + generationSpacing));
+            const x = contentOffset.x + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
             generation.forEach((individual, individualIndex) => {
-                const y = contentOffset.y + bubbleRadius + (individualIndex * ((2 * bubbleRadius) + individualSpacing));
-                const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, bubbleRadius);
+                const y = contentOffset.y + svgBubbleRadius + (individualIndex * ((2 * svgBubbleRadius) + individualSpacing));
+                const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, svgBubbleRadius);
                 allBubbles[individual.guid] = newBubble;
                 allLines[individual.guid] = [];
                 const highlightBubbles = [ newBubble ];
                 const highlightLines = [];
                 individual.parentGuids.forEach(parentGuid => {
                     const parentXY = individualCoords[parentGuid];
-                    const newLine = svgLine(lineGroup, parentXY.x + bubbleRadius, parentXY.y, x - bubbleRadius, y);
+                    const newLine = svgLine(lineGroup, parentXY.x + svgBubbleRadius, parentXY.y, x - svgBubbleRadius, y);
                     highlightLines.push(newLine);
                     allLines[individual.guid].push(newLine);
                 });
                 individual.lineageGuids.forEach(parentGuid => {
-                    allLines[parentGuid].forEach(parentLine => highlightLines.push(parentLine));
+                    highlightLines.push(...allLines[parentGuid]);       // this is very cool (spread syntax)
                     highlightBubbles.push(allBubbles[parentGuid]);
                 });
                 individualCoords[individual.guid] = {x: x, y: y};
@@ -236,7 +268,17 @@ function onBootCampDataFileLoaded (input) {
     // it scales the svg
     // draws the axes (+ main labels)
     // and this returns the x and y offsets for your content rect
-    function drawSvgPerformance () {
+    function drawSvgMetric (getValueFromIndividual, minValue, maxValue) {
+        // gather min and max values from all individuals (if not defined)
+        // value label is just dropdown value
+
+        const genCount = loadedData.generations.length;
+        const individualCount = loadedData.generations[0].length;
+        // TODO the axes + labels + a bubble color legend
+        const bubbleRectHeight = 300;
+        const bubbleRectWidth = (genCount * 2 * svgBubbleRadius) + ((genCount - 1) * svgGenerationSpacing);
+        // TODO the minor labels again
+        setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight);
         console.log("TODO");
     }
 
