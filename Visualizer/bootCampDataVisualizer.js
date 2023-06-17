@@ -98,7 +98,6 @@ function onBootCampDataFileLoaded (input) {
                     break;
                 case displayFitnessMode:
                     drawSvgMetric((individual) => { return individual.fitness; });
-                    setLegendVisible(false);    // TODO remove, this is just for testing
                     break;
                 // case displayWinPercentMode:      // TODO ensure additional dropdown to set up which percentage
                 //     drawSvgMetric((individual) => { return individual.
@@ -313,16 +312,34 @@ function onBootCampDataFileLoaded (input) {
         if(minMax == undefined){
             minMax = getMinAndMaxValuesFromIndividualMetric(getValueFromIndividual);
         }
-        // value label is just dropdown value
+        setLegendVisible(false);    // TODO make this depend on the (to be implemented) "colored bubbles" option
 
         const genCount = loadedData.generations.length;
-        const individualCount = loadedData.generations[0].length;
-        // TODO the axes + labels + a bubble color legend
         const bubbleRectHeight = 300;
         const bubbleRectWidth = (genCount * 2 * svgBubbleRadius) + ((genCount - 1) * svgGenerationSpacing);
-        // TODO the minor labels again
-        setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight);
-        console.log("TODO");
+        
+        const minorXLabels = getDefaultGenerationXAxisMinorLabels();
+        const minorYLabels = getCustomMinAndMaxYAxisMinorLabels(minMax.min.toFixed(2), minMax.max.toFixed(2), bubbleRectHeight);
+        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
+        const bubbleParent = createSvgElement("g", svg);    // TODO more options
+        bubbleParent.setAttribute("stroke", "black");       // TODO
+        bubbleParent.setAttribute("stroke-opacity", 0.5);   // TODO
+        bubbleParent.setAttribute("stroke-width", 1);       // TODO
+        bubbleParent.setAttribute("fill", "black");         // TODO
+        bubbleParent.setAttribute("fill-opacity", 0.1);     // TODO
+        loadedData.generations.forEach((generation, genIndex) => {
+            const x = contentOffset.x + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
+            // TODO min max avg lines
+            generation.forEach(individual => {
+                const rawValue = Number(getValueFromIndividual(individual));
+                if(rawValue != NaN && rawValue != Infinity && rawValue != -Infinity){
+                    const normedValue = (rawValue - minMax.min) / (minMax.max - minMax.min);
+                    const y = contentOffset.y + svgBubbleRadius + ((1 - normedValue) * (bubbleRectHeight - (2 * svgBubbleRadius)));
+                    const newCircle = svgCircle(bubbleParent, x, y, svgBubbleRadius);
+                }
+            });
+        });
+        // TODO min max avg labels on right side of diagram
     }
 
     function getMinAndMaxValuesFromIndividualMetric (getValueFromIndividual) {
@@ -330,7 +347,7 @@ function onBootCampDataFileLoaded (input) {
         loadedData.generations.forEach(generation => {
             generation.forEach(individual => {
                 const newValue = Number(getValueFromIndividual(individual));
-                if(newValue != NaN){
+                if(newValue != NaN && newValue != Infinity && newValue != -Infinity){
                     output.min = Math.min(output.min, newValue);
                     output.max = Math.max(output.max, newValue);
                 }

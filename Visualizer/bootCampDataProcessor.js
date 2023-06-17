@@ -3,7 +3,7 @@
 function processBootCampData (input) {
     const output = {};
     const allAgentIds = [];
-    input.generations.map(gen => {
+    input.generations.forEach(gen => {
         gen.forEach(individual => {
             allAgentIds.push(individual.agentId);        
         });
