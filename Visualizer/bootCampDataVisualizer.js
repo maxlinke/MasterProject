@@ -49,12 +49,11 @@ function onBootCampDataFileLoaded (input) {
     }
 
     let loadedData = undefined;
+    let scatterOffsetRandomValues = [];
 
     const displayLineageMode = "Lineage";
     const displayFitnessMode = "Fitness";
-    const displayWinPercentMode = "Win%";
-    const displayDrawPercentMode = "Draw%";
-    const displayLossPercentMode = "Loss%";
+    const displayPercentageMode = "Percentage";
     // TODO add a "custom" metric where one can define a string separated with periods and i look that up in the object
     // that would allow me to get the randomness for example for ttt individuals
     // i would have to check if that metric 
@@ -197,23 +196,27 @@ function onBootCampDataFileLoaded (input) {
     
     const svgBubbleRadius = 8;
     const svgGenerationSpacing = 40;
-    
-    function getBubbleRectWidthForBubbleDisplayFromGenerationCount () {
-        const genCount = loadedData.generations.length;
-        return (genCount * 2 * svgBubbleRadius) + ((genCount - 1) * svgGenerationSpacing);
-    }
-
-    function getDefaultGenerationXAxisMinorLabels () {
-        return loadedData.generations.map((gen, genIndex) => {
-            return { text: genIndex, x: svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing)) };
-        });
-    }
 
     function getCustomMinAndMaxYAxisMinorLabels (minLabel, maxLabel, rectHeight) {
         return [
             { text: maxLabel, y: svgBubbleRadius },
             { text: minLabel, y: rectHeight - svgBubbleRadius }
         ];
+    }
+
+    function setupIndividualTypeBubbleGroups (opacity) {
+        const bubbleGroup = createSvgElement("g", svg);
+        bubbleGroup.setAttribute("stroke", "black");
+        bubbleGroup.setAttribute("stroke-opacity", opacity);
+        bubbleGroup.setAttribute("stroke-width", 1);
+        const individualTypeGroups = {};
+        loadedData.individualTypes.forEach(individualType => {
+            const individualTypeGroup = createSvgElement("g", bubbleGroup);
+            individualTypeGroup.setAttribute("fill", loadedData.individualTypeColors[individualType]);
+            individualTypeGroup.setAttribute("fill-opacity", opacity);
+            individualTypeGroups[individualType] = individualTypeGroup;
+        });
+        return individualTypeGroups;
     }
 
     // potentially add an option to push the generations closer together
@@ -224,24 +227,16 @@ function onBootCampDataFileLoaded (input) {
         const defaultOpacity = 0.5;
 
         const individualCount = loadedData.generations[0].length;
-        const bubbleRectWidth = getBubbleRectWidthForBubbleDisplayFromGenerationCount();
+        const bubbleRectWidth = generationIndexToXCoord(svgBubbleRadius * 2, loadedData.generations.length - 1);
         const bubbleRectHeight = (individualCount * 2 * svgBubbleRadius) + ((individualCount - 1) * individualSpacing);
-        const minorXLabels = getDefaultGenerationXAxisMinorLabels();
+        const minorXLabels = loadedData.generations.map((gen, genIndex) => {
+            return { text: genIndex, x: generationIndexToXCoord(0, genIndex) };
+        });
         const minorYLabels = getCustomMinAndMaxYAxisMinorLabels("Worst", "Best", bubbleRectHeight);
         const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Fitness", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
         setLegendVisible(true);
 
-        const bubbleGroup = createSvgElement("g", svg);
-        bubbleGroup.setAttribute("stroke", "black");
-        bubbleGroup.setAttribute("stroke-opacity", defaultOpacity);
-        bubbleGroup.setAttribute("stroke-width", 1);
-        const individualTypeGroups = {};
-        loadedData.individualTypes.forEach(individualType => {
-            const individualTypeGroup = createSvgElement("g", bubbleGroup);
-            individualTypeGroup.setAttribute("fill", loadedData.individualTypeColors[individualType]);
-            individualTypeGroup.setAttribute("fill-opacity", defaultOpacity);
-            individualTypeGroups[individualType] = individualTypeGroup;
-        });
+        const individualTypeGroups = setupIndividualTypeBubbleGroups(defaultOpacity);
         const lineGroup = createSvgElement("g", svg);
         lineGroup.setAttribute("stroke", "black");
         lineGroup.setAttribute("stroke-opacity", defaultOpacity);
@@ -250,7 +245,7 @@ function onBootCampDataFileLoaded (input) {
         let allBubbles = {};
         let allLines = {};
         loadedData.generations.forEach((generation, genIndex) => {
-            const x = contentOffset.x + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
+            const x = generationIndexToXCoord(contentOffset.x, genIndex);
             generation.forEach((individual, individualIndex) => {
                 const y = contentOffset.y + svgBubbleRadius + (individualIndex * ((2 * svgBubbleRadius) + individualSpacing));
                 const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, svgBubbleRadius);
@@ -301,73 +296,77 @@ function onBootCampDataFileLoaded (input) {
                 };
             });
         });
+
+        function generationIndexToXCoord (xOffset, genIndex) {
+            return xOffset + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
+        }
     }
 
-    // no colors, just dots
-    // and polylines for max, min (and avg?) performance
-    // the basic axis code should be the same
-    // calculate the dimensions you need for what you'll draw
-    // call the draw-axes function
-    // it scales the svg
-    // draws the axes (+ main labels)
-    // and this returns the x and y offsets for your content rect
-    //
-    // options:
-    // dot spacing (from 0 to 1 with 1 being the default)
-    // dot scatter (0 to 1 with 1 being between the halfway marks of the normal lines)
-    // dot size (also 0 to 1)
-    // dot opacity
-    // dot color (yes or no, tint based on individual type)
     function drawSvgMetric (getValueFromIndividual, minMax) {
         if(minMax == undefined){
             minMax = getMinAndMaxValuesFromIndividualMetric(getValueFromIndividual);
         }
-        setLegendVisible(false);    // TODO make this depend on the (to be implemented) "colored bubbles" option
+        setLegendVisible(true);
 
-        const genCount = loadedData.generations.length;
         const bubbleRectHeight = 300;
-        const bubbleRectWidth = (genCount * 2 * svgBubbleRadius) + ((genCount - 1) * svgGenerationSpacing);
+        const bubbleRectWidth = generationIndexToXCoord(svgBubbleRadius * 2, loadedData.generations.length - 1);
+        const defaultBubbleOpacity = 0.5;
         
-        const minorXLabels = getDefaultGenerationXAxisMinorLabels();
+        const minorXLabels = loadedData.generations.map((gen, genIndex) => {
+            return { text: genIndex, x: generationIndexToXCoord(0, genIndex) };
+        });
         const minorYLabels = getCustomMinAndMaxYAxisMinorLabels(minMax.min.toFixed(2), minMax.max.toFixed(2), bubbleRectHeight);
         const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
-        const bubbleParent = createSvgElement("g", svg);    // TODO more options
-        bubbleParent.setAttribute("stroke", "black");       // TODO
-        bubbleParent.setAttribute("stroke-opacity", 0.5);   // TODO
-        bubbleParent.setAttribute("stroke-width", 1);       // TODO
-        bubbleParent.setAttribute("fill", "black");         // TODO
-        bubbleParent.setAttribute("fill-opacity", 0.1);     // TODO
+        const bubbleGroup = createSvgElement("g", svg);
+        bubbleGroup.setAttribute("stroke", "black");
+        bubbleGroup.setAttribute("stroke-opacity", defaultBubbleOpacity);
+        bubbleGroup.setAttribute("stroke-width", 1);
+        bubbleGroup.setAttribute("fill-opacity", defaultBubbleOpacity);
         const generationXCoords = [];
         const meanValues = [];
         const medianValues = [];
         const minValues = [];
         const maxValues = [];
+        let scatterIndex = 0;
         loadedData.generations.forEach((generation, genIndex) => {
-            const x = contentOffset.x + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
+            const x = generationIndexToXCoord(contentOffset.x, genIndex);
             generationXCoords[genIndex] = x;
+            const individualsWithValidValues = [];
             const rawValues = [];
             let rawValueSum = 0;
             generation.forEach(individual => {
                 const rawValue = Number(getValueFromIndividual(individual));
                 if(rawValue != NaN && rawValue != Infinity && rawValue != -Infinity){
-                    const y = valueToY(rawValue);
-                    const newCircle = svgCircle(bubbleParent, x, y, svgBubbleRadius);
-                    rawValues.push(rawValue);
-                    rawValueSum += rawValue;
+                    individualsWithValidValues.push({individual: individual, value: rawValue});
                 }
             });
+            individualsWithValidValues.sort((a, b) => Math.sign(a.value - b.value));
+            individualsWithValidValues.forEach((individualWithValue, i) => {
+                const y = valueToY(individualWithValue.value);
+                const newCircle = svgCircle(bubbleGroup, x + ((i == 0 || i == (individualsWithValidValues.length - 1)) ? 0 : getDotScatterXOffset()), y, svgBubbleRadius);
+                newCircle.setAttribute("fill", loadedData.individualTypeColors[individualWithValue.individual.individualType]);
+                rawValues.push(individualWithValue.value);
+                rawValueSum += individualWithValue.value;
+            });
             meanValues.push(rawValueSum / Math.max(1, rawValues.length));
-            minValues.push(Math.min(...rawValues));
-            maxValues.push(Math.max(...rawValues));
+            minValues.push(rawValues[0]);
+            maxValues.push(rawValues[rawValues.length - 1]);
             medianValues.push(rawValues[Math.floor(rawValues.length / 2)]);
         });
         const lineParent = createSvgElement("g", svg);
-        drawPolyline(meanValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Mean");
         drawPolyline(minValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Min");
         drawPolyline(maxValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Max");
-        const medianLine = drawPolyline(medianValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Median");
-        medianLine.setAttribute("stroke-dasharray", 5);
-        // quartiles too?    
+        drawPolyline(meanValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Mean").setAttribute("stroke-dasharray", 6);
+        drawPolyline(medianValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Median").setAttribute("stroke-dasharray", 3);
+        // quartiles too?
+
+        function generationIndexToXCoord (xOffset, genIndex) {
+            return xOffset + ((svgGenerationSpacing + svgBubbleRadius) * (genIndex + 0.5));
+        }
+
+        function getDotScatterXOffset () {
+            return (0.125 * scatterOffsetRandomValues[scatterIndex++]) * (svgGenerationSpacing + svgBubbleRadius);
+        }
 
         function valueToY (rawValue) {
             const normedValue = (rawValue - minMax.min) / (minMax.max - minMax.min);
@@ -377,7 +376,7 @@ function onBootCampDataFileLoaded (input) {
         function drawPolyline (rawCoords, label) {
             const defaultStrokeWidth = 1;
             const highlightStrokeWidth = 3;
-            const hoverWidth = 9;
+            const hoverWidth = 7;
             const mainLine = svgPolyline(lineParent, rawCoords, "none", "black");
             mainLine.setAttribute("stroke-width", defaultStrokeWidth);
             mainLine.style = "pointer-events: none;";
@@ -385,7 +384,7 @@ function onBootCampDataFileLoaded (input) {
             hoverLine.setAttribute("stroke-width", hoverWidth);
             hoverLine.setAttribute("stroke-opacity", 0);
             const lastCoord = rawCoords[rawCoords.length - 1];
-            const newLabel = svgText(lineParent, label, lastCoord.x + (2 * svgBubbleRadius), lastCoord.y + (0.5 * 8), "svgMetricDisplayLineLabel");
+            const newLabel = svgText(lineParent, label, contentOffset.x + bubbleRectWidth + 8, lastCoord.y + (0.5 * 8), "svgMetricDisplayLineLabel");
             hoverLine.onmouseenter = () => { highlightLine(); };
             hoverLine.onmouseleave = () => { resetHighlight(); };
             newLabel.onmouseenter = () => { highlightLine(); };
@@ -426,6 +425,12 @@ function onBootCampDataFileLoaded (input) {
     initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
     svgDisplayModeDropdown.value = displayFitnessMode;
     loadedData = processBootCampData(input);
+    scatterOffsetRandomValues = [];
+    loadedData.generations.forEach(gen => {
+        gen.forEach(() => {
+            scatterOffsetRandomValues.push((2 * Math.random()) - 1);
+        });
+    });
     console.log(loadedData);
     updateSvg();
 

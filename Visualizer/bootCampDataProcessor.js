@@ -27,13 +27,9 @@ function processBootCampData (input) {
             outputIndividual.parentGuids = [...individual.parentGuids];
             outputIndividual.lineageGuids = [...individual.parentGuids];
             appendRemainingLineageGuids(outputIndividual, generationIndex);
-            outputIndividual.percentages = {};
-            // make these as 
-            // percentages["Wins%"]["Total"]
-            // pergentages["Wins%"]["Peers"];
-            // that makes the visualizer easier
+            outputIndividual.percentages = getPercentagesObject(individual);
             unknownProps.forEach(unknownProp => { outputIndividual[unknownProp] = individual[unknownProp]; });  // but we do copy all unknown data so people can "make their own visualizations" for numbers
-            outputIndividual.popupText = getPopupText(outputIndividual, ["guid", "parentGuids", "lineageGuids"]);
+            outputIndividual.popupText = getPopupText(outputIndividual, ["parentGuids", "lineageGuids"]);
             if(generationIndex == 0 && individualIndex == 0){   // just for tests
                 console.log(outputIndividual.popupText);
             }
@@ -56,6 +52,15 @@ function processBootCampData (input) {
             });
             lineageGenIndex--;
         };
+    }
+
+    function getPercentagesObject (individual) {
+        const output = {};
+        // TODO make these as 
+        // percentages["Wins%"]["Total"]
+        // pergentages["Wins%"]["Peers"];
+        // that makes the visualizer easier
+        return output;
     }
 
     function getUnknownProperties (individual) {
