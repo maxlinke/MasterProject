@@ -53,7 +53,7 @@ function onBootCampDataFileLoaded (input) {
 
     const displayLineageMode = "Lineage";
     const displayFitnessMode = "Fitness";
-    const displayPercentageMode = "Percentage";
+    const displayTournamentResultMode = "Tournament Result";
     // TODO add a "custom" metric where one can define a string separated with periods and i look that up in the object
     // that would allow me to get the randomness for example for ttt individuals
     // i would have to check if that metric 
@@ -61,7 +61,7 @@ function onBootCampDataFileLoaded (input) {
     // b) is a number
     // put a div next to the string input field though that displays why it can't display the current string
     // according to the checks above
-    const svgDisplayModes = [ displayLineageMode, displayFitnessMode ];
+    const svgDisplayModes = [ displayLineageMode, displayFitnessMode, displayTournamentResultMode ];
     const svgDisplayModeDropdown = document.getElementById("svgDisplayModeSelection");
     function getSvgDisplayMode () { return svgDisplayModeDropdown.value; }
 
@@ -69,25 +69,14 @@ function onBootCampDataFileLoaded (input) {
     const popupEnabledSelection = document.getElementById("svgPopupEnabledSelection");
     function getPopupsEnabled () { return popupEnabledSelection.value == "Enabled"; }
 
-    // what do i want to visualize?
-    // - performance with increasing generations
-    //      - point clouds for individual agents
-    //      - lines for min/max/average
-    //      - x/y plot with x being generations and y being [minFitness, maxFitness]
-    //      - since peer/random performance is saved individually, make that showable too
-    // - lineage of individuals
-    //      - nice orderly grid (still an x/y plot though)
-    //      - draw lines between parent(s) and children
-    //      - color code individuals based on type
-    // - more?
-    //      - be able to find all the info about a specific individual when clicking/hovering/whatever
-    // i think that's enough for now
-    // i could also then add an svg-graph to the tournament vis to show whatever metric we're grouping the agents by as a graph (highly optional though)
-    // first make sure the visualization exists
-    // then train the g44p agents
-    // then i'm done with the "training" part as well
-    // and can do chess
-    // and godfield
+    const tournamentResultOptions = [ "Wins", "Draws", "Losses" ];
+    const tournamentResultSourceOptions = [ "All", "Peers", "Random" ];
+    const tournamentOptionsParent = document.getElementById("tournamentResultOptionsParent");
+    const tournamentTypeDropdown = document.getElementById("tournamentTypeSelection");
+    const tournamentResultSourceDropdown = document.getElementById("tournamentResultSourceSelection");
+    function setTournamentOptionsVisible (newValue) { tournamentOptionsParent.style.setProperty("display", (newValue ? "" : "none")); }
+    function getTournamentType () { return tournamentTypeDropdown.value; }
+    function getTournamentResultSource () { return tournamentResultSourceDropdown.value; }
 
     // https://www.w3schools.com/tags/tag_svg.asp
     // https://www.w3schools.com/html/html5_svg.asp
@@ -97,7 +86,6 @@ function onBootCampDataFileLoaded (input) {
     // arrows: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
 
     const svg = document.getElementById("overviewSvg");
-    // svg.style = "border: 1px solid black";  // TODO remove this later
     const legendSvg = document.getElementById("colorLegendSvg");
     const svgOverlay = document.getElementById("overviewSvgOverlay");
     let legendInitialized = false;
@@ -106,25 +94,25 @@ function onBootCampDataFileLoaded (input) {
         svg.replaceChildren();
         svgOverlay.replaceChildren();
         if(loadedData.generations.length > 0){
+            setLegendVisible(true);
             switch(getSvgDisplayMode()){
                 case displayLineageMode:
+                    setTournamentOptionsVisible(false);
                     drawSvgLineage();
                     break;
                 case displayFitnessMode:
+                    setTournamentOptionsVisible(false);
                     drawSvgMetric((individual) => { return individual.fitness; });
                     break;
-                // case displayWinPercentMode:      // TODO ensure additional dropdown to set up which percentage
-                //     drawSvgMetric((individual) => { return individual.
-                //     break;
-                // case displayDrawPercentMode:
-
-                //     break;
-                // case displayLossPercentMode:
-
-                //     break;
+                case displayTournamentResultMode:
+                    setTournamentOptionsVisible(true);
+                    drawSvgMetric((individual) => { return individual.tournamentResults[getTournamentResultSource()][getTournamentType()].percentage; }, {min: 0, max: 100}, "Percentage");
+                    break;
                 default:
                     throw new Error(`Unknown mode ${getSvgDisplayMode()}`);
             }
+        }else{
+            setLegendVisible(false);
         }
     }
 
@@ -246,7 +234,6 @@ function onBootCampDataFileLoaded (input) {
         });
         const minorYLabels = getCustomMinAndMaxYAxisMinorLabels("Worst", "Best", bubbleRectHeight);
         const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", "Fitness", bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
-        setLegendVisible(true);
 
         const individualTypeGroups = setupIndividualTypeBubbleGroups(defaultOpacity);
         const lineGroup = createSvgElement("g", svg);
@@ -319,11 +306,13 @@ function onBootCampDataFileLoaded (input) {
         }
     }
 
-    function drawSvgMetric (getValueFromIndividual, minMax) {
+    function drawSvgMetric (getValueFromIndividual, minMax, majorYLabel) {
         if(minMax == undefined){
             minMax = getMinAndMaxValuesFromIndividualMetric(getValueFromIndividual);
         }
-        setLegendVisible(true);
+        if(majorYLabel == undefined){
+            majorYLabel = getSvgDisplayMode();
+        }
 
         const bubbleRectHeight = 400;
         const bubbleRectWidth = generationIndexToXCoord(svgBubbleRadius * 2, loadedData.generations.length - 1);
@@ -333,17 +322,17 @@ function onBootCampDataFileLoaded (input) {
             return { text: genIndex, x: generationIndexToXCoord(0, genIndex) };
         });
         const minorYLabels = getCustomMinAndMaxYAxisMinorLabels(minMax.min.toFixed(2), minMax.max.toFixed(2), bubbleRectHeight);
-        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", getSvgDisplayMode(), bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
+        const contentOffset = setupSvgSizeDrawAxesAndGetContentOffsets("Generation", majorYLabel, bubbleRectWidth, bubbleRectHeight, minorXLabels, minorYLabels);
         const bubbleGroup = createSvgElement("g", svg);
         bubbleGroup.setAttribute("stroke", "black");
         bubbleGroup.setAttribute("stroke-opacity", defaultBubbleOpacity);
         bubbleGroup.setAttribute("stroke-width", 1);
         bubbleGroup.setAttribute("fill-opacity", defaultBubbleOpacity);
         const generationXCoords = [];
+        // const minValues = [];
+        // const maxValues = [];
         const meanValues = [];
         const medianValues = [];
-        const minValues = [];
-        const maxValues = [];
         let scatterIndex = 0;
         loadedData.generations.forEach((generation, genIndex) => {
             const x = generationIndexToXCoord(contentOffset.x, genIndex);
@@ -360,7 +349,7 @@ function onBootCampDataFileLoaded (input) {
             individualsWithValidValues.sort((a, b) => Math.sign(a.value - b.value));
             individualsWithValidValues.forEach((individualWithValue, i) => {
                 const y = valueToY(individualWithValue.value);
-                const actualX = x + ((i == 0 || i == (individualsWithValidValues.length - 1)) ? 0 : getDotScatterXOffset());    // first and last are min/max and should be on the vertices of the line
+                const actualX = x + getDotScatterXOffset();
                 const newCircle = svgCircle(bubbleGroup, actualX, y, svgBubbleRadius);
                 newCircle.setAttribute("fill", loadedData.individualTypeColors[individualWithValue.individual.individualType]);
                 rawValues.push(individualWithValue.value);
@@ -385,14 +374,14 @@ function onBootCampDataFileLoaded (input) {
                 };
 
             });
+            // minValues.push(rawValues[0]);
+            // maxValues.push(rawValues[rawValues.length - 1]);
             meanValues.push(rawValueSum / Math.max(1, rawValues.length));
-            minValues.push(rawValues[0]);
-            maxValues.push(rawValues[rawValues.length - 1]);
             medianValues.push(rawValues[Math.floor(rawValues.length / 2)]);
         });
         const lineParent = createSvgElement("g", svg);
-        drawPolyline(minValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Min");
-        drawPolyline(maxValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Max");
+        // drawPolyline(minValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Min");     // these don't really add anything...
+        // drawPolyline(maxValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Max");     // these don't really add anything...
         drawPolyline(meanValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Mean").setAttribute("stroke-dasharray", 6);
         drawPolyline(medianValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Median").setAttribute("stroke-dasharray", 3);
         // quartiles too?
@@ -461,6 +450,8 @@ function onBootCampDataFileLoaded (input) {
 
     initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
     initDropdown(popupEnabledSelection, popupEnabledModes);
+    initDropdown(tournamentTypeDropdown, tournamentResultOptions, updateSvg);
+    initDropdown(tournamentResultSourceDropdown, tournamentResultSourceOptions, updateSvg);
     // svgDisplayModeDropdown.value = displayFitnessMode;
     loadedData = processBootCampData(input);
     scatterOffsetRandomValues = [];

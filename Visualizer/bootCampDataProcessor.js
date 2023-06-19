@@ -16,34 +16,31 @@ function processBootCampData (input) {
     output.individualTypeColors[output.individualTypes[2]] = "#0af";    // blue
     output.individualTypeColors[output.individualTypes[3]] = "#fa0";    // orange
     output.individualTypeColors[output.individualTypes[4]] = "#a0f";    // purple
-    output.generations = input.generations.map((generation, generationIndex) => {
-        return generation.map((individual, individualIndex) => {
+    output.generations = input.generations.map((generation, genIndex) => {
+        return generation.map(individual => {
             const unknownProps = getUnknownProperties(individual);
             const outputIndividual = {};    // we're only copying what we need and format the rest to a nice string
             outputIndividual.guid = individual.guid;
             outputIndividual.agentId = individual.agentId.substring(agentIdPrefix.length);
             outputIndividual.individualType = output.individualTypes[individual.IndividualType];
+            outputIndividual.generation = genIndex;
             outputIndividual.fitness = individual.finalFitness;
             outputIndividual.parentGuids = [...individual.parentGuids];
             outputIndividual.lineageGuids = [...individual.parentGuids];
-            outputIndividual.percentages = getPercentagesObject(individual);
+            outputIndividual.tournamentResults = {};
+            outputIndividual.tournamentResults["All"] = processTournamentResult(combineRawTournamentResults(individual.peerTournamentResult, individual.randomTournamentResult));
+            outputIndividual.tournamentResults["Peers"] = processTournamentResult(individual.peerTournamentResult);
+            outputIndividual.tournamentResults["Random"] = processTournamentResult(individual.randomTournamentResult);
             unknownProps.forEach(unknownProp => { outputIndividual[unknownProp] = individual[unknownProp]; });  // but we do copy all unknown data so people can "make their own visualizations" for numbers
+            outputIndividual.popupText = getPopupText(outputIndividual, ["parentGuids", "lineageGuids"]);
             return outputIndividual;
         });
     });
-    output.generations.forEach((generation, generationIndex) => {
-        generation.forEach(individual => {
+    output.generations.forEach((generation, generationIndex) => {   // lineage must be done after the first iteration because it accesses the other individuals which aren't there yet in the initial map-call above
+        generation.forEach(individual => {                          // the fact that this happens after the popup text is generated does not matter, because lineage is excluded from that
             appendRemainingLineageGuids(individual, generationIndex);
         });
     });
-    output.generations.forEach((generation, generationIndex) => {
-        generation.forEach((individual, individualIndex) => {
-            individual.popupText = getPopupText(individual, ["parentGuids", "lineageGuids"]);
-            if(generationIndex == 0 && individualIndex == 0){   // just for tests
-                console.log(individual.popupText);
-            }
-        });
-    }); 
     return output;
 
     function appendRemainingLineageGuids (individual, individualGenerationIndex) {
@@ -65,13 +62,33 @@ function processBootCampData (input) {
         };
     }
 
-    function getPercentagesObject (individual) {
-        const output = {};
-        // TODO make these as 
-        // percentages["Wins%"]["Total"]
-        // pergentages["Wins%"]["Peers"];
-        // that makes the visualizer easier
-        return output;
+    function combineRawTournamentResults (a, b) {
+        return {
+            totalWins: a.totalWins + b.totalWins,
+            totalDraws: a.totalDraws + b.totalDraws,
+            totalLosses: a.totalLosses + b.totalLosses
+        };
+    }
+
+    function processTournamentResult (tournamentResult) {
+        const tw = tournamentResult.totalWins;
+        const td = tournamentResult.totalDraws;
+        const tl = tournamentResult.totalLosses;
+        const total = tw + td + tl;
+        return {
+            Wins: getSubResult(tw),
+            Draws: getSubResult(td),
+            Losses: getSubResult(tl),
+            Total: total,
+            popupText: `${tw} wins, ${td} draws, ${tl} losses`
+        };
+
+        function getSubResult (invidiualCount) {
+            return {
+                count: invidiualCount,
+                percentage: (100 * invidiualCount) / Math.max(total)
+            }
+        }
     }
 
     function getUnknownProperties (individual) {
@@ -99,25 +116,34 @@ function processBootCampData (input) {
         for(const propertyName in individual){
             if(!propsToIgnore.includes(propertyName)){
                 const nicePropName = getNicePropertyName(propertyName);
-                if(typeof(individual[propertyName]) == "object"){
+                if(propertyName == "tournamentResults"){
                     lines.push(`${nicePropName}:`);
-                    appendSubProps(individual[propertyName], 1);
+                    appendSubProps(individual[propertyName], 1, (result) => { return result.popupText; });
                 }else{
-                    lines.push(`${nicePropName}: ${individual[propertyName]}`);
+                    if(typeof(individual[propertyName]) == "object"){
+                        lines.push(`${nicePropName}:`);
+                        appendSubProps(individual[propertyName], 1);
+                    }else{
+                        lines.push(`${nicePropName}: ${individual[propertyName]}`);
+                    }
                 }
             }
         }
         return lines.join("\n");
 
-        function appendSubProps (subProp, depth) {
+        function appendSubProps (subProp, depth, subPropToString) {
             const indent = " ".repeat(depth * 3);
             for(const deeperProp in subProp){
                 const nicePropName = getNicePropertyName(deeperProp);
-                if(typeof(deeperProp) == "object"){
-                    lines.push(`${indent}${nicePropName}:`);
-                    appendSubProps(deeperProp, depth+1);
+                if(subPropToString == undefined){
+                    if(typeof(subProp[deeperProp]) == "object"){
+                        lines.push(`${indent}${nicePropName}:`);
+                        appendSubProps(subProp[deeperProp], depth+1);
+                    }else{
+                        lines.push(`${indent}${nicePropName}: ${subProp[deeperProp]}`);
+                    }
                 }else{
-                    lines.push(`${indent}${nicePropName}: ${subProp[deeperProp]}`);
+                    lines.push(`${indent}${nicePropName}: ${subPropToString(subProp[deeperProp])}`);
                 }
             }
         }

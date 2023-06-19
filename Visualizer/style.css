@@ -24,6 +24,11 @@ label {
     width: 6em;
 }
 
+.indentedLabel {
+    padding-left: 1em;
+    width: 5em;
+}
+
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
     border: 0px;
     padding: 4px;
