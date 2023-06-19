@@ -36,6 +36,16 @@ function onBootCampDataFileLoaded (input) {
         if(className != undefined){
             newText.setAttribute("class", className);
         }
+        return newText;
+    }
+
+    function svgPolyline (lineParent, coords, fill, stroke) {
+        const lineCoords = coords.map(coord => { return `${coord.x},${coord.y}`; }).join(" ");
+        const newLine = createSvgElement("polyline", lineParent);
+        newLine.setAttribute("points", lineCoords);
+        newLine.setAttribute("fill", fill);
+        newLine.setAttribute("stroke", stroke);
+        return newLine;
     }
 
     let loadedData = undefined;
@@ -327,19 +337,71 @@ function onBootCampDataFileLoaded (input) {
         bubbleParent.setAttribute("stroke-width", 1);       // TODO
         bubbleParent.setAttribute("fill", "black");         // TODO
         bubbleParent.setAttribute("fill-opacity", 0.1);     // TODO
+        const generationXCoords = [];
+        const meanValues = [];
+        const medianValues = [];
+        const minValues = [];
+        const maxValues = [];
         loadedData.generations.forEach((generation, genIndex) => {
             const x = contentOffset.x + svgBubbleRadius + (genIndex * ((2 * svgBubbleRadius) + svgGenerationSpacing));
-            // TODO min max avg lines
+            generationXCoords[genIndex] = x;
+            const rawValues = [];
+            let rawValueSum = 0;
             generation.forEach(individual => {
                 const rawValue = Number(getValueFromIndividual(individual));
                 if(rawValue != NaN && rawValue != Infinity && rawValue != -Infinity){
-                    const normedValue = (rawValue - minMax.min) / (minMax.max - minMax.min);
-                    const y = contentOffset.y + svgBubbleRadius + ((1 - normedValue) * (bubbleRectHeight - (2 * svgBubbleRadius)));
+                    const y = valueToY(rawValue);
                     const newCircle = svgCircle(bubbleParent, x, y, svgBubbleRadius);
+                    rawValues.push(rawValue);
+                    rawValueSum += rawValue;
                 }
             });
+            meanValues.push(rawValueSum / Math.max(1, rawValues.length));
+            minValues.push(Math.min(...rawValues));
+            maxValues.push(Math.max(...rawValues));
+            medianValues.push(rawValues[Math.floor(rawValues.length / 2)]);
         });
-        // TODO min max avg labels on right side of diagram
+        const lineParent = createSvgElement("g", svg);
+        drawPolyline(meanValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Mean");
+        drawPolyline(minValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Min");
+        drawPolyline(maxValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Max");
+        const medianLine = drawPolyline(medianValues.map((val, i) => { return {x: generationXCoords[i], y: valueToY(val)}; }), "Median");
+        medianLine.setAttribute("stroke-dasharray", 5);
+        // quartiles too?    
+
+        function valueToY (rawValue) {
+            const normedValue = (rawValue - minMax.min) / (minMax.max - minMax.min);
+            return contentOffset.y + svgBubbleRadius + ((1 - normedValue) * (bubbleRectHeight - (2 * svgBubbleRadius)));
+        }
+
+        function drawPolyline (rawCoords, label) {
+            const defaultStrokeWidth = 1;
+            const highlightStrokeWidth = 3;
+            const hoverWidth = 9;
+            const mainLine = svgPolyline(lineParent, rawCoords, "none", "black");
+            mainLine.setAttribute("stroke-width", defaultStrokeWidth);
+            mainLine.style = "pointer-events: none;";
+            const hoverLine = svgPolyline(lineParent, rawCoords, "none", "black");
+            hoverLine.setAttribute("stroke-width", hoverWidth);
+            hoverLine.setAttribute("stroke-opacity", 0);
+            const lastCoord = rawCoords[rawCoords.length - 1];
+            const newLabel = svgText(lineParent, label, lastCoord.x + (2 * svgBubbleRadius), lastCoord.y + (0.5 * 8), "svgMetricDisplayLineLabel");
+            hoverLine.onmouseenter = () => { highlightLine(); };
+            hoverLine.onmouseleave = () => { resetHighlight(); };
+            newLabel.onmouseenter = () => { highlightLine(); };
+            newLabel.onmouseleave = () => { resetHighlight(); };
+            return mainLine;
+
+            function highlightLine () {
+                mainLine.setAttribute("stroke-width", highlightStrokeWidth);
+                newLabel.style = "font-weight: bold;";
+            }
+
+            function resetHighlight () {
+                mainLine.setAttribute("stroke-width", defaultStrokeWidth);
+                newLabel.style = "";
+            }
+        }
     }
 
     function getMinAndMaxValuesFromIndividualMetric (getValueFromIndividual) {
@@ -362,6 +424,7 @@ function onBootCampDataFileLoaded (input) {
 // ----- init -----
 
     initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
+    svgDisplayModeDropdown.value = displayFitnessMode;
     loadedData = processBootCampData(input);
     console.log(loadedData);
     updateSvg();
