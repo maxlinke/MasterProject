@@ -78,7 +78,7 @@ label {
     text-align: center;
 }
 
-.matrixFieldPopup {
+.popup {
     pointer-events: none;
     visibility: hidden;
     position: absolute;

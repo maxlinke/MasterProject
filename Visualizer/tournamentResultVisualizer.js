@@ -190,7 +190,7 @@ function onTournamentResultFileLoaded (input) {
                         const newPopup = document.createElement("div");
                         newField.appendChild(newPopup);
                         newPopup.innerHTML = info.popupText;
-                        newPopup.className = "matrixFieldPopup";
+                        newPopup.className = "popup";
                         newField.onmouseenter = () => {
                             newPopup.style = "visibility: visible";
                         };

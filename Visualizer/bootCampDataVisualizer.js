@@ -94,12 +94,13 @@ function onBootCampDataFileLoaded (input) {
 
     const svg = document.getElementById("overviewSvg");
     // svg.style = "border: 1px solid black";  // TODO remove this later
-
     const legendSvg = document.getElementById("colorLegendSvg");
+    const svgOverlay = document.getElementById("overviewSvgOverlay");
     let legendInitialized = false;
 
     function updateSvg () {
         svg.replaceChildren();
+        svgOverlay.replaceChildren();
         if(loadedData.generations.length > 0){
             switch(getSvgDisplayMode()){
                 case displayLineageMode:
@@ -219,9 +220,16 @@ function onBootCampDataFileLoaded (input) {
         return individualTypeGroups;
     }
 
-    // potentially add an option to push the generations closer together
-    // or only show a subset of generations
-    // in case there are a lot of generations..
+    function createIndividualPopup (individual, x, y) {
+        const newPopup = document.createElement("div");
+        svgOverlay.appendChild(newPopup);
+        newPopup.innerHTML = individual.popupText;
+        newPopup.className = "popup";
+        const newPopupStyle = `top: ${y}px; left: ${x}px;`;
+        newPopup.style = newPopupStyle;
+        return { popup: newPopup, defaultStyle: newPopupStyle };
+    }
+
     function drawSvgLineage () {
         const individualSpacing = 4;
         const defaultOpacity = 0.5;
@@ -264,6 +272,7 @@ function onBootCampDataFileLoaded (input) {
                     highlightBubbles.push(allBubbles[parentGuid]);
                 });
                 individualCoords[individual.guid] = {x: x, y: y};
+                const popup = createIndividualPopup(individual, x, y);
 
                 newBubble.onmouseenter = () => {
                     highlightBubbles.forEach(bubble => {
@@ -275,11 +284,7 @@ function onBootCampDataFileLoaded (input) {
                         line.setAttribute("stroke-opacity", 1);
                         line.setAttribute("stroke-width", 2);
                     });
-                    // TODO info popup with ALL the info
-                    // this time i can't just make it a child of the bubble
-                    // ...
-                    // can i place an invisible, un-raycastable div over the svg?
-                    // and put my popups onto that?
+                    popup.popup.style = `${popup.defaultStyle} visibility: visible;`;
                 };
 
                 newBubble.onmouseleave = () => {
@@ -292,7 +297,7 @@ function onBootCampDataFileLoaded (input) {
                         line.removeAttribute("stroke-opacity");
                         line.removeAttribute("stroke-width");
                     });
-                    // TODO remove the popup
+                    popup.popup.style = popup.defaultStyle;
                 };
             });
         });
@@ -347,6 +352,27 @@ function onBootCampDataFileLoaded (input) {
                 newCircle.setAttribute("fill", loadedData.individualTypeColors[individualWithValue.individual.individualType]);
                 rawValues.push(individualWithValue.value);
                 rawValueSum += individualWithValue.value;
+
+                const popup = createIndividualPopup(individualWithValue.individual, x, y);
+
+                newCircle.onmouseenter = () => {
+                    newCircle.setAttribute("stroke-opacity", 1);
+                    newCircle.setAttribute("stroke-width", 2);
+                    newCircle.setAttribute("fill-opacity", 1);
+                    newCircle.setAttribute("stroke-opacity", 1);
+                    newCircle.setAttribute("stroke-width", 2);
+                    popup.popup.style = `${popup.defaultStyle} visibility: visible;`;
+                };
+
+                newCircle.onmouseleave = () => {
+                    newCircle.removeAttribute("stroke-opacity");
+                    newCircle.removeAttribute("stroke-width");
+                    newCircle.removeAttribute("fill-opacity");
+                    newCircle.removeAttribute("stroke-opacity");
+                    newCircle.removeAttribute("stroke-width");
+                    popup.popup.style = popup.defaultStyle;
+                };
+
             });
             meanValues.push(rawValueSum / Math.max(1, rawValues.length));
             minValues.push(rawValues[0]);
@@ -423,7 +449,7 @@ function onBootCampDataFileLoaded (input) {
 // ----- init -----
 
     initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
-    svgDisplayModeDropdown.value = displayFitnessMode;
+    // svgDisplayModeDropdown.value = displayFitnessMode;
     loadedData = processBootCampData(input);
     scatterOffsetRandomValues = [];
     loadedData.generations.forEach(gen => {
