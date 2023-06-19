@@ -26,28 +26,39 @@ function processBootCampData (input) {
             outputIndividual.fitness = individual.finalFitness;
             outputIndividual.parentGuids = [...individual.parentGuids];
             outputIndividual.lineageGuids = [...individual.parentGuids];
-            appendRemainingLineageGuids(outputIndividual, generationIndex);
             outputIndividual.percentages = getPercentagesObject(individual);
             unknownProps.forEach(unknownProp => { outputIndividual[unknownProp] = individual[unknownProp]; });  // but we do copy all unknown data so people can "make their own visualizations" for numbers
-            outputIndividual.popupText = getPopupText(outputIndividual, ["parentGuids", "lineageGuids"]);
-            if(generationIndex == 0 && individualIndex == 0){   // just for tests
-                console.log(outputIndividual.popupText);
-            }
             return outputIndividual;
         });
     });
+    output.generations.forEach((generation, generationIndex) => {
+        generation.forEach(individual => {
+            appendRemainingLineageGuids(individual, generationIndex);
+        });
+    });
+    output.generations.forEach((generation, generationIndex) => {
+        generation.forEach((individual, individualIndex) => {
+            individual.popupText = getPopupText(individual, ["parentGuids", "lineageGuids"]);
+            if(generationIndex == 0 && individualIndex == 0){   // just for tests
+                console.log(individual.popupText);
+            }
+        });
+    }); 
     return output;
 
     function appendRemainingLineageGuids (individual, individualGenerationIndex) {
         let lineageGenIndex = individualGenerationIndex - 1;
         while(lineageGenIndex >= 0){
-            input.generations[lineageGenIndex].forEach((prevGenIndividual) => {
+            output.generations[lineageGenIndex].forEach((prevGenIndividual) => {
                 if(individual.lineageGuids.includes(prevGenIndividual.guid)){
                     prevGenIndividual.parentGuids.forEach((lineageGuid) => {
                         if(!individual.lineageGuids.includes(lineageGuid)){
                             individual.lineageGuids.push(lineageGuid);
                         }
                     });
+                    if(!prevGenIndividual.lineageGuids.includes(individual.guid)){
+                        prevGenIndividual.lineageGuids.push(individual.guid);
+                    }
                 }
             });
             lineageGenIndex--;

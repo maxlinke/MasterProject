@@ -33,5 +33,7 @@ function initDropdown (dropdown, options, onValueChanged) {
         newOption.innerHTML = option;
     });
     dropdown.value = options[0];
-    dropdown.addEventListener("change", () => onValueChanged());
+    if(onValueChanged != undefined){
+        dropdown.addEventListener("change", () => onValueChanged());
+    }
 }

@@ -65,6 +65,10 @@ function onBootCampDataFileLoaded (input) {
     const svgDisplayModeDropdown = document.getElementById("svgDisplayModeSelection");
     function getSvgDisplayMode () { return svgDisplayModeDropdown.value; }
 
+    const popupEnabledModes = [ "Enabled", "Disabled" ];
+    const popupEnabledSelection = document.getElementById("svgPopupEnabledSelection");
+    function getPopupsEnabled () { return popupEnabledSelection.value == "Enabled"; }
+
     // what do i want to visualize?
     // - performance with increasing generations
     //      - point clouds for individual agents
@@ -173,7 +177,7 @@ function onBootCampDataFileLoaded (input) {
         legendSvg.style = "";
         if(!legendInitialized){
             const leftSidePadding = 70; // from axes
-            const textWidth = 80;
+            const textWidth = 100;
             const textHeight = 8;   // copy from css
             const spacing = 8;
             const singleElementHeight = 2 * svgBubbleRadius + 2;    // + 2 to prevent bubble outline from being cut off on top and bottom
@@ -195,8 +199,8 @@ function onBootCampDataFileLoaded (input) {
         }
     }
     
-    const svgBubbleRadius = 8;
-    const svgGenerationSpacing = 40;
+    const svgBubbleRadius = 10;
+    const svgGenerationSpacing = 60;
 
     function getCustomMinAndMaxYAxisMinorLabels (minLabel, maxLabel, rectHeight) {
         return [
@@ -252,6 +256,7 @@ function onBootCampDataFileLoaded (input) {
         let individualCoords = {};
         let allBubbles = {};
         let allLines = {};
+        let allPopups = {};
         loadedData.generations.forEach((generation, genIndex) => {
             const x = generationIndexToXCoord(contentOffset.x, genIndex);
             generation.forEach((individual, individualIndex) => {
@@ -259,35 +264,42 @@ function onBootCampDataFileLoaded (input) {
                 const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, svgBubbleRadius);
                 allBubbles[individual.guid] = newBubble;
                 allLines[individual.guid] = [];
-                const highlightBubbles = [ newBubble ];
-                const highlightLines = [];
+                allPopups[individual.guid] = createIndividualPopup(individual, x, y);
                 individual.parentGuids.forEach(parentGuid => {
                     const parentXY = individualCoords[parentGuid];
                     const newLine = svgLine(lineGroup, parentXY.x + svgBubbleRadius, parentXY.y, x - svgBubbleRadius, y);
-                    highlightLines.push(newLine);
                     allLines[individual.guid].push(newLine);
                 });
-                individual.lineageGuids.forEach(parentGuid => {
-                    highlightLines.push(...allLines[parentGuid]);       // this is very cool (spread syntax)
-                    highlightBubbles.push(allBubbles[parentGuid]);
-                });
                 individualCoords[individual.guid] = {x: x, y: y};
-                const popup = createIndividualPopup(individual, x, y);
+            });
+        });
+        loadedData.generations.forEach(generation => {
+            generation.forEach(individual => {
+                const individualBubble = allBubbles[individual.guid];
+                const individualPopup = allPopups[individual.guid];
+                const highlightBubbles = [ individualBubble ];
+                const highlightLines = [ ...allLines[individual.guid] ];
+                individual.lineageGuids.forEach(parentGuid => {
+                    highlightBubbles.push(allBubbles[parentGuid]);
+                    highlightLines.push(...allLines[parentGuid]);
+                });
 
-                newBubble.onmouseenter = () => {
+                individualBubble.onmouseenter = () => {
                     highlightBubbles.forEach(bubble => {
                         bubble.setAttribute("stroke-opacity", 1);
-                        bubble.setAttribute("stroke-width", 2);
+                        bubble.setAttribute("stroke-width", 1.5);
                         bubble.setAttribute("fill-opacity", 1);
                     });
                     highlightLines.forEach(line => {
                         line.setAttribute("stroke-opacity", 1);
-                        line.setAttribute("stroke-width", 2);
+                        line.setAttribute("stroke-width", 1.5);
                     });
-                    popup.popup.style = `${popup.defaultStyle} visibility: visible;`;
+                    if(getPopupsEnabled()){
+                        individualPopup.popup.style = `${individualPopup.defaultStyle} visibility: visible;`;
+                    }
                 };
 
-                newBubble.onmouseleave = () => {
+                individualBubble.onmouseleave = () => {
                     highlightBubbles.forEach(bubble => {
                         bubble.removeAttribute("stroke-opacity");
                         bubble.removeAttribute("stroke-width");
@@ -297,7 +309,7 @@ function onBootCampDataFileLoaded (input) {
                         line.removeAttribute("stroke-opacity");
                         line.removeAttribute("stroke-width");
                     });
-                    popup.popup.style = popup.defaultStyle;
+                    individualPopup.popup.style = individualPopup.defaultStyle;
                 };
             });
         });
@@ -313,7 +325,7 @@ function onBootCampDataFileLoaded (input) {
         }
         setLegendVisible(true);
 
-        const bubbleRectHeight = 300;
+        const bubbleRectHeight = 400;
         const bubbleRectWidth = generationIndexToXCoord(svgBubbleRadius * 2, loadedData.generations.length - 1);
         const defaultBubbleOpacity = 0.5;
         
@@ -348,28 +360,27 @@ function onBootCampDataFileLoaded (input) {
             individualsWithValidValues.sort((a, b) => Math.sign(a.value - b.value));
             individualsWithValidValues.forEach((individualWithValue, i) => {
                 const y = valueToY(individualWithValue.value);
-                const newCircle = svgCircle(bubbleGroup, x + ((i == 0 || i == (individualsWithValidValues.length - 1)) ? 0 : getDotScatterXOffset()), y, svgBubbleRadius);
+                const actualX = x + ((i == 0 || i == (individualsWithValidValues.length - 1)) ? 0 : getDotScatterXOffset());    // first and last are min/max and should be on the vertices of the line
+                const newCircle = svgCircle(bubbleGroup, actualX, y, svgBubbleRadius);
                 newCircle.setAttribute("fill", loadedData.individualTypeColors[individualWithValue.individual.individualType]);
                 rawValues.push(individualWithValue.value);
                 rawValueSum += individualWithValue.value;
 
-                const popup = createIndividualPopup(individualWithValue.individual, x, y);
+                const popup = createIndividualPopup(individualWithValue.individual, actualX, y);
 
                 newCircle.onmouseenter = () => {
                     newCircle.setAttribute("stroke-opacity", 1);
-                    newCircle.setAttribute("stroke-width", 2);
+                    newCircle.setAttribute("stroke-width", 1.5);
                     newCircle.setAttribute("fill-opacity", 1);
-                    newCircle.setAttribute("stroke-opacity", 1);
-                    newCircle.setAttribute("stroke-width", 2);
-                    popup.popup.style = `${popup.defaultStyle} visibility: visible;`;
+                    if(getPopupsEnabled()){
+                        popup.popup.style = `${popup.defaultStyle} visibility: visible;`;
+                    }
                 };
 
                 newCircle.onmouseleave = () => {
                     newCircle.removeAttribute("stroke-opacity");
                     newCircle.removeAttribute("stroke-width");
                     newCircle.removeAttribute("fill-opacity");
-                    newCircle.removeAttribute("stroke-opacity");
-                    newCircle.removeAttribute("stroke-width");
                     popup.popup.style = popup.defaultStyle;
                 };
 
@@ -391,7 +402,7 @@ function onBootCampDataFileLoaded (input) {
         }
 
         function getDotScatterXOffset () {
-            return (0.125 * scatterOffsetRandomValues[scatterIndex++]) * (svgGenerationSpacing + svgBubbleRadius);
+            return (0.25 * Math.pow(scatterOffsetRandomValues[scatterIndex++], 2)) * (svgGenerationSpacing + svgBubbleRadius);
         }
 
         function valueToY (rawValue) {
@@ -401,7 +412,7 @@ function onBootCampDataFileLoaded (input) {
 
         function drawPolyline (rawCoords, label) {
             const defaultStrokeWidth = 1;
-            const highlightStrokeWidth = 3;
+            const highlightStrokeWidth = 1.5;
             const hoverWidth = 7;
             const mainLine = svgPolyline(lineParent, rawCoords, "none", "black");
             mainLine.setAttribute("stroke-width", defaultStrokeWidth);
@@ -449,6 +460,7 @@ function onBootCampDataFileLoaded (input) {
 // ----- init -----
 
     initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
+    initDropdown(popupEnabledSelection, popupEnabledModes);
     // svgDisplayModeDropdown.value = displayFitnessMode;
     loadedData = processBootCampData(input);
     scatterOffsetRandomValues = [];
