@@ -47,6 +47,19 @@ namespace MasterProject {
             set => _saveIdPrefix = (value ?? string.Empty).Trim();
         }
 
+        string _logIdPrefix = string.Empty;
+        public string LogIdPrefix {
+            get => _logIdPrefix;
+            set => _logIdPrefix = (value ?? string.Empty).Trim();
+        }
+
+        protected abstract string id { get; }
+
+        protected void Log (string message) {
+            var logId = $"{(!string.IsNullOrWhiteSpace(LogIdPrefix) ? $"{LogIdPrefix}_" : string.Empty)}{id}";
+            Logger.Log($"{logId}: {message}");
+        }
+
         public Game.ConsoleOutputs AllowedGameConsoleOutputs { get; set; } = Game.ConsoleOutputs.Nothing;
 
         public const string ResultsDirectoryName = "TournamentResults";
@@ -78,8 +91,10 @@ namespace MasterProject {
         private string[] agentIds = new string[0];
         private WinLossDrawRecord? record;
         private int playersPerGame;
-        private string id;
+        private string _id;
         private int autosaveCounter;
+
+        protected override string id => _id;
 
         public WinLossDrawRecord? GetWinLossDrawRecord () {
             if (!IsFinished || record == null) {
@@ -101,7 +116,7 @@ namespace MasterProject {
                 }
                 record.CalculateElo();
             }
-            var saveId = this.id;
+            var saveId = this._id;
             if (isAutoSave) {
                 saveId = $"{saveId}_autosave{autosaveCounter}";
                 autosaveCounter++;
@@ -165,7 +180,7 @@ namespace MasterProject {
 
         public static Tournament<TGame> New (int playersPerGame) {
             var output = new Tournament<TGame>();
-            output.id = GenerateId();
+            output._id = GenerateId();
             output.playersPerGame = playersPerGame;
             output.record = null;
             return output;
@@ -173,7 +188,7 @@ namespace MasterProject {
 
         public static Tournament<TGame> Continue (WinLossDrawRecord existingRecord) {
             var output = new Tournament<TGame>();
-            output.id = GenerateId();
+            output._id = GenerateId();
             output.playersPerGame = existingRecord.matchupSize;
             output.record = existingRecord;
             return output;
@@ -266,9 +281,9 @@ namespace MasterProject {
                                 runGameCounter += gameRuns.Count;
                                 gameRuns.Clear();
                                 if (System.DateTime.Now > nextAutoSaveTime) {
-                                    Console.WriteLine(" ---- AUTOSAVING! ----");
+                                    Log(" ---- AUTOSAVING! ----");
                                     SaveWinLossDrawRecord(isAutoSave: true);
-                                    Console.WriteLine(" ---- AUTOSAVE DONE ----");
+                                    Log(" ---- AUTOSAVE DONE ----");
                                     nextAutoSaveTime = System.DateTime.Now + System.TimeSpan.FromMinutes(AutosaveIntervalMinutes);
                                 }
                             }
@@ -294,7 +309,7 @@ namespace MasterProject {
                 var estimateRemaining = System.TimeSpan.FromSeconds(Math.Round((estimateDuration - elapsed).TotalSeconds));
                 outputMessage = $"{outputMessage} ({FormatTimeSpan(elapsed, true)} elapsed, approx. {FormatTimeSpan(estimateRemaining, true)} remaining)";
             }
-            Console.WriteLine(outputMessage);
+            Log(outputMessage);
         }
 
         void RunCurrentRuns (IEnumerable<GameRun> gameRuns, ref int moveLimitReachedCounter, List<Exception> otherExceptions) {
@@ -317,16 +332,18 @@ namespace MasterProject {
 
         void DoEndLogs (int moveLimitReachedCounter, IReadOnlyList<Exception> otherExceptions) {
             var duration = System.DateTime.Now - startTime;
-            Console.WriteLine($"Tournament complete! (Took {FormatTimeSpan(duration, false)})");
+            var logSb = new System.Text.StringBuilder();
+            logSb.AppendLine($"Tournament complete! (Took {FormatTimeSpan(duration, false)})");
             if (moveLimitReachedCounter > 0) {
-                Console.WriteLine($"{moveLimitReachedCounter} games reached the move limit and were counted as draws!");
+                logSb.AppendLine($"{moveLimitReachedCounter} games reached the move limit and were counted as draws!");
             }
             if (otherExceptions.Count > 0) {
-                Console.WriteLine($"{otherExceptions.Count} games had other exceptions, listed now:");
+                logSb.AppendLine($"{otherExceptions.Count} games had other exceptions, listed now:");
                 foreach (var otherException in otherExceptions) {
-                    Console.WriteLine($"{otherException.GetType()} \"{otherException.Message}\"\n{otherException.StackTrace}");
+                    logSb.AppendLine($"{otherException.GetType()} \"{otherException.Message}\"\n{otherException.StackTrace}");
                 }
             }
+            Log(logSb.ToString());
         }
 
         static string FormatTimeSpan (TimeSpan timeSpan, bool trimLeadingZeroes) {

@@ -189,7 +189,7 @@ namespace MasterProject.MachineLearning {
         }
 
         void Log (string msg) {
-            Console.WriteLine($"{nameof(BootCamp)}<{typeof(TGame).Name}, {typeof(TIndividual).Name}>: {msg}");
+            Logger.Log($"{nameof(BootCamp)}<{typeof(TGame).Name}, {typeof(TIndividual).Name}>: {msg}");
         }
 
         public void RunUntil (IBootCampTerminationCondition<TGame, TIndividual> terminationCondition) {
@@ -322,6 +322,7 @@ namespace MasterProject.MachineLearning {
             tournament.MaxNumberOfMovesPerGame = tournamentConfig.maxMoveCount;
             tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = false;
             tournament.SaveIdPrefix = this.id;
+            tournament.LogIdPrefix = $"BC_Gen{generations.Count-1}";
             tournament.onSaved += (id) => latestRecordId = id;
             tournament.Run(agents, matchupRepetitons, filter);
             tournament.SaveWinLossDrawRecord();

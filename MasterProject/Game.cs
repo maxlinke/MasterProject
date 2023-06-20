@@ -31,13 +31,21 @@ namespace MasterProject {
         public ConsoleOutputs AllowedConsoleOutputs { get; set; } = ConsoleOutputs.Nothing;
 
         protected void TryLog (ConsoleOutputs logLevel, object message) {
-            if ((this.AllowedConsoleOutputs & logLevel) == logLevel) {
-                Console.WriteLine($"{this.HumanReadableId}: {message}");
+            if (LogIsAllowed(logLevel)) {
+                Logger.Log($"{this.HumanReadableId}: {message}");
             }
         }
 
-        public void TryDebugLog (object message) {
+        protected bool LogIsAllowed (ConsoleOutputs logLevel) {
+            return (this.AllowedConsoleOutputs & logLevel) == logLevel;
+        }
+
+        protected void TryDebugLog (object message) {
             TryLog(ConsoleOutputs.Debug, message);
+        }
+
+        protected bool DebugLogIsAllowed () {
+            return LogIsAllowed(ConsoleOutputs.Debug);
         }
 
         public void RunSynced (IEnumerable<Agent> agents) {

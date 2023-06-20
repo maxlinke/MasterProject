@@ -50,6 +50,7 @@ public class Program {
         // shouldn't be too hard though. 
 
         DataSaver.Flush();
+        Logger.Flush();
     }
 
     // TODO option for game log files
