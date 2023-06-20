@@ -101,7 +101,6 @@ namespace MasterProject {
                 return null;
             }
             var output = WinLossDrawRecord.Merge(record, WinLossDrawRecord.Empty(record.matchupSize));
-            output.CalculateElo();
             return output;
         }
 
@@ -114,7 +113,6 @@ namespace MasterProject {
                 if (!IsFinished || record == null) {
                     throw new NotImplementedException("Can't save win loss record now!");
                 }
-                record.CalculateElo();
             }
             var saveId = this._id;
             if (isAutoSave) {

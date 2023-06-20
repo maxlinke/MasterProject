@@ -48,7 +48,6 @@ namespace MasterProject.Records {
         }
 
         public string[] playerIds { get; set; }
-        public float[] elo { get; set; }
         public int matchupSize { get; set; }
         public int[] totalWins { get; set; }
         public int[] totalLosses { get; set; }
@@ -81,16 +80,11 @@ namespace MasterProject.Records {
             return HashCode.Combine(playerIds, matchupSize, totalWins, totalLosses, totalDraws, matchupRecords);
         }
 
-        public void CalculateElo () {
-            Console.WriteLine("TODO calculate elo");  // TODO
-        }
-
         public static WinLossDrawRecord Empty (int playersPerGame) => New(new string[0], playersPerGame);
 
         public static WinLossDrawRecord New (IReadOnlyList<string> playerIds, int playersPerGame) {
             var output = new WinLossDrawRecord();
             output.playerIds = playerIds.ToArray();
-            output.elo = new float[playerIds.Count];
             output.totalWins = new int[playerIds.Count];
             output.totalLosses = new int[playerIds.Count];
             output.totalDraws = new int[playerIds.Count];

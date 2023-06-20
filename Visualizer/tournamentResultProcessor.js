@@ -18,7 +18,6 @@ function processTournamentData (input) {
         drawPercentage: input.totalDraws[i] / playerGameCounts[i],
         rawWinLossBalance: (input.totalWins[i] - input.totalLosses[i]) / Math.max(1, (playerGameCounts[i] - input.totalDraws[i])),
         adjustedWinLossBalance: getAdjustedWinLossBalance(input.totalWins[i], input.totalLosses[i], Math.max(2, input.matchupSize)), 
-        elo: input.elo[i]
     }});
     output.matchupSize = input.matchupSize;
     output.matchupRecords = JSON.parse(JSON.stringify(input.matchupRecords));   // create a clone, because otherwise reloading loaded data becomes problematic

@@ -12,8 +12,7 @@ function onTournamentResultFileLoaded (input) {
 
     const winPercentMetric = "Win%";
     const wlBalanceMetric = "W/L-Balance";
-    const eloMetric = "Elo";
-    const rankingOptions = [ winPercentMetric, wlBalanceMetric, eloMetric ];
+    const rankingOptions = [ winPercentMetric, wlBalanceMetric ];
     const rankingOptionsDropdown = document.getElementById("rankingOptionsSelection");
     function getCurrentRankingOption () { return rankingOptionsDropdown.value; }
 
@@ -33,7 +32,7 @@ function onTournamentResultFileLoaded (input) {
     const matchupOptionsDropdown = document.getElementById("matchupOptionsSelection");
     function getAdjustForMatchupSize () { return matchupOptionsDropdown.value == adjustForMatchupSize; }
 
-    const rankingColumnLabels = [ "", "Games Played", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Balance", "Elo" ];
+    const rankingColumnLabels = [ "", "Games Played", "Wins", "Wins%", "Losses", "Losses%", "Draws", "Draws%", "W/L-Balance" ];
     function getRankingColumnData (playerData, column) {
         switch(column){
             case 0: return playerData.id;
@@ -45,7 +44,6 @@ function onTournamentResultFileLoaded (input) {
             case 6: return playerData.totalDraws;
             case 7: return `${(100 * playerData.drawPercentage).toFixed(2)}`;
             case 8: return (getAdjustForMatchupSize() ? playerData.adjustedWinLossBalance : playerData.rawWinLossBalance).toFixed(5);
-            case 9: return playerData.elo.toFixed(1);
         }
     }
 
@@ -82,7 +80,6 @@ function onTournamentResultFileLoaded (input) {
             switch(currentRankingOption){
                 case winPercentMetric: aVal = a.winPercentage;     bVal = b.winPercentage;     break;
                 case wlBalanceMetric:  aVal = a.rawWinLossBalance; bVal = b.rawWinLossBalance; break;
-                case eloMetric:        aVal = a.elo;               bVal = b.elo;               break;
             }
             return (aVal > bVal ? 1 : (aVal < bVal) ? -1 : 0);
         });
