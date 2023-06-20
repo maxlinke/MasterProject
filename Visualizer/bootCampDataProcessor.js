@@ -16,9 +16,9 @@ function processBootCampData (input) {
     output.individualTypeColors[output.individualTypes[2]] = "#0af";    // blue
     output.individualTypeColors[output.individualTypes[3]] = "#fa0";    // orange
     output.individualTypeColors[output.individualTypes[4]] = "#a0f";    // purple
+    output.unknownVisualizableProperties = {};
     output.generations = input.generations.map((generation, genIndex) => {
-        return generation.map(individual => {
-            const unknownProps = getUnknownProperties(individual);
+        return generation.map((individual, individualIndex) => {
             const outputIndividual = {};    // we're only copying what we need and format the rest to a nice string
             outputIndividual.guid = individual.guid;
             outputIndividual.agentId = individual.agentId.substring(agentIdPrefix.length);
@@ -31,7 +31,11 @@ function processBootCampData (input) {
             outputIndividual.tournamentResults["All"] = processTournamentResult(combineRawTournamentResults(individual.peerTournamentResult, individual.randomTournamentResult));
             outputIndividual.tournamentResults["Peers"] = processTournamentResult(individual.peerTournamentResult);
             outputIndividual.tournamentResults["Random"] = processTournamentResult(individual.randomTournamentResult);
-            unknownProps.forEach(unknownProp => { outputIndividual[unknownProp] = individual[unknownProp]; });  // but we do copy all unknown data so people can "make their own visualizations" for numbers
+            const unknownProps = getUnknownProperties(individual);
+            unknownProps.forEach(unknownProp => {
+                outputIndividual[unknownProp] = individual[unknownProp];    // copy these over so they appear in the popup text
+                ensureVisualizablePropertiesRegistered(outputIndividual[unknownProp], [ unknownProp ]);
+            });
             outputIndividual.popupText = getPopupText(outputIndividual, ["parentGuids", "lineageGuids"]);
             return outputIndividual;
         });
@@ -111,6 +115,30 @@ function processBootCampData (input) {
         return output;
     }
 
+    function ensureVisualizablePropertiesRegistered (prop, keyStack) {
+        const keyAsString = keyStack.join(".");
+        if(output.unknownVisualizableProperties[keyAsString] == undefined){
+            if(!isNaN(prop)){
+                output.unknownVisualizableProperties[keyAsString] = {
+                    dropdownText : keyAsString,
+                    getValueFromIndividual: (individual) => {
+                        let prop = individual;
+                        keyStack.forEach(key => {
+                            prop = prop[key];
+                        });
+                        return Number(prop);
+                    }
+                };
+            }else{
+                if(typeof(prop) == "object"){
+                    for(const subKey in prop){
+                        ensureVisualizablePropertiesRegistered(prop[subKey], keyStack.concat([subKey]));
+                    }
+                }
+            }
+        }
+    }
+
     function getPopupText (individual, propsToIgnore) {
         const lines = [];
         for(const propertyName in individual){
@@ -118,11 +146,11 @@ function processBootCampData (input) {
                 const nicePropName = getNicePropertyName(propertyName);
                 if(propertyName == "tournamentResults"){
                     lines.push(`${nicePropName}:`);
-                    appendSubProps(individual[propertyName], 1, (result) => { return result.popupText; });
+                    appendSubPropsText(individual[propertyName], 1, (result) => { return result.popupText; });
                 }else{
                     if(typeof(individual[propertyName]) == "object"){
                         lines.push(`${nicePropName}:`);
-                        appendSubProps(individual[propertyName], 1);
+                        appendSubPropsText(individual[propertyName], 1);
                     }else{
                         lines.push(`${nicePropName}: ${individual[propertyName]}`);
                     }
@@ -131,14 +159,14 @@ function processBootCampData (input) {
         }
         return lines.join("\n");
 
-        function appendSubProps (subProp, depth, subPropToString) {
+        function appendSubPropsText (subProp, depth, subPropToString) {
             const indent = " ".repeat(depth * 3);
             for(const deeperProp in subProp){
                 const nicePropName = getNicePropertyName(deeperProp);
                 if(subPropToString == undefined){
                     if(typeof(subProp[deeperProp]) == "object"){
                         lines.push(`${indent}${nicePropName}:`);
-                        appendSubProps(subProp[deeperProp], depth+1);
+                        appendSubPropsText(subProp[deeperProp], depth+1);
                     }else{
                         lines.push(`${indent}${nicePropName}: ${subProp[deeperProp]}`);
                     }

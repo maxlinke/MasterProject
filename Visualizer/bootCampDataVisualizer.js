@@ -54,14 +54,8 @@ function onBootCampDataFileLoaded (input) {
     const displayLineageMode = "Lineage";
     const displayFitnessMode = "Fitness";
     const displayTournamentResultMode = "Tournament Result";
-    // TODO add a "custom" metric where one can define a string separated with periods and i look that up in the object
-    // that would allow me to get the randomness for example for ttt individuals
-    // i would have to check if that metric 
-    // a) exists
-    // b) is a number
-    // put a div next to the string input field though that displays why it can't display the current string
-    // according to the checks above
-    const svgDisplayModes = [ displayLineageMode, displayFitnessMode, displayTournamentResultMode ];
+    const defaultSvgDisplayModes = [ displayLineageMode, displayFitnessMode, displayTournamentResultMode ];
+    let customSvgDisplayModes = [];
     const svgDisplayModeDropdown = document.getElementById("svgDisplayModeSelection");
     function getSvgDisplayMode () { return svgDisplayModeDropdown.value; }
 
@@ -109,7 +103,19 @@ function onBootCampDataFileLoaded (input) {
                     drawSvgMetric((individual) => { return individual.tournamentResults[getTournamentResultSource()][getTournamentType()].percentage; }, {min: 0, max: 100}, "Percentage");
                     break;
                 default:
-                    throw new Error(`Unknown mode ${getSvgDisplayMode()}`);
+                    setTournamentOptionsVisible(false);
+                    let customMode = undefined;
+                    for(let i=0; i<customSvgDisplayModes.length; i++){
+                        if(customSvgDisplayModes[i].dropdownText == getSvgDisplayMode()){
+                            customMode = customSvgDisplayModes[i];
+                            break;
+                        }
+                    }
+                    if(customMode != undefined){
+                        drawSvgMetric(customMode.getValueFromIndividual, undefined, customMode.dropdownText.substring(customMode.dropdownText.lastIndexOf(".") + 1));
+                    }else{
+                        throw new Error(`Unknown mode ${getSvgDisplayMode()}`);
+                    }
             }
         }else{
             setLegendVisible(false);
@@ -448,19 +454,17 @@ function onBootCampDataFileLoaded (input) {
 
 // ----- init -----
 
-    initDropdown(svgDisplayModeDropdown, svgDisplayModes, updateSvg);
+    loadedData = processBootCampData(input);
+    scatterOffsetRandomValues = [];
+    loadedData.generations.forEach(gen => { gen.forEach(() => { scatterOffsetRandomValues.push((2 * Math.random()) - 1); }); });    // precompute scatter offets so it's consistent while looking at the same file
+    for(const propKey in loadedData.unknownVisualizableProperties){
+        customSvgDisplayModes.push(loadedData.unknownVisualizableProperties[propKey]);
+    }
+    console.log(loadedData);
+    initDropdown(svgDisplayModeDropdown, defaultSvgDisplayModes.concat(customSvgDisplayModes.map(mode => mode.dropdownText)), updateSvg);
     initDropdown(popupEnabledSelection, popupEnabledModes);
     initDropdown(tournamentTypeDropdown, tournamentResultOptions, updateSvg);
     initDropdown(tournamentResultSourceDropdown, tournamentResultSourceOptions, updateSvg);
-    // svgDisplayModeDropdown.value = displayFitnessMode;
-    loadedData = processBootCampData(input);
-    scatterOffsetRandomValues = [];
-    loadedData.generations.forEach(gen => {
-        gen.forEach(() => {
-            scatterOffsetRandomValues.push((2 * Math.random()) - 1);
-        });
-    });
-    console.log(loadedData);
     updateSvg();
 
 }
