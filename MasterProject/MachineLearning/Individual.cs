@@ -75,6 +75,88 @@
 
         protected abstract void InvertCoefficients ();
 
+        public static IReadOnlyList<T> RandomlyPickFromBoth<T> (IReadOnlyList<T> a, IReadOnlyList<T> b, double ratio) {
+            if (a.Count != b.Count) {
+                throw new System.ArgumentException($"Both collections must be the same size but the first had {a.Count} elements and the second {b.Count}!");
+            }
+            var src = new IReadOnlyList<T>[] { a, b };
+            var output = new T[a.Count];
+            var remainingFromA = (int)(Math.Round(Math.Clamp(ratio, 0, 1) * a.Count));
+            var sourceIndices = new int[output.Length];
+            for (int i = 0; i < remainingFromA; i++) {
+                sourceIndices[i] = 0;
+            }
+            for (int i = remainingFromA; i < output.Length; i++) {
+                sourceIndices[i] = 1;
+            }
+            // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+            for (int i = 0; i < output.Length; i++) {
+                var j = rng.Next(output.Length);
+                var temp = sourceIndices[i];
+                sourceIndices[i] = sourceIndices[j];
+                sourceIndices[j] = temp;
+            }
+            for (int i = 0; i < output.Length; i++) {
+                output[i] = src[sourceIndices[i]][i];
+            }
+            return output;
+        }
+
+    }
+
+    public abstract class Individual<TParams, TParam> : Individual where TParams : IParameterListConvertible<TParam> {
+        
+        public TParams agentParams { get; set; }
+
+        protected override void CombineCoefficients (Individual other) {
+            if (!(other is Individual<TParams, TParam>)) {
+                throw new ArgumentException($"Can't automatically combine with agent of type {other.GetType()}!");
+            }
+            var thisParams = agentParams.GetParameterList();
+            var otherParams = ((Individual<TParams, TParam>)other).agentParams.GetParameterList();
+            var combinedParams = RandomlyPickFromBoth(thisParams, otherParams, 0.5);
+            agentParams.ApplyParameterList(combinedParams);
+        }
+
+    }
+
+    public abstract class NumericallyParametrizedIndividual<TParams> : Individual<TParams, float> where TParams : IParameterListConvertible<float>, IParameterRangeProvider<float> {
+
+        protected abstract float maxMutationStrength { get; }
+
+        protected override void InvertCoefficients () {
+            var oldParams = agentParams.GetParameterList();
+            var newParams = new float[oldParams.Count];
+            for (int i = 0; i < newParams.Length; i++) {
+                var range = agentParams.GetRangeForParameterAtIndex(i);
+                var normed = (oldParams[i] - range.min) / (range.max - range.min);
+                var flipped = 1f - normed;
+                newParams[i] = ((flipped * (range.max - range.min)) + range.min);
+            }
+            agentParams.ApplyParameterList(newParams);
+        }
+
+        protected override void MutateCoefficients () {
+            var oldParams = agentParams.GetParameterList();
+            var newParams = new float[oldParams.Count];
+            for (int i = 0; i < newParams.Length; i++) {
+                var range = agentParams.GetRangeForParameterAtIndex(i);
+                var normed = (oldParams[i] - range.min) / (range.max - range.min);
+                var bidiOffset = (float)(rng.NextDouble() - 0.5) * 2;
+                var mutated = Math.Clamp(normed + (bidiOffset * maxMutationStrength), 0, 1);
+                newParams[i] = ((mutated * (range.max - range.min)) + range.min);
+            }
+            agentParams.ApplyParameterList(newParams);
+        }
+
+        protected override void RandomizeCoefficients () {
+            var newParams = new float[agentParams.GetParameterList().Count];
+            for (int i = 0; i < newParams.Length; i++) {
+                var range = agentParams.GetRangeForParameterAtIndex(i);
+                newParams[i] = (float)((rng.NextDouble() * (range.max - range.min)) + range.min);
+            }
+            agentParams.ApplyParameterList(newParams);
+        }
     }
 
 }

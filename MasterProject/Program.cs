@@ -30,46 +30,23 @@ public class Program {
         //var fooClone = JsonSerializer.Deserialize<MasterProject.TicTacToe.MachineLearning.AgentParameters>(json);
         //Console.WriteLine(foo.GetHashCode());
 
+        //var a = new int[] { 1, 2, 3, 4, 5, 6, 7, 8};
+        //var b = new int[] { 10, 20, 30, 40, 50, 60, 70, 80 };
+        //for (int i = 0; i < 20; i++) {
+        //    var c = Individual.RandomlyPickFromBoth(a, b, 0.5);
+        //    Console.WriteLine(JsonSerializer.Serialize(c));
+        //}
+
         //DoTTTTournament();
-        DoTTTBootCamp();
+        //DoTTTBootCamp();
 
         //TestG44P();
         //DoG44PTournament();
-
-        // TODO
-        // make simple ttt-individuals
-        // a weighting for winning, drawing and losing
-        // and a weight for how often a random move should be played anyways
-        // and for starters, just check if the serialization even works
-        // and the deserialization of course
-        // so do a bootcamp with the absolute minimum
-        // also maybe add some console logs to whenever a generation is done training
-        // then, when the serialization reliably works, do the ttt-tournament in earnest
-        // and if that works, do one for g44p
-        // the individuals (thanks to inheritance) need to be their own classes, containing the ratingparameters objects
-        // shouldn't be too hard though. 
+        DoG44PBootCamp();
 
         DataSaver.Flush();
         Logger.Flush();
     }
-
-    // TODO option for game log files
-    //  -> not even an option
-    //  -> just make a logger class
-    //  -> and when main terminates, write the log to file
-    //  -> https://stackoverflow.com/questions/4470700/how-to-save-console-writeline-output-to-text-file
-    //  -> but do it with the manual logger instead
-    // TODO option for tournament log files
-    // TODO non-optional tournament error log files
-    // TODO make the visualizer adapt to a higher player count by not having 50% hardcoded as neutral but dependent on the player count per matchup with 25% being neutral for 4 players for example
-
-    // TODO continue the previous g44p tournament with a depth 4 and depth 8 simple ab agent
-    // then add more ab agents and play more
-    // then do the whole machine learning thing
-    // and finally put the winner of that into the tournament as well and see the performance of that compared to explicit solutions
-
-    // TODO if log enabled method
-    // so i don't have to comment and uncomment the nice debug output
 
     static void TestG44P () {
         //Tournament<G44PGame>.RunSingleAgentTournamentVsRandom(new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8), 100);             // 2m 0s
@@ -179,6 +156,19 @@ public class Program {
         );
     }
 
+    static void DoG44PBootCamp () {
+        Console.WriteLine("TODO");
+
+        // first check if the g44pindividuals are serializable (because the params thing is abstract and such)
+        // and of course deserializable
+        // then check each of the modifications
+        // randomizing, mutating, combining, inverting
+        // change the range in the params too, just to see if it still works AS EXPECTED
+        // try some proper whack ranges
+
+        //DoBootCamp<G44PGame, MasterProject.G44P.RatingFunctions.
+    }
+
     static void DoTTTTournament () {
         //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
         const string continueTournamentId = "";
@@ -218,69 +208,18 @@ public class Program {
         );
     }
 
-    // TODO continuing the bootcamp gives this exception (invaliddataexception in tournament.verifyagents or something)
-    // Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent (MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_28297030)!
-	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_-2114008383)!
-	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_7672059)!
-	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_28297030)!
-	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_-2114008383)!
-	// Agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent returned same id as agent type MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent_7672059)!
-    // either somehow my offspring creation results in duplicates (the only good explanation with the ids being hashcodes)
-    // or something else is happening that i'll need to debug
-    // it is very unlikely that this is random chance though
-    // i could get the agent types and parent indices for one, see what kind of agents are causing the problems
-    // and on another hand, i could just use guids for them and the parameters instead of auto-generated hashcodes
-
-    // TODO test both running a single generation, saving and running the second generation from loaded data
-    // and just doing two generations from the get-go
     static void DoTTTBootCamp () {
         var bcId = "";
         //var bcId = "BC_638222022448911356_Generation1";
         var genCount = 10;
-        BootCamp<TTTGame, TTTIndividual> bc;
-        if (!BootCamp<TTTGame, TTTIndividual>.TryLoad(bcId, out bc)) {
-            Console.WriteLine("NEW BOOTCAMP!!!");
-            bc = BootCamp<TTTGame, TTTIndividual>.Create(
-                BootCamp.DefaultGenerationConfig,
-                //BootCamp.DefaultTournamentConfig(2),
-                BootCamp.FastTournamentConfig(2),
-                BootCamp.DefaultFitnessWeighting
-            );
-        } else {
-            Console.WriteLine("CONTINUING!!!");
-        }
-
-        //var prettyPrint = new JsonSerializerOptions { WriteIndented = true };
-        //for (int i = 0; i < bc.currentGeneration.Count; i++) {
-        //    var individualI = bc.currentGeneration[i];
-        //    var agentI = individualI.CreateAgent();
-        //    for (int j = i + 1; j < bc.currentGeneration.Count; j++) {
-        //        var individualJ = bc.currentGeneration[j];
-        //        var agentJ = individualJ.CreateAgent();
-        //        if (agentI.Id == agentJ.Id) {
-        //            Console.WriteLine($">>> {i} and {j} create agents with the same id!");
-        //            Console.WriteLine($"{i} is {individualI.IndividualType} with parents {GetParents(individualI)}");
-        //            Console.WriteLine($"parameters for {i} are {JsonSerializer.Serialize(individualI.agentParams, prettyPrint)}");
-        //            Console.WriteLine($"{j} is {individualJ.IndividualType} with parents {GetParents(individualJ)}");
-        //            Console.WriteLine($"parameters for {j} are {JsonSerializer.Serialize(individualJ.agentParams, prettyPrint)}");
-        //            Console.WriteLine();
-        //        }
-        //    }
-        //}
-        //
-        //string GetParents (TTTIndividual individual) {
-        //    var sb = new System.Text.StringBuilder();
-        //    if (individual.parentIndices.Length > 0) {
-        //        sb.Append(individual.parentIndices[0]);
-        //        for (int i = 1; i < individual.parentIndices.Length; i++) {
-        //            sb.Append($", {individual.parentIndices[i]}");
-        //        }
-        //    }
-        //    return sb.ToString();
-        //}
-        //return; // TODO remove
-
-        bc.RunUntil(BootCampTerminationCondition<TTTGame, TTTIndividual>.AfterFixedNumberOfGenerations(genCount));
+        DoBootCamp<TTTGame, TTTIndividual>(
+            bcId, 
+            genCount,
+            BootCamp.DefaultGenerationConfig,
+            //BootCamp.DefaultTournamentConfig(2),
+            BootCamp.FastTournamentConfig(2),
+            BootCamp.DefaultFitnessWeighting
+        );
     }
 
     static void DoTournament<TGame> (string continueId, int numberOfPlayersPerMatchup, int numberOfGamesToPlay, IMatchupFilter filter, IReadOnlyList<Agent> agents, bool saveResult, System.Action<Tournament<TGame>> onBeforeRun = null) where TGame : Game, new() {
@@ -299,6 +238,17 @@ public class Program {
         if (saveResult) {
             tournament.SaveWinLossDrawRecord();
         }
+    }
+
+    static void DoBootCamp<TGame, TIndividual> (string continueId, int genCount, BootCamp.GenerationConfiguration gc, BootCamp.TournamentConfiguration tc, BootCamp.FitnessWeighting fw) where TGame: Game, new() where TIndividual: Individual, new() {
+        BootCamp<TGame, TIndividual> bc;
+        if (!BootCamp<TGame, TIndividual>.TryLoad(continueId, out bc)) {
+            Console.WriteLine("NEW BOOTCAMP!!!");
+            bc = BootCamp<TGame, TIndividual>.Create(gc, tc, fw);
+        } else {
+            Console.WriteLine("CONTINUING!!!");
+        }
+        bc.RunUntil(BootCampTerminationCondition<TGame, TIndividual>.AfterFixedNumberOfGenerations(genCount));
     }
 
 }
