@@ -118,7 +118,7 @@ function processBootCampData (input) {
     function ensureVisualizablePropertiesRegistered (prop, keyStack) {
         const keyAsString = keyStack.join(".");
         if(output.unknownVisualizableProperties[keyAsString] == undefined){
-            if(!isNaN(prop)){
+            if(isFinite(prop)){
                 output.unknownVisualizableProperties[keyAsString] = {
                     dropdownText : keyAsString,
                     getValueFromIndividual: (individual) => {

@@ -348,7 +348,7 @@ function onBootCampDataFileLoaded (input) {
             let rawValueSum = 0;
             generation.forEach(individual => {
                 const rawValue = Number(getValueFromIndividual(individual));
-                if(rawValue != NaN && rawValue != Infinity && rawValue != -Infinity){
+                if(isFinite(rawValue)){
                     individualsWithValidValues.push({individual: individual, value: rawValue});
                 }
             });
@@ -440,7 +440,7 @@ function onBootCampDataFileLoaded (input) {
         loadedData.generations.forEach(generation => {
             generation.forEach(individual => {
                 const newValue = Number(getValueFromIndividual(individual));
-                if(newValue != NaN && newValue != Infinity && newValue != -Infinity){
+                if(isFinite(newValue)){
                     output.min = Math.min(output.min, newValue);
                     output.max = Math.max(output.max, newValue);
                 }
