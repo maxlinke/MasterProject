@@ -13,13 +13,20 @@ namespace MasterProject.G44P.RatingFunctions {
 
         public class Parameters : IParameterListConvertible<float>, IParameterRangeProvider<float> {
 
-            public float ownScoreMultiplier { get; set; }
-            public float[] otherScoreMultipliers { get; set; }
+            public float ownScoreMultiplier { get; set; } = 0;
+            public float[] otherScoreMultipliers { get; set; } = new float[3];
+
+            public Parameters Clone () {
+                return new Parameters() {
+                    ownScoreMultiplier = this.ownScoreMultiplier,
+                    otherScoreMultipliers = (float[])this.otherScoreMultipliers.Clone()
+                };
+            }
 
             public override bool Equals (object? obj) {
                 return obj is Parameters other
                     && other.GetHashCode() == this.GetHashCode()
-                ;       
+                ;
             }
 
             public override int GetHashCode () {

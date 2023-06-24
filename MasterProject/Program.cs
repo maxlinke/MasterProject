@@ -167,6 +167,40 @@ public class Program {
         // try some proper whack ranges
 
         //DoBootCamp<G44PGame, MasterProject.G44P.RatingFunctions.
+
+        var foo = new float[] { 0, 1, 2, 3, 623 };
+        Console.WriteLine(JsonSerializer.Serialize(foo));
+
+        var a = new Container<TestStruct>();
+        var b = new Container<TestClass>();
+        for (int i = 0; i < 10; i++) {
+            Console.WriteLine(a.ToString());
+            Console.WriteLine(b.ToString());
+            a.obj.customMessage = $"{a.obj}.";
+            b.obj.customMessage = $"{b.obj}.";
+        }
+    }
+
+    struct TestStruct {
+        public string customMessage;
+        public override string ToString () {
+            return customMessage ?? "I'm the struct";
+        }
+    }
+
+    class TestClass {
+        public string customMessage;
+        public override string ToString () {
+            return customMessage ?? "I'm the class";
+        }
+    }
+
+    class Container<T> where T : new() {
+        public T obj;
+        public override string ToString () {
+            obj = obj ?? new T();
+            return obj.ToString();
+        }
     }
 
     static void DoTTTTournament () {

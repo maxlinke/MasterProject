@@ -104,7 +104,7 @@
 
     }
 
-    public abstract class Individual<TParams, TParam> : Individual where TParams : IParameterListConvertible<TParam> {
+    public abstract class Individual<TParams, TParam> : Individual where TParams : IParameterListConvertible<TParam>, new() {
         
         public TParams agentParams { get; set; }
 
@@ -112,6 +112,7 @@
             if (!(other is Individual<TParams, TParam>)) {
                 throw new ArgumentException($"Can't automatically combine with agent of type {other.GetType()}!");
             }
+            agentParams = agentParams ?? new TParams();
             var thisParams = agentParams.GetParameterList();
             var otherParams = ((Individual<TParams, TParam>)other).agentParams.GetParameterList();
             var combinedParams = RandomlyPickFromBoth(thisParams, otherParams, 0.5);
@@ -120,11 +121,12 @@
 
     }
 
-    public abstract class NumericallyParametrizedIndividual<TParams> : Individual<TParams, float> where TParams : IParameterListConvertible<float>, IParameterRangeProvider<float> {
+    public abstract class NumericallyParametrizedIndividual<TParams> : Individual<TParams, float> where TParams : IParameterListConvertible<float>, IParameterRangeProvider<float>, new() {
 
-        protected abstract float maxMutationStrength { get; }
+        public abstract float maxMutationStrength { get; }
 
         protected override void InvertCoefficients () {
+            agentParams = agentParams ?? new TParams();
             var oldParams = agentParams.GetParameterList();
             var newParams = new float[oldParams.Count];
             for (int i = 0; i < newParams.Length; i++) {
@@ -137,6 +139,7 @@
         }
 
         protected override void MutateCoefficients () {
+            agentParams = agentParams ?? new TParams();
             var oldParams = agentParams.GetParameterList();
             var newParams = new float[oldParams.Count];
             for (int i = 0; i < newParams.Length; i++) {
@@ -150,6 +153,7 @@
         }
 
         protected override void RandomizeCoefficients () {
+            agentParams = agentParams ?? new TParams();
             var newParams = new float[agentParams.GetParameterList().Count];
             for (int i = 0; i < newParams.Length; i++) {
                 var range = agentParams.GetRangeForParameterAtIndex(i);
