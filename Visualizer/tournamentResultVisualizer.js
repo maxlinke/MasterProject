@@ -50,6 +50,7 @@ function onTournamentResultFileLoaded (input) {
     let loadedData = undefined;
     let sortedPlayerIndices = [];
     let additionalMatrixDimensionPlayerIds = [];
+    let playerIdToIndexMap = {};
 
     function onMatrixOptionChanged () {
         if(loadedData != undefined){
@@ -128,7 +129,7 @@ function onTournamentResultFileLoaded (input) {
                 firstRow.appendChild(newLabel);
             });
             rankingTable.appendChild(firstRow);
-            sortedPlayerIndices.forEach(playerIndex => {
+            sortedPlayerIndices.forEach((playerIndex, i) => {
                 const playerData = loadedData.players[playerIndex];
                 const newRow = document.createElement("tr");
                 for(let i=0; i<rankingColumnLabels.length; i++){
@@ -163,7 +164,7 @@ function onTournamentResultFileLoaded (input) {
                     newLabel.className = "matrixColumnLabel";
                 });
                 const highlightFixed = getHighlightFixedOutcomes();
-                sortedPlayerIndices.forEach((mainPlayerIndex) => {
+                sortedPlayerIndices.forEach((mainPlayerIndex, i) => {
                     const mainPlayer = loadedData.players[mainPlayerIndex];
                     const newRow = document.createElement("tr");
                     matchupMatrix.appendChild(newRow);
@@ -171,12 +172,14 @@ function onTournamentResultFileLoaded (input) {
                     newRow.appendChild(newLabel);
                     newLabel.innerHTML = mainPlayer.id;
                     newLabel.className = "matrixRowLabel";
-                    sortedPlayerIndices.forEach((secondaryPlayerIndex) => {
+                    sortedPlayerIndices.forEach((secondaryPlayerIndex, j) => {
                         const secondaryPlayer = loadedData.players[secondaryPlayerIndex];
                         const newField = document.createElement("td");
                         newRow.appendChild(newField);
                         newField.className = "matrixDataField";
+                        const timeBeforeInfo = Date.now();
                         const info = getInfo(mainPlayer, secondaryPlayer);
+                        const timeAfterInfo = Date.now();
                         newField.style = `background-color: ${info.color}`;
                         if(info.deterministic && highlightFixed){
                             const overlay = document.createElement("div");
@@ -288,12 +291,13 @@ function onTournamentResultFileLoaded (input) {
             output[key] = Array(loadedData.matchupSize).fill(0);
         });
         records.forEach(record => {
-            record.gameResults.forEach(resultString => {
+            for(const resultString in record.gameResults){
+                const resultCount = record.gameResults[resultString];
                 [...resultString].forEach((character, index) => {
-                    output[character][index]++;
+                    output[character][index] += resultCount;
                 });
-            });
-            output.total += record.gameResults.length;
+                output.total += resultCount;
+            }
         });
         gameResultCharacters.forEach(key => {
             output.alwaysZero[key] = (output[key][0] == 0);
@@ -327,39 +331,44 @@ function onTournamentResultFileLoaded (input) {
     }
 
     function getMatchupRecordsForMatrixField (mainPlayer, secondaryPlayer) {
-        let basePair = [ mainPlayer.id, secondaryPlayer.id ];
-        let matchups = [ basePair ];
-        additionalMatrixDimensionPlayerIds.forEach((additionalPlayerId, index) => {
+        let baseIdPair = [ mainPlayer.id, secondaryPlayer.id ];
+        let baseIndexPair = [ mainPlayer.index, secondaryPlayer.index ];
+        let matchupPlayerIds = [ baseIdPair ];
+        let matchupPlayerIndices = [ baseIndexPair ];
+        additionalMatrixDimensionPlayerIds.forEach((additionalPlayerId) => {
             if(additionalPlayerId == allPlayersId){
-                let newOutput = [];
-                matchups.forEach(group => {
+                let newIds = [];
+                matchupPlayerIndices.forEach(group => {
                     loadedData.players.forEach((additionalPlayer) => {
-                        newOutput.push(group.concat(additionalPlayer.id));
+                        newIds.push(group.concat(additionalPlayer.id));
                     });
                 });
-                matchups = newOutput;
+                matchupPlayerIds = newIds;
+                let newIndices = [];
+                matchupPlayerIndices.forEach(group => {
+                    loadedData.players.forEach((additionalPlayer) => {
+                        newIndices.push(group.concat(additionalPlayer.index));
+                    });
+                });
+                matchupPlayerIndices = newIndices;
             }else{
-                matchups.forEach(group => {
+                const additionalPlayerIndex = playerIdToIndexMap[additionalPlayerId];
+                matchupPlayerIds.forEach(group => {
                     group.push(additionalPlayerId);
+                });
+                matchupPlayerIndices.forEach(group => {
+                    group.push(additionalPlayerIndex);
                 });
             }
         });
-        let output = [];
-        matchups.forEach((matchup) => {
-            loadedData.matchupRecords.forEach((matchupRecord) => {
-                let isCorrectMatchup = true;
-                for(let i=0; i<matchup.length; i++){
-                    if(matchup[i] != matchupRecord.playerIds[i]){
-                        isCorrectMatchup = false;
-                        break;
-                    }
-                }
-                if(isCorrectMatchup){
-                    output.push(matchupRecord);
-                }
+        return matchupPlayerIndices.map(matchup => {
+            let matchupIndex = 0;
+            matchup.forEach(playerIndex => {
+                matchupIndex *= loadedData.players.length;
+                matchupIndex += playerIndex;
             });
+            return loadedData.matchupRecords[matchupIndex];
         });
-        return output;
     }
 
 //  ----- init -----
@@ -370,7 +379,11 @@ function onTournamentResultFileLoaded (input) {
     initDropdown(matchupOptionsDropdown, matchupOptions, onMatchupOptionChanged);
 
     loadedData = processTournamentData(input);
-    // console.log(loadedData);
+    console.log(loadedData);
+    playerIdToIndexMap = {};
+    loadedData.players.forEach(player => {
+        playerIdToIndexMap[player.id] = player.index;
+    });
     updateRankingTable();
     updateAdditionalMatrixControls();
     updateMatrix();

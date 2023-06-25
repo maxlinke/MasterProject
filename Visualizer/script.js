@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return secondSplit[secondSplit.length - 1];
     }
 
+    const fileStatusText = document.getElementById("fileStatus");
+
     async function handleFileSelect(evt) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -19,11 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 const rawText = e.target.result;
                 const parsedObject = JSON.parse(rawText);
                 onInputLoaded(parsedObject, extension);
+                fileStatusText.innerHTML = "Loaded";
             }catch(error){
                 alert("Error, check the console for details!");
                 console.error(error);
+                fileStatusText.innerHTML = "Error";
             }
         }
+        fileStatusText.innerHTML = "Loading";
         reader.readAsText(evt.target.files[0]);
     }
 

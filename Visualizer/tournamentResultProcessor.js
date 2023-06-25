@@ -20,11 +20,17 @@ function processTournamentData (input) {
         adjustedWinLossBalance: getAdjustedWinLossBalance(input.totalWins[i], input.totalLosses[i], Math.max(2, input.matchupSize)), 
     }});
     output.matchupSize = input.matchupSize;
-    output.matchupRecords = JSON.parse(JSON.stringify(input.matchupRecords));   // create a clone, because otherwise reloading loaded data becomes problematic
-    output.matchupRecords.forEach(matchupRecord => {
-        matchupRecord.playerIds.forEach((id, index) => {
-            matchupRecord.playerIds[index] = id.substring(commonPrefix.length);
+    output.matchupRecords = input.matchupRecords.map((srcRecord, index) => {
+        const newRecord = {};
+        newRecord.playerIds = srcRecord.playerIds.map(srcId => { return srcId.substring(commonPrefix.length); });
+        newRecord.gameResults = {};
+        srcRecord.gameResults.forEach(result => {
+            if(newRecord.gameResults[result] == undefined){
+                newRecord.gameResults[result] = 0;
+            }
+            newRecord.gameResults[result]++;
         });
+        return newRecord;
     });
     return output;
 }

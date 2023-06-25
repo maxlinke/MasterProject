@@ -10,12 +10,12 @@
     <script src="bootCampDataVisualizer.js"></script>
     <script src="bootCampDataProcessor.js"></script>
     <script src="utils.js"></script>
-    <script src="bootCampTestData.js"></script>
-    <!-- <script src="tournamentTestData.js"></script> -->
+    <!-- <script src="bootCampTestData.js"></script> -->
+    <script src="tournamentTestData.js"></script>
 
     <template id="tournamentResultVisualization">
         <section>
-            <h2 class="sectionHeader">File Processing</h2>
+            <h2 class="sectionHeader">Data Processing</h2>
             <div class="sectionContent">
                 <div class="horizontalControlGroup">
                     <label for="matchupOptionsSelection">Matchup Size</label>
@@ -104,6 +104,10 @@
             <div class="horizontalControlGroup">
                 <label for="fileInput">Select File</label>
                 <input id="fileInput" type="file" accept=".tournamentResult, .bootCampData">
+            </div>
+            <div class="horizontalControlGroup" id="fileStatusGroup">
+                <label for="fileStatus">File Status</label>
+                <p id="fileStatus" style="display:inline"></p>
             </div>
         </div>
     </section>
