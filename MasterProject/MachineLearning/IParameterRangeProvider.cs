@@ -4,6 +4,8 @@
 
         ParameterRange<T> GetRangeForParameterAtIndex (int index);
 
+        bool GetParameterIsInvertible (int index);
+
     }
 
 }

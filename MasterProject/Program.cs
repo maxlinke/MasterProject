@@ -7,7 +7,6 @@ using MasterProject.Records;
 using MasterProject.MachineLearning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TTTIndividual = MasterProject.TicTacToe.MachineLearning.TTTIndividual;
 
 public class Program {
 
@@ -20,29 +19,14 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        //var foo = new MasterProject.TicTacToe.MachineLearning.AgentParameters();
-        //var bar = new MasterProject.TicTacToe.MachineLearning.AgentParameters();
-        //Console.WriteLine(foo.GetHashCode());
-        //Console.WriteLine(bar.GetHashCode());
-        //foo.winScore = 1;
-        //Console.WriteLine(foo.GetHashCode());
-        //var json = JsonSerializer.SerializeToUtf8Bytes(foo);
-        //var fooClone = JsonSerializer.Deserialize<MasterProject.TicTacToe.MachineLearning.AgentParameters>(json);
-        //Console.WriteLine(foo.GetHashCode());
-
-        //var a = new int[] { 1, 2, 3, 4, 5, 6, 7, 8};
-        //var b = new int[] { 10, 20, 30, 40, 50, 60, 70, 80 };
-        //for (int i = 0; i < 20; i++) {
-        //    var c = Individual.RandomlyPickFromBoth(a, b, 0.5);
-        //    Console.WriteLine(JsonSerializer.Serialize(c));
-        //}
+        Logger.consoleOnly = true;
 
         //DoTTTTournament();
-        //DoTTTBootCamp();
+        DoTTTBootCamp();
 
         //TestG44P();
         //DoG44PTournament();
-        DoG44PBootCamp();
+        //DoG44PBootCamp();
 
         DataSaver.Flush();
         Logger.Flush();
@@ -157,50 +141,16 @@ public class Program {
     }
 
     static void DoG44PBootCamp () {
-        Console.WriteLine("TODO");
-
-        // first check if the g44pindividuals are serializable (because the params thing is abstract and such)
-        // and of course deserializable
-        // then check each of the modifications
-        // randomizing, mutating, combining, inverting
-        // change the range in the params too, just to see if it still works AS EXPECTED
-        // try some proper whack ranges
-
-        //DoBootCamp<G44PGame, MasterProject.G44P.RatingFunctions.
-
-        var foo = new float[] { 0, 1, 2, 3, 623 };
-        Console.WriteLine(JsonSerializer.Serialize(foo));
-
-        var a = new Container<TestStruct>();
-        var b = new Container<TestClass>();
-        for (int i = 0; i < 10; i++) {
-            Console.WriteLine(a.ToString());
-            Console.WriteLine(b.ToString());
-            a.obj.customMessage = $"{a.obj}.";
-            b.obj.customMessage = $"{b.obj}.";
-        }
-    }
-
-    struct TestStruct {
-        public string customMessage;
-        public override string ToString () {
-            return customMessage ?? "I'm the struct";
-        }
-    }
-
-    class TestClass {
-        public string customMessage;
-        public override string ToString () {
-            return customMessage ?? "I'm the class";
-        }
-    }
-
-    class Container<T> where T : new() {
-        public T obj;
-        public override string ToString () {
-            obj = obj ?? new T();
-            return obj.ToString();
-        }
+        const string continueId = "";
+        const int genCount = 3;
+        DoBootCamp<G44PGame, G44PIndividual>(
+            continueId: continueId,
+            genCount: genCount,
+            BootCamp.DefaultGenerationConfig,
+            //BootCamp.DefaultTournamentConfig(4),
+            BootCamp.FastTournamentConfig(playersPerGame: 4, gameReductionFactor: 10),
+            BootCamp.DefaultFitnessWeighting
+        );
     }
 
     static void DoTTTTournament () {
@@ -246,12 +196,12 @@ public class Program {
         var bcId = "";
         //var bcId = "BC_638222022448911356_Generation1";
         var genCount = 10;
-        DoBootCamp<TTTGame, TTTIndividual>(
+        DoBootCamp<TTTGame, MasterProject.TicTacToe.MachineLearning.GenericTTTIndividual>(
             bcId, 
             genCount,
             BootCamp.DefaultGenerationConfig,
             //BootCamp.DefaultTournamentConfig(2),
-            BootCamp.FastTournamentConfig(2),
+            BootCamp.FastTournamentConfig(playersPerGame: 2, gameReductionFactor: 4),
             BootCamp.DefaultFitnessWeighting
         );
     }

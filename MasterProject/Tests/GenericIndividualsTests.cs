@@ -17,6 +17,7 @@ namespace MasterProject.Tests {
 
             public static float paramRangeMin { get; set; }
             public static float paramRangeMax { get; set; }
+            public static int uninvertableParamIndex { get; set; } = -1;
 
             public const int DEFAULT_PARAM_COUNT = 4;
 
@@ -28,12 +29,14 @@ namespace MasterProject.Tests {
 
             ParameterRange<float> IParameterRangeProvider<float>.GetRangeForParameterAtIndex (int index) => new ParameterRange<float>(paramRangeMin, paramRangeMax);
 
+            bool IParameterRangeProvider<float>.GetParameterIsInvertible (int index) => (index != uninvertableParamIndex);
+
         }
 
 
         public class TestIndividual : NumericallyParametrizedIndividual<TestParams> {
 
-            public override float maxMutationStrength => 0.25f;
+            public override float GetMaximumMutationStrength () => 0.25f;
 
             public override Agent CreateAgent () {
                 throw new NotImplementedException();
@@ -79,9 +82,10 @@ namespace MasterProject.Tests {
             }
         }
 
-        TestIndividual Setup (float min, float max) {
+        TestIndividual Setup (float min, float max, int uninvertibleParamIndex = -1) {
             TestParams.paramRangeMin = min;
             TestParams.paramRangeMax = max;
+            TestParams.uninvertableParamIndex = uninvertibleParamIndex;
             var output = new TestIndividual();
             output.InitializeWithRandomCoefficients();
             return output;
@@ -164,9 +168,9 @@ namespace MasterProject.Tests {
         [Test]
         public void TestWeirdCombination () => TestCombination(3, 7);
 
-        void TestInversion (float min, float max) {
+        void TestInversion (float min, float max, int uninvertibleIndex) {
             Console.WriteLine($"testing inversion of range {min} to {max}");
-            var a = Setup(min, max);
+            var a = Setup(min, max, uninvertibleIndex);
             var rangePivot = (max + min) / 2;
             var approxRange = (max - min) / 10000;
             TestRepeatedly(() => {
@@ -174,19 +178,20 @@ namespace MasterProject.Tests {
                 var b = (TestIndividual)(a.InvertedClone());
                 for (int i = 0; i < a.agentParams.parameters.Length; i++) {
                     var origVal = a.agentParams.parameters[i];
-                    var shouldBeInverse = (-(origVal - rangePivot)) + rangePivot;
+                    var shouldInvert = (i != uninvertibleIndex);
+                    var checkVal = ((shouldInvert) ? (-(origVal - rangePivot)) + rangePivot : origVal);
                     var newVal = b.agentParams.parameters[i];
-                    Console.WriteLine($"{origVal:F4} -> {newVal:F4}");
-                    Assert.LessOrEqual(Math.Abs(shouldBeInverse - newVal), approxRange);
+                    Console.WriteLine($"{origVal:F4} -> {newVal:F4}{(!shouldInvert ? " (not inverted)" : "")}");
+                    Assert.LessOrEqual(Math.Abs(checkVal - newVal), approxRange);
                 }
             });
         }
 
         [Test]
-        public void TestNormalInversion () => TestInversion(-1, 1);
+        public void TestNormalInversion () => TestInversion(-1, 1, 2);
 
         [Test]
-        public void TestWeirdInversion () => TestInversion(3, 7);
+        public void TestWeirdInversion () => TestInversion(3, 7, 2);
 
         void TestMutation (float min, float max) {
             Console.WriteLine($"testing mutation of range {min} to {max}");
@@ -201,7 +206,7 @@ namespace MasterProject.Tests {
                     Console.WriteLine($"{origVal:F4} -> {newVal:F4} ({(normedDifference*100):F1}%)");
                     Assert.LessOrEqual(newVal, max);
                     Assert.GreaterOrEqual(newVal, min);
-                    Assert.LessOrEqual(Math.Abs(normedDifference), a.maxMutationStrength);
+                    Assert.LessOrEqual(Math.Abs(normedDifference), a.GetMaximumMutationStrength());
                 }
             });
         }

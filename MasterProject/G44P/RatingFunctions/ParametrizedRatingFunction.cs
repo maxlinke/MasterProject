@@ -61,6 +61,8 @@ namespace MasterProject.G44P.RatingFunctions {
                 };
             }
 
+            bool IParameterRangeProvider<float>.GetParameterIsInvertible (int index) => true;
+
         }
 
         public Parameters parameters;

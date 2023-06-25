@@ -63,11 +63,11 @@ namespace MasterProject.MachineLearning {
             };
         }
 
-        public static TournamentConfiguration FastTournamentConfig (int playersPerGame) {
+        public static TournamentConfiguration FastTournamentConfig (int playersPerGame, float gameReductionFactor) {
             return new TournamentConfiguration() {
                 playersPerGame = playersPerGame,
-                peerTournamentMatchupRepetitionCount = DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS / 4,
-                randomTournamentMatchupRepetitionCount = DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS / 4,
+                peerTournamentMatchupRepetitionCount = (int)Math.Max(1, Math.Round(DEFAULT_PEER_TOURNAMENTS_MATCHUP_REPETITIONS / gameReductionFactor)),
+                randomTournamentMatchupRepetitionCount = (int)Math.Max(1, Math.Round(DEFAULT_RANDOM_TOURNAMENT_MATCHUP_REPETITIONS / gameReductionFactor)),
                 maxMoveCount = Game.NO_MOVE_LIMIT,
                 maxMoveMillis = Game.NO_TIMEOUT,
                 autosaveInterval = 5,
@@ -192,7 +192,18 @@ namespace MasterProject.MachineLearning {
             Logger.Log($"{nameof(BootCamp)}<{typeof(TGame).Name}, {typeof(TIndividual).Name}>: {msg}");
         }
 
+        void VerifyTournamentConfigPlayersPerGame () {
+            var ppg = tournamentConfig.playersPerGame;
+            var tempGame = new TGame();
+            var minPpg = tempGame.MinimumNumberOfAgentsRequired;
+            var maxPpg = tempGame.MaximumNumberOfAgentsAllowed;
+            if (ppg < minPpg || ppg > maxPpg) {
+                throw new System.NotSupportedException($"Tournament config specifies {ppg} players per game, but the number must be between {minPpg} and {maxPpg}!");
+            }
+        }
+
         public void RunUntil (IBootCampTerminationCondition<TGame, TIndividual> terminationCondition) {
+            VerifyTournamentConfigPlayersPerGame();
             while (true) {
                 Log($"Training Generation {generations.Count - 1}");
                 var currentGen = generations[generations.Count - 1];

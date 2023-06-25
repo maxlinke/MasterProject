@@ -1,4 +1,6 @@
-﻿namespace MasterProject.MachineLearning {
+﻿using System.Text.Json.Serialization;
+
+namespace MasterProject.MachineLearning {
 
     public abstract class Individual {
 
@@ -123,13 +125,17 @@
 
     public abstract class NumericallyParametrizedIndividual<TParams> : Individual<TParams, float> where TParams : IParameterListConvertible<float>, IParameterRangeProvider<float>, new() {
 
-        public abstract float maxMutationStrength { get; }
+        public abstract float GetMaximumMutationStrength ();
 
         protected override void InvertCoefficients () {
             agentParams = agentParams ?? new TParams();
             var oldParams = agentParams.GetParameterList();
             var newParams = new float[oldParams.Count];
             for (int i = 0; i < newParams.Length; i++) {
+                if (!agentParams.GetParameterIsInvertible(i)) {
+                    newParams[i] = oldParams[i];
+                    continue;
+                }
                 var range = agentParams.GetRangeForParameterAtIndex(i);
                 var normed = (oldParams[i] - range.min) / (range.max - range.min);
                 var flipped = 1f - normed;
@@ -146,7 +152,7 @@
                 var range = agentParams.GetRangeForParameterAtIndex(i);
                 var normed = (oldParams[i] - range.min) / (range.max - range.min);
                 var bidiOffset = (float)(rng.NextDouble() - 0.5) * 2;
-                var mutated = Math.Clamp(normed + (bidiOffset * maxMutationStrength), 0, 1);
+                var mutated = Math.Clamp(normed + (bidiOffset * GetMaximumMutationStrength()), 0, 1);
                 newParams[i] = ((mutated * (range.max - range.min)) + range.min);
             }
             agentParams.ApplyParameterList(newParams);

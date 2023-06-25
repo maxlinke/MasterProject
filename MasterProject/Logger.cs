@@ -10,12 +10,14 @@ namespace MasterProject {
 
     public static class Logger {
 
-        static bool initialized = false;
+        static bool fileStreamInitialized = false;
         static FileStream fs;
         static StreamWriter sw;
 
+        public static bool consoleOnly { get; set; }
+
         public static void Log (object message) {
-            if (!initialized) {
+            if (!consoleOnly && !fileStreamInitialized) {
                 var logsDirectory = Path.Combine(Program.GetProjectPath(), "Logs");
                 if (!Directory.Exists(logsDirectory)) {
                     Directory.CreateDirectory(logsDirectory);
@@ -24,15 +26,17 @@ namespace MasterProject {
                 fs = new FileStream(filePath, FileMode.Create);
                 sw = new StreamWriter(fs);
                 sw.AutoFlush = true;
-                initialized = true;
+                fileStreamInitialized = true;
             }
             var msg = message.ToString();
             Console.WriteLine(msg);
-            sw.WriteLine(msg);
+            if (!consoleOnly) {
+                sw.WriteLine(msg);
+            }
         }
 
         public static void Flush () {
-            if (initialized) {
+            if (fileStreamInitialized) {
                 sw.Flush();
                 fs.Flush();
             }

@@ -42,7 +42,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
         }
 
         protected override Individual GetClone () {
-            return new TTTIndividual() { agentParams = this.agentParams };
+            return new TTTIndividual() { agentParams = this.agentParams.Clone() };
         }
 
         protected override void InvertCoefficients () {
