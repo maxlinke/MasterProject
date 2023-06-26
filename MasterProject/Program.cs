@@ -3,6 +3,7 @@
 using MasterProject;
 using MasterProject.TicTacToe;
 using MasterProject.G44P;
+using MasterProject.Chess;
 using MasterProject.Records;
 using MasterProject.MachineLearning;
 using System.Text.Json;
@@ -21,6 +22,7 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
+        TestChess();
 
         //DoTTTTournament();
         //DoTTTBootCamp();
@@ -30,6 +32,12 @@ public class Program {
 
         DataSaver.Flush();
         Logger.Flush();
+    }
+
+    static void TestChess () {
+        var gs = new ChessGameState();
+        gs.Initialize();
+        Console.WriteLine(gs.ToPrintableString());
     }
 
     static void DoG44PTournament () {

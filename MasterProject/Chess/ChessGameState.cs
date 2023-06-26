@@ -107,9 +107,6 @@ namespace MasterProject.Chess {
         }
 
         public string ToPrintableString () {
-            // TODO
-            // remember that y is 0 at the bottom
-
             // 7   r n b q k b n r
             // 6   p p p p p p p p
             // 5   . . . . . . . .
@@ -120,8 +117,20 @@ namespace MasterProject.Chess {
             // 0   R N B Q K B N R
             //
             //     0 1 2 3 4 5 6 7
-
-            throw new NotImplementedException();
+            var sb = new System.Text.StringBuilder();
+            for (int y = BOARD_SIZE - 1; y >= 0; y--) {
+                sb.Append($"{y}   ");
+                for (int x = 0; x < BOARD_SIZE; x++) {
+                    sb.Append($"{board[XYToCoord(x, y)].ToShortString()} ");
+                }
+                sb.Append("\n");
+            }
+            sb.Append("\n");
+            sb.Append($"    ");
+            for (int x = 0; x < BOARD_SIZE; x++) {
+                sb.Append($"{x} ");
+            }
+            return sb.ToString();
         }
 
     }

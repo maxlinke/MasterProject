@@ -15,7 +15,7 @@
         public const int ID_BLACK = 1 << 7;
 
         public static string ToShortString (this ChessPiece piece) => piece switch {
-            ChessPiece.None        => " ",
+            ChessPiece.None        => "-",
             ChessPiece.WhitePawn   => "P",
             ChessPiece.WhiteKnight => "N",
             ChessPiece.WhiteBishop => "B",
