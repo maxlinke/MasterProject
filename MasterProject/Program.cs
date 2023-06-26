@@ -22,11 +22,11 @@ public class Program {
         Logger.consoleOnly = true;
 
         //DoTTTTournament();
-        DoTTTBootCamp();
+        //DoTTTBootCamp();
 
         //TestG44P();
         //DoG44PTournament();
-        //DoG44PBootCamp();
+        DoG44PBootCamp();
 
         DataSaver.Flush();
         Logger.Flush();
@@ -142,13 +142,16 @@ public class Program {
 
     static void DoG44PBootCamp () {
         const string continueId = "";
-        const int genCount = 3;
+        const int genCount = 10;
+        var tc = BootCamp.DefaultTournamentConfig(playersPerGame: 4);
+        tc.parallelGameCount = 1024;    // to reduce the console spam
         DoBootCamp<G44PGame, G44PIndividual>(
             continueId: continueId,
             genCount: genCount,
             BootCamp.DefaultGenerationConfig,
             //BootCamp.DefaultTournamentConfig(4),
-            BootCamp.FastTournamentConfig(playersPerGame: 4, gameReductionFactor: 10),
+            //BootCamp.FastTournamentConfig(playersPerGame: 4, gameReductionFactor: 10),
+            tc,
             BootCamp.DefaultFitnessWeighting
         );
     }
