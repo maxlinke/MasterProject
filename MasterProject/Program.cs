@@ -21,92 +21,15 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
+
         //DoTTTTournament();
         //DoTTTBootCamp();
 
-        //TestG44P();
-        DoG44PTournament();
+        //DoG44PTournament();
         //DoG44PBootCamp();
 
         DataSaver.Flush();
         Logger.Flush();
-    }
-
-    static void TestG44P () {
-        //Tournament<G44PGame>.RunSingleAgentTournamentVsRandom(new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8), 100);             // 2m 0s
-        //Tournament<G44PGame>.RunSingleAgentTournamentVsRandom(new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8), 100); // 0m 0s (too fast to measure)
-
-        void TestThatTheFilterActuallyWorks () {
-            var agents = new Agent[]{
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
-                new MasterProject.G44P.Agents.RandomAgent(),
-            };
-            var agentIds = agents.Select(a => a.Id).ToArray();
-            var wlr = WinLossDrawRecord.New(agentIds, 4);
-            var filter = MatchupFilter.EnsureAgentIsContainedOncePerMatchup(agents[0]);
-            for (int i = 0; i < wlr.matchupRecords.Length; i++) {
-                var m = wlr.GetMatchupFromIndex(i);
-                var sb = new System.Text.StringBuilder();
-                foreach (var id in m) {
-                    sb.AppendLine($" - {id}");
-                }
-                if (filter.PreventMatchup(m)) {
-                    Console.WriteLine($"{sb} --> PREVENTED\n");
-                } else {
-                    Console.WriteLine($"{sb} --> ALLOWED\n");
-                }
-            }
-        }
-
-        void TestTheParametrizedRatingFunction () {
-            var gs = new G44PGameState();
-            gs.Initialize(null);
-            gs.PlayerStates[0].Points = 2;
-            gs.PlayerStates[1].Points = 6;
-            gs.PlayerStates[2].Points = 5;
-            gs.PlayerStates[3].Points = 5;
-            var p = new MasterProject.G44P.RatingFunctions.ParametrizedRatingFunction.Parameters() {
-                ownScoreMultiplier = 1,
-                otherScoreMultipliers = new float[3] { -1, -0.5f, -0.25f }
-            };
-            var rf = new MasterProject.G44P.RatingFunctions.ParametrizedRatingFunction(p);
-            Console.WriteLine(rf.Evaluate(0, gs, 1));
-            Console.WriteLine(rf.Evaluate(1, gs, 1));
-            Console.WriteLine(rf.Evaluate(2, gs, 1));
-            Console.WriteLine(rf.Evaluate(3, gs, 1));
-        }
-
-        void DoHardcodedAndParametrizedComparison () {
-            var t1 = Tournament<G44PGame>.RunSingleAgentTournamentVsRandom(
-            new MasterProject.G44P.Agents.IgnoreOpponentMoves(
-                new MasterProject.G44P.RatingFunctions.MaximizeLead(),
-                4
-            ),
-            totalGameCountPerMatchup: 100,
-            parallelGameCount: 16
-        );
-            var r1 = t1.GetWinLossDrawRecord();
-            DataSaver.SaveInProject("ComparisonPart1.tournamentResult", r1.ToJsonBytes());
-
-            var t2 = Tournament<G44PGame>.RunSingleAgentTournamentVsRandom(
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(
-                    new MasterProject.G44P.RatingFunctions.ParametrizedRatingFunction(
-                        new MasterProject.G44P.RatingFunctions.ParametrizedRatingFunction.Parameters() {
-                            ownScoreMultiplier = 1,
-                            otherScoreMultipliers = new float[3] { -1, -0.5f, -0.25f }
-                        }
-                    ),
-                    4
-                ),
-                totalGameCountPerMatchup: 100,
-                parallelGameCount: 16
-            );
-            var r2 = t2.GetWinLossDrawRecord();
-            DataSaver.SaveInProject("ComparisonPart2.tournamentResult", r2.ToJsonBytes());
-
-            var r = MasterProject.Records.WinLossDrawRecord.Merge(r1, r2);
-            DataSaver.SaveInProject("Comparison.tournamentResult", r.ToJsonBytes());
-        }
     }
 
     static void DoG44PTournament () {
