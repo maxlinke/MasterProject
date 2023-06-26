@@ -181,6 +181,24 @@ namespace MasterProject.MachineLearning {
             return false;
         }
 
+        public static BootCamp<TGame, TIndividual> Load (string id) {
+            if (TryLoad(id, out var output)) {
+                return output;
+            }
+            return default;
+        }
+
+        public TIndividual GetFittestIndividual () {
+            List<TIndividual> sourceGeneration;
+            if (peerTournamentFinished && randomTournamentFinished) {
+                sourceGeneration = new List<TIndividual>(currentGeneration);
+            } else {
+                sourceGeneration = new List<TIndividual>(previousGeneration);
+            }
+            sourceGeneration.Sort((a, b) => Math.Sign(b.finalFitness - a.finalFitness));
+            return sourceGeneration[0];
+        }
+
         void Save () {
             Log("Saving Progress!");
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(this);
