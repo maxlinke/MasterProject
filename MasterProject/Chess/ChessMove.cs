@@ -11,7 +11,7 @@
         public bool checksKing;
 
         public string ToSortableString () {
-            return $"{(char)('a' + sourceX)}{sourceY}{(char)('a' + destinationX)}{destinationY}{promoteTo.ToShortString()}";                
+            return $"{(char)('a' + sourceX)}{sourceY+1}{(char)('a' + destinationX)}{destinationY+1}{promoteTo.ToShortString()}";                
         }
 
         int IComparable<ChessMove>.CompareTo (ChessMove? other) {

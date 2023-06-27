@@ -32,6 +32,23 @@
             _                      => "?",
         };
 
+        public static ChessPiece FromShortString (string s) => s switch {
+            "-" => ChessPiece.None,
+            "P" => ChessPiece.WhitePawn,
+            "N" => ChessPiece.WhiteKnight,
+            "B" => ChessPiece.WhiteBishop,
+            "R" => ChessPiece.WhiteRook,
+            "Q" => ChessPiece.WhiteQueen,
+            "K" => ChessPiece.WhiteKing,
+            "p" => ChessPiece.BlackPawn,
+            "n" => ChessPiece.BlackKnight,
+            "b" => ChessPiece.BlackBishop,
+            "r" => ChessPiece.BlackRook,
+            "q" => ChessPiece.BlackQueen,
+            "k" => ChessPiece.BlackKing,
+            _ => throw new System.ArgumentException($"Invalid argument \"{s}\"!"),
+        };
+
     }
 
 }

@@ -190,19 +190,23 @@ namespace MasterProject.Chess {
             }
         }
 
-        public string ToPrintableString () {
+        public string ToPrintableString (bool includeRowAndColumnLabels = true) {
             var sb = new System.Text.StringBuilder();
             for (int y = BOARD_SIZE - 1; y >= 0; y--) {
-                sb.Append($"{y}   ");
+                if (includeRowAndColumnLabels) {
+                    sb.Append($"{y+1}   ");
+                }
                 for (int x = 0; x < BOARD_SIZE; x++) {
                     sb.Append($"{board[XYToCoord(x, y)].ToShortString()} ");
                 }
-                sb.Append("\n");
+                sb.Append(System.Environment.NewLine);
             }
-            sb.Append("\n");
-            sb.Append($"    ");
-            for (int x = 0; x < BOARD_SIZE; x++) {
-                sb.Append($"{(char)('a' + x)} ");
+            if (includeRowAndColumnLabels) {
+                sb.Append(System.Environment.NewLine);
+                sb.Append($"    ");
+                for (int x = 0; x < BOARD_SIZE; x++) {
+                    sb.Append($"{(char)('a' + x)} ");
+                }
             }
             return sb.ToString();
         }
@@ -235,7 +239,7 @@ namespace MasterProject.Chess {
             }
         }
 
-        private bool DetermineIfPlayerChecksOther (int playerIndex) {
+        public bool DetermineIfPlayerChecksOther (int playerIndex) {
             foreach (var coord in CoordsWithPiecesOfPlayer(playerIndex)) {
                 foreach (var move in ChessMoveUtils.GetRegularMovesForPiece(this, coord)) {
                     if (move.checksKing) {
@@ -246,22 +250,53 @@ namespace MasterProject.Chess {
             return false;
         }
 
-        private bool DetermineIfBoardIsDeadPosition () {
-            // TODO
+        public bool DetermineIfBoardIsDeadPosition () {
             // king against king
-            //  > easy, 0 "other" pieces and 0 knights and bishops in total
             // king against king and bishop
-            //  > easy, 0 "other" pieces and 1 bishop in total
             // king against king and knight
-            //  > easy, 0 "other" pieces and 1 knight in total
             // king and bishop against king and bishop, with both bishops on squares of the same color (see King and two bishops)
-            //  > not so easy
-            //  > 0 other pieces (that's the quick lockout condition)
-            //  > 0 knights in total
-            //  > 1 bishop each, cache bishop coord
-            //  > i can return early if any of the above conditions are broken
-            //  > so i don't need an "other pieces counter"
-            throw new System.NotImplementedException();
+            int lastWhiteBishopCoord = -1;
+            int lastBlackBishopCoord = -1;
+            int lastKnightCoord = -1;
+            for (int i = 0; i < board.Length; i++) {
+                if (board[i] != ChessPiece.None) {
+                    var colorId = (int)(board[i]) & ChessPieceUtils.MASK_COLOR;
+                    var pieceId = (int)(board[i]) & ~ChessPieceUtils.MASK_COLOR;
+                    switch (pieceId) {
+                        case ChessPieceUtils.ID_KING:
+                            break;
+                        case ChessPieceUtils.ID_KNIGHT:
+                            if (lastKnightCoord >= 0) {
+                                return false;
+                            }
+                            lastKnightCoord = i;
+                            break;
+                        case ChessPieceUtils.ID_BISHOP:
+                            if (colorId == ChessPieceUtils.ID_WHITE) {
+                                if (lastWhiteBishopCoord >= 0) {
+                                    return false;
+                                }
+                                lastWhiteBishopCoord = i;
+                            } else {
+                                if (lastBlackBishopCoord >= 0) {
+                                    return false;
+                                }
+                                lastBlackBishopCoord = i;
+                            }
+                            break;
+                        default:
+                            return false;
+                    }
+                }
+            }
+            if (lastWhiteBishopCoord >= 0 && lastBlackBishopCoord >= 0) {
+                CoordToXY(lastWhiteBishopCoord, out var whiteX, out var whiteY);
+                CoordToXY(lastBlackBishopCoord, out var blackX, out var blackY);
+                var whiteFieldCol = ((whiteX + whiteY) % 2);
+                var blackFieldCol = ((blackX + blackY) % 2);
+                return whiteFieldCol == blackFieldCol;
+            }
+            return true;
         }
 
         private IEnumerable<int> CoordsWithPiecesOfPlayer (int playerIndex) {
