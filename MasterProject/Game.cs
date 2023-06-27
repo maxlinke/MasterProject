@@ -73,6 +73,8 @@ namespace MasterProject {
 
         protected abstract Task Run (IEnumerable<Agent> agents);
 
+        public bool CollectRecord { get; set; } = false;
+
         public abstract GameRecord GetRecord ();
 
         public abstract GameState GetFinalGameState ();
@@ -99,6 +101,7 @@ namespace MasterProject {
         }
 
         private bool hasRun = false;
+        private bool collectingRecord = false;
         private readonly List<Agent<TGame, TGameState, TMove>> agents = new();
         private readonly List<TGameState> gameStates = new();
         private readonly List<MoveRecord> moveRecords = new();
@@ -111,7 +114,7 @@ namespace MasterProject {
 
         public override int PlayerCount => agents.Count;
 
-        public int MoveCounter => moveRecords.Count;
+        public int MoveCounter { get; private set; }
 
         public bool MoveLimitReached => MoveCounter >= MoveLimit;
 
@@ -163,6 +166,7 @@ namespace MasterProject {
             var rng = new Random();
             var sw = new Stopwatch();
             hasRun = true;
+            collectingRecord = CollectRecord;
             foreach (var agent in agents) {
                 agent.OnGameStarted((TGame)this);
             }
@@ -222,22 +226,33 @@ namespace MasterProject {
                         break;
                     }
                 }
-                moveRecords.Add(new MoveRecord() {
-                    AvailableMoves = moves.ToArray(),
-                    ChosenMoveIndex = moveIndex,
-                    MoveChoiceDurationMillis = sw.ElapsedMilliseconds,
-                    MoveChoiceTimedOut = moveTimeout
-                });
-                gameStates.Add(CurrentGameState);
+                MoveCounter++;
+                if (collectingRecord) {
+                    moveRecords.Add(new MoveRecord() {
+                        AvailableMoves = moves.ToArray(),
+                        ChosenMoveIndex = moveIndex,
+                        MoveChoiceDurationMillis = sw.ElapsedMilliseconds,
+                        MoveChoiceTimedOut = moveTimeout
+                    });
+                    gameStates.Add(CurrentGameState);
+                }
                 CurrentGameState = possibleOutcomes[newGameStateIndex].GameState;
                 OnGameStateUpdated();
             }
-            gameStates.Add(CurrentGameState);
+            if (collectingRecord) {
+                gameStates.Add(CurrentGameState);
+            }
             TryLog(ConsoleOutputs.GameOver, "Game Over");
             OnGameOver();
         }
 
         public override GameRecord GetRecord () {
+            if (!hasRun) {
+                throw new System.Exception("Can't get record when game hasn't run yet!");
+            }
+            if (!collectingRecord) {
+                throw new System.Exception("Record collection was not enabled!");
+            }
             return new GameRecord() {
                 GameType = this.GetType().FullName,
                 GameId = this.Guid,
