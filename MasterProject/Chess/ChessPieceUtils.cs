@@ -11,6 +11,7 @@
         public const int ID_KING = 1 << 5;
 
         // colors
+        public const int MASK_COLOR = ID_WHITE | ID_BLACK;
         public const int ID_WHITE = 1 << 6;
         public const int ID_BLACK = 1 << 7;
 

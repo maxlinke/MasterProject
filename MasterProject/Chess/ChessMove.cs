@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MasterProject.Chess {
+﻿namespace MasterProject.Chess {
     
     public class ChessMove : IComparable<ChessMove> {
 
-        public int sourceRow;
-        public int sourceColumn;
-        public int destinationRow;
-        public int destinationColumn;
+        public int sourceX;
+        public int sourceY;
+        public int destinationX;
+        public int destinationY;
         public ChessPiece promoteTo;
 
+        public bool checksKing;
+
         public string ToSortableString () {
-            return $"{sourceRow}{sourceColumn}{destinationRow}{destinationColumn}{promoteTo.ToShortString()}";                
+            return $"{(char)('a' + sourceX)}{sourceY}{(char)('a' + destinationX)}{destinationY}{promoteTo.ToShortString()}";                
         }
 
         int IComparable<ChessMove>.CompareTo (ChessMove? other) {
