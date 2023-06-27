@@ -6,15 +6,23 @@ using System.Threading.Tasks;
 
 namespace MasterProject.Chess {
     
-    public class ChessMove {
+    public class ChessMove : IComparable<ChessMove> {
 
-        // source row
-        // source column
-        // destination row
-        // destination column
-        // promote to
+        public int sourceRow;
+        public int sourceColumn;
+        public int destinationRow;
+        public int destinationColumn;
+        public ChessPiece promoteTo;
 
-        // make these sortable in the order of the things above
+        public string ToSortableString () {
+            return $"{sourceRow}{sourceColumn}{destinationRow}{destinationColumn}{promoteTo.ToShortString()}";                
+        }
+
+        int IComparable<ChessMove>.CompareTo (ChessMove? other) {
+            var a = this.ToSortableString();
+            var b = other.ToSortableString();
+            return string.CompareOrdinal(a, b);
+        }
 
     }
 

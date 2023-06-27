@@ -35,9 +35,57 @@ public class Program {
     }
 
     static void TestChess () {
-        var gs = new ChessGameState();
-        gs.Initialize();
-        Console.WriteLine(gs.ToPrintableString());
+        //var gs = new ChessGameState();
+        //gs.Initialize();
+        //Console.WriteLine(gs.ToPrintableString());
+
+        var moves = new List<ChessMove>() {
+            new ChessMove(){
+                sourceRow = 0,
+                sourceColumn = 0,
+                destinationRow = 0,
+                destinationColumn = 0,
+                promoteTo = ChessPiece.None
+            },
+            new ChessMove(){
+                sourceRow = 1,
+                sourceColumn = 2,
+                destinationRow = 3,
+                destinationColumn = 4,
+                promoteTo = ChessPiece.None
+            },
+            new ChessMove(){
+                sourceRow = 2,
+                sourceColumn = 2,
+                destinationRow = 3,
+                destinationColumn = 4,
+                promoteTo = ChessPiece.None
+            },
+            new ChessMove(){
+                sourceRow = 1,
+                sourceColumn = 2,
+                destinationRow = 3,
+                destinationColumn = 5,
+                promoteTo = ChessPiece.None
+            },
+            new ChessMove(){
+                sourceRow = 0,
+                sourceColumn = 0,
+                destinationRow = 0,
+                destinationColumn = 0,
+                promoteTo = ChessPiece.WhiteQueen
+            },
+        };
+        foreach (var move in moves) {
+            Console.WriteLine(move.ToSortableString());
+        }
+        Console.WriteLine();
+        moves.Sort();
+        foreach (var move in moves) {
+            Console.WriteLine(move.ToSortableString());
+        }
+        Console.WriteLine();
+
     }
 
     static void DoG44PTournament () {
