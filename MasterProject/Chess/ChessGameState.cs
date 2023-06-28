@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace MasterProject.Chess {
@@ -34,70 +30,107 @@ namespace MasterProject.Chess {
 
         public ChessGameState GetResultOfMove (ChessMove move) {
             var output = new ChessGameState();
-            output.board = (ChessPiece[])(this.board.Clone());
+            output.board = this.CloneBoard();
+            output.playerStates = this.ClonePlayerStates();
+            output.pieceHasMoved = this.pieceHasMoved;
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
-            var srcCoord = XYToCoord(move.sourceX, move.sourceY);
-            var dstCoord = XYToCoord(move.destinationX, move.destinationY);
-            var srcPiece = board[srcCoord];
-            if (srcPiece == ChessPiece.None) {
-                throw new System.InvalidOperationException($"Can't move nothing (field {(char)('a' + move.sourceX)}{move.sourceY} is empty)");
-            }
-            output.board[srcCoord] = ChessPiece.None;
-            output.SetPositionHasBeenMoved(srcCoord, true);
-            if (move.promoteTo != ChessPiece.None) {
-                output.board[dstCoord] = move.promoteTo;
-            } else {
-                // i need to detect things like castling and en-passant and stuff HERE
-                // and act on that
-                // because a move is just (xy) -> (xy)
-                // also the rules for en-passant are more complicated than i thought
-                // but i don't actually need to implement any additional tracking here
-                // i can just check the previous gamestate
-                // but man...
-                // aaaaaa
-                // am i actually going to implement all of chess?
-                // i'll just start off with the basic rules
-                // how the pieces move
-                // check and checkmate
-                // i can add on the fancier rules later
-                output.board[dstCoord] = srcPiece;
-            }
-            output.playerStates = new ChessPlayerState[this.playerStates.Length];
+            output.ApplyMove(move);
+            output.UpdatePlayerStates();
+            output.UpdateGameIsOver();
+            return output;
+        }
+
+        public ChessPiece[] CloneBoard () {
+            return (ChessPiece[])(board.Clone());   // this should work. shallow copying primitives and such...
+        }
+
+        // i could make playerstates structs
+        // this would prevent inheritance
+        // but i could make the structs generic with a payload
+        // the payload would also have to be value-type
+        // which would be a bit of a pain in the ass as i can't do playerstate[0].customdata.something = value
+        public ChessPlayerState[] ClonePlayerStates () {
+            var output = new ChessPlayerState[this.playerStates.Length];
             for (int i = 0; i < PLAYER_COUNT; i++) {
-                output.playerStates[i] = this.playerStates[i].Clone();
-            }
-            // at this point we have merely moved our pieces and have a new gamestate that is otherwise identical (current player and all)
-            // so here is the place to check for dead positions (immediate draws)
-            // and checks
-            if (output.DetermineIfBoardIsDeadPosition()) {
-                output.SetDraw();
-                return output;
-            }
-            output.UpdatePlayerCheckStates();
-            if (output.playerStates[output.currentPlayerIndex].IsInCheck) {
-                if (!output.AnyLegalMovesForPlayer(output.currentPlayerIndex)) {
-                    output.SetVictoryForPlayer(this.currentPlayerIndex);
-                }
+                output[i] = this.playerStates[i].Clone();
             }
             return output;
         }
 
-        void SetDraw () {
-            for (int i = 0; i < PLAYER_COUNT; i++) {
-                playerStates[i].HasDrawn = true;
+        public void ApplyMove (ChessMove move) {
+            var srcPiece = board[move.srcCoord];
+            board[move.srcCoord] = ChessPiece.None;
+            SetPositionHasBeenMoved(move.srcCoord, true);
+            if (move.castle) {
+                // TODO
+                playerStates[currentPlayerIndex].HasCastled = true;
+                throw new System.NotImplementedException();
+            }
+            if (move.enPassant) {
+                CoordToXY(move.srcCoord, out _, out var srcY);
+                CoordToXY(move.dstCoord, out var dstX, out _);
+                var passantCoord = XYToCoord(dstX, srcY);
+                board[passantCoord] = ChessPiece.None;
+            }
+            board[move.dstCoord] = ((move.promoteTo != ChessPiece.None) ? move.promoteTo : srcPiece);
+            if (srcPiece.IsKing()) {
+                playerStates[currentPlayerIndex].KingCoord = move.dstCoord;
             }
         }
 
-        void SetVictoryForPlayer (int playerIndex) {
-            for (int i = 0; i < PLAYER_COUNT; i++) {
-                playerStates[i].HasWon = (i == playerIndex);
-                playerStates[i].HasLost = (i != playerIndex);
+        public void UpdatePlayerStates () {
+            var whiteAttackMap = 0L;
+            var blackAttackMap = 0L;
+            for (int i = 0; i < board.Length; i++) {
+                if (board[i] != ChessPiece.None) {
+                    if (board[i].IsWhite()) {
+                        whiteAttackMap |= ChessMoveUtils.GetAttackMap(this, i);
+                    } else {
+                        blackAttackMap |= ChessMoveUtils.GetAttackMap(this, i);
+                    }
+                }
             }
+            playerStates[INDEX_WHITE].AttackMap = whiteAttackMap;
+            playerStates[INDEX_BLACK].AttackMap = blackAttackMap;
+            playerStates[INDEX_WHITE].IsInCheck = GetLongBit(blackAttackMap, playerStates[INDEX_WHITE].KingCoord);
+            playerStates[INDEX_BLACK].IsInCheck = GetLongBit(whiteAttackMap, playerStates[INDEX_BLACK].KingCoord);
         }
 
-        void UpdatePlayerCheckStates () {
-            for (int i = 0; i < PLAYER_COUNT; i++) {
-                playerStates[i].IsInCheck = DetermineIfPlayerChecksOther((i + 1) % PLAYER_COUNT);
+        public void UpdateGameIsOver () {
+            if (!AnyLegalMovesForPlayer(currentPlayerIndex)) {
+                if (playerStates[currentPlayerIndex].IsInCheck) {
+                    SetVictoryForPlayer(this.currentPlayerIndex);
+                    return;
+                }
+                SetDraw();
+                return;
+            }
+            if (DetermineIfBoardIsDeadPosition()) {
+                SetDraw();
+                return;
+            }
+            // Other draw conditions (https://en.wikipedia.org/wiki/Rules_of_chess)
+            // The player having the move claims a draw by correctly declaring that one of the following conditions exists, or by correctly declaring an intention to make a move which will bring about one of these conditions:
+            // - The same board position has occurred three times with the same player to move and all pieces having the same rights to move, including the right to castle or capture en passant(see threefold repetition rule).
+            //      > check parent of parent (if that even exists)
+            //      > if the boards differ, that's already a fail
+            //      > otherwise i'll have to compare all available moves
+            //        luckily, as they are generated in a deterministic and fixed order, i can just compare them
+            // - There has been no capture or pawn move in the last fifty moves (move = both players get to play) by each player, if the last move was not a checkmate (see fifty-move rule).
+            //      > this is easily tracked with a counter that resets if any of the things mentioned above do happen
+            //      > remember that 50 moves is 100 chessmoves
+
+            void SetDraw () {
+                for (int i = 0; i < PLAYER_COUNT; i++) {
+                    playerStates[i].HasDrawn = true;
+                }
+            }
+
+            void SetVictoryForPlayer (int playerIndex) {
+                for (int i = 0; i < PLAYER_COUNT; i++) {
+                    playerStates[i].HasWon = (i == playerIndex);
+                    playerStates[i].HasLost = (i != playerIndex);
+                }
             }
         }
 
@@ -114,35 +147,37 @@ namespace MasterProject.Chess {
             return (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE);
         }
 
-        public void SetPositionHasBeenMoved (int x, int y, bool value) {
-            SetPositionHasBeenMoved(XYToCoord(x, y), value);
+        private static bool GetLongBit (long longValue, int index) {
+            return ((longValue >> index) & 1) == 1;
         }
 
-        public void SetPositionHasBeenMoved (int coord, bool value) {
-            if (value) {
-                pieceHasMoved |= (1l << coord);
-            } else {
-                pieceHasMoved &= ~(1l << coord);
-            }
+        private static long SetLongBit (long longValue, int index, bool value) {
+            return (value ? (longValue | (1L << index)) : (longValue & ~(1L << index)));
         }
 
-        public bool GetPositionHasBeenMoved (int x, int y) {
-            var coord = XYToCoord(x, y);
-            return ((pieceHasMoved >> coord) & 1) == 1;
+        public bool GetPositionHasBeenMoved (int coord) => GetLongBit(pieceHasMoved, coord);
+        public bool GetPositionHasBeenMoved (int x, int y) => GetPositionHasBeenMoved(XYToCoord(x, y));
+        public void SetPositionHasBeenMoved (int coord, bool value) => pieceHasMoved = SetLongBit(pieceHasMoved, coord, value);
+        public void SetPositionHasBeenMoved (int x, int y, bool value) => SetPositionHasBeenMoved(XYToCoord(x, y), value);
+
+        public ChessPiece GetPieceAtPosition (int x, int y) {
+            return GetPieceAtCoordinate(XYToCoord(x, y));
         }
 
-        // TODO test this
+        public ChessPiece GetPieceAtCoordinate (int coord) {
+            return board[coord];
+        }
+
         public int CountTotalPiecesOfColor (int colorId) {
             var output = 0;
             for (int i = 0; i < board.Length; i++) {
-                if ((((int)(board[i])) & colorId) == colorId) {
+                if ((((int)(board[i])) & ChessPieceUtils.MASK_COLOR) == colorId) {
                     output++;
                 }
             }
             return output;
         }
 
-        // TODO test this
         public int CountNumberOfPieces (ChessPiece piece) {
             var output = 0;
             for (int i = 0; i < board.Length; i++) {
@@ -154,40 +189,18 @@ namespace MasterProject.Chess {
         }
 
         public void Initialize () {
-            this.board = new ChessPiece[BOARD_SIZE * BOARD_SIZE];
-            this.pieceHasMoved = -1;    // everywhere has been moved
-            PlacePiecesOnBoard();
+            this.board = ChessPieceUtils.GetInitialBoard();
+            for (int i = 0; i < board.Length; i++) {
+                SetPositionHasBeenMoved(i, board[i] == ChessPiece.None);
+            }
             this.playerStates = new ChessPlayerState[PLAYER_COUNT];
             for (int i = 0; i < PLAYER_COUNT; i++) {
-                playerStates[i] = new ChessPlayerState();   // TODO any setup required? 
+                playerStates[i] = new ChessPlayerState();
             }
+            playerStates[INDEX_WHITE].KingCoord = Array.IndexOf(board, ChessPiece.WhiteKing);
+            playerStates[INDEX_BLACK].KingCoord = Array.IndexOf(board, ChessPiece.BlackKing);
+            UpdatePlayerStates();
             this.currentPlayerIndex = INDEX_WHITE;
-
-            void PlacePiecesOnBoard () {
-                for (int i = 0; i < BOARD_SIZE; i++) {
-                    SetPiecesVerticallySymmetric(i, 1, ChessPieceUtils.ID_PAWN);
-                }
-                for (int i = 0; i < 3; i++) {
-                    var pieceId = i switch {
-                        0 => ChessPieceUtils.ID_ROOK,
-                        1 => ChessPieceUtils.ID_KNIGHT,
-                        2 => ChessPieceUtils.ID_BISHOP
-                    };
-                    SetPiecesVerticallySymmetric(i, 0, pieceId);
-                    SetPiecesVerticallySymmetric(BOARD_SIZE - 1 - i, 0, pieceId);
-                }
-                SetPiecesVerticallySymmetric(3, 0, ChessPieceUtils.ID_QUEEN);
-                SetPiecesVerticallySymmetric(4, 0, ChessPieceUtils.ID_KING);
-
-                void SetPiecesVerticallySymmetric (int x, int localY, int rawPieceId) {
-                    var wCoord = XYToCoord(x, localY);
-                    board[wCoord] = (ChessPiece)(ChessPieceUtils.ID_WHITE | rawPieceId);
-                    SetPositionHasBeenMoved(wCoord, false);
-                    var bCoord = XYToCoord(x, BOARD_SIZE - 1 - localY);
-                    board[bCoord] = (ChessPiece)(ChessPieceUtils.ID_BLACK | rawPieceId);
-                    SetPositionHasBeenMoved(bCoord, false);
-                }
-            }
         }
 
         public string ToPrintableString (bool includeRowAndColumnLabels = true) {
@@ -223,38 +236,16 @@ namespace MasterProject.Chess {
         }
 
         private IEnumerable<ChessMove> EnumerateLegalMovesForPlayer (int playerIndex) {
-            var evaluateResultForCheck = playerStates[playerIndex].IsInCheck;
             foreach (var coord in CoordsWithPiecesOfPlayer(playerIndex)) {
-                foreach (var move in ChessMoveUtils.GetRegularMovesForPiece(this, coord)) {
-                    if (!move.checksKing) {
-                        if (evaluateResultForCheck) {
-                            var result = GetResultOfMove(move);
-                            if (!result.GameOver && result.playerStates[playerIndex].IsInCheck) {
-                                continue;
-                            }
-                        }
+                foreach (var move in ChessMoveUtils.GetMovesForPiece(this, coord)) {
+                    if (!GetResultOfMove(move).playerStates[playerIndex].IsInCheck) {
                         yield return move;
                     }
                 }
             }
         }
 
-        public bool DetermineIfPlayerChecksOther (int playerIndex) {
-            foreach (var coord in CoordsWithPiecesOfPlayer(playerIndex)) {
-                foreach (var move in ChessMoveUtils.GetRegularMovesForPiece(this, coord)) {
-                    if (move.checksKing) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         public bool DetermineIfBoardIsDeadPosition () {
-            // king against king
-            // king against king and bishop
-            // king against king and knight
-            // king and bishop against king and bishop, with both bishops on squares of the same color (see King and two bishops)
             int lastWhiteBishopCoord = -1;
             int lastBlackBishopCoord = -1;
             int lastKnightCoord = -1;
@@ -308,22 +299,6 @@ namespace MasterProject.Chess {
                 }
             }
         }
-
-        //private IReadOnlyList<ChessMove> CalculatePossibleMovesForCurrentPlayer () {
-        //    var moves = new List<ChessMove>();
-        //    foreach (var coord in CoordsWithPiecesOfPlayer(CurrentPlayerIndex)) {
-        //        moves.AddRange(ChessMoveUtils.GetRegularMovesForPiece(this, coord));
-        //    }
-        //    if (playerStates[currentPlayerIndex].IsInCheck) {
-        //        for (int i = moves.Count - 1; i >= 0; i--) {
-        //            var newGs = this.GetResultOfMove(moves[i]);
-        //            if (newGs.PlayerStates[currentPlayerIndex].IsInCheck) {
-        //                moves.RemoveAt(i);
-        //            }
-        //        }
-        //    }
-        //    return moves;
-        //}
 
         public override IReadOnlyList<PossibleOutcome<ChessGameState>> GetPossibleOutcomesForMove (ChessMove move) {
             return new PossibleOutcome<ChessGameState>[]{

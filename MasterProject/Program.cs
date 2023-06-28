@@ -22,7 +22,7 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
-        TestChess();
+        //TestChess();
 
         //DoTTTTournament();
         //DoTTTBootCamp();
@@ -30,8 +30,41 @@ public class Program {
         //DoG44PTournament();
         //DoG44PBootCamp();
 
+
+        // testing if i could simplify updating/copying player states
+        // if they are simply value type
+        // i would have to make it generic with a generic payload parameter
+        // but that's about it
+        // for the ones without payload, i'll need a default payload
+
+        var s = new GenericStruct<OtherStruct>[2];
+        //s[0].myT.myString = "Hello, world!";                            // illegal
+        //s[0].myT = new OtherStruct() { myString = "Hello, world!" };    // cumbersome
+        s[0].myT = s[0].myT.WithString("Hello, world!");                  // slightly less cumbersome
+        //s[0].myT.SetString("Hello, world!");                            // doesn't work
+        Console.WriteLine(s[0].myT.myString);
+        var s2 = (GenericStruct<OtherStruct>[])(s.Clone());
+        Console.WriteLine(s2[0].myT.myString);
+
         DataSaver.Flush();
         Logger.Flush();
+    }
+
+    struct GenericStruct<T> where T : struct {
+        public int myInt { get; set; }
+        public T myT { get; set; }
+    }
+
+    struct OtherStruct {
+        public string myString { get; set; }
+        public OtherStruct WithString (string s) {
+            return new OtherStruct() {
+                myString = s
+            };
+        }
+        public void SetString (string s) {
+            myString = s;
+        }
     }
 
     static void TestChess () {

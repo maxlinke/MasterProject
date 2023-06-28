@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using static MasterProject.Chess.ChessGameState;
 using static MasterProject.Chess.ChessPieceUtils;
 
@@ -53,10 +49,19 @@ namespace MasterProject.Chess {
         static readonly IReadOnlyList<MoveOffset> squareMoveOffsets;
         static readonly IReadOnlyList<MoveOffset> knightMoveOffsets;
 
-        public static IEnumerable<ChessMove> GetRegularMovesForPiece (ChessGameState gs, int coord) {
+        public static long GetAttackMap (ChessGameState gs, int coord) {
+            // TODO
+            // for everyone but pawns this is more or less the same as the moves (but with less garbage)
+            // for pawns it's the diagonals
+            throw new System.NotImplementedException();
+        }
+
+        // TODO rename this (like, what's a "regular" move anyways...)
+        public static IEnumerable<ChessMove> GetMovesForPiece (ChessGameState gs, int coord) {
             CoordToXY(coord, out var x, out var y);
             var board = gs.board;
             var pieceColorId = (int)(board[coord]) & MASK_COLOR;
+            var piecePlayerIndex = (pieceColorId == ID_WHITE ? ChessGameState.INDEX_WHITE : ChessGameState.INDEX_BLACK);
             var pieceTypeId = (int)(board[coord]) & ~MASK_COLOR;
             IEnumerable<ChessMove> moves;
             switch (pieceTypeId) {
@@ -86,30 +91,25 @@ namespace MasterProject.Chess {
             }
 
             IEnumerable<ChessMove> GetVacantOrCaptureMoves (IEnumerable<MoveOffset> offsets, int x, int y, bool breakIfImpossible) {
-                foreach (var offset in squareMoveOffsets) {
+                foreach (var offset in offsets) {
                     var newX = x + offset.x;
                     var newY = y + offset.y;
                     if (CheckIsInbounds(newX, newY)) {
                         var newCoord = XYToCoord(newX, newY);
                         var isValidCoord = false;
-                        var coordIsOtherKing = false;
                         if (board[newCoord] == ChessPiece.None) {
                             isValidCoord = true;
                         } else {
                             var colorAtCoord = (int)(board[newCoord]) & MASK_COLOR;
                             var pieceAtCoord = (int)(board[newCoord]) & ~MASK_COLOR;
                             if (colorAtCoord != pieceColorId) {
-                                isValidCoord = true;
-                                coordIsOtherKing = (pieceAtCoord == ID_KING);
+                                isValidCoord = (pieceAtCoord != ID_KING);
                             }
                         }
                         if (isValidCoord) {
                             yield return new ChessMove() {
-                                sourceX = x,
-                                sourceY = y,
-                                destinationX = newX,
-                                destinationY = newY,
-                                checksKing = coordIsOtherKing
+                                srcCoord = coord,
+                                dstCoord = newCoord
                             };
                         } else if (breakIfImpossible) {
                             yield break;
@@ -122,8 +122,8 @@ namespace MasterProject.Chess {
 
             IEnumerable<ChessMove> GetPawnMoves (int x, int y) {
                 // TODO 
-                // remember the conversions?
-                // 
+                // remember the conversions
+                // remember en passant
                 throw new NotImplementedException();
             }
 
@@ -162,7 +162,17 @@ namespace MasterProject.Chess {
                 foreach (var move in GetVacantOrCaptureMoves(squareMoveOffsets, x, y, false)) {
                     yield return move;
                 }
-                // TODO castle thing when that gets added back in
+                if (!gs.playerStates[piecePlayerIndex].HasCastled && !gs.playerStates[piecePlayerIndex].IsInCheck) {
+                    if (!gs.GetPositionHasBeenMoved(x, y)) {
+                        // The king and rook involved in castling must not have previously moved;
+                        // There must be no pieces between the king and the rook;
+                        // The king may not currently be under attack,
+                        // .. nor may the king pass through or end up in a square that is under attack by an enemy piece
+                        // .. (though the rook is permitted to be under attack and to pass over an attacked square)
+                        // The castling must be kingside or queenside as shown in the diagram.
+                        throw new System.NotImplementedException();
+                    }
+                }
             }
         }
 

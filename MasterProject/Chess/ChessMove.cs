@@ -1,25 +1,34 @@
 ﻿namespace MasterProject.Chess {
     
-    public class ChessMove : IComparable<ChessMove> {
+    public class ChessMove : IEquatable<ChessMove?> {
 
-        public int sourceX;
-        public int sourceY;
-        public int destinationX;
-        public int destinationY;
+        public int srcCoord;
+        public int dstCoord;
+
         public ChessPiece promoteTo;
+        public bool enPassant;
+        public bool castle;
 
-        public bool checksKing;
-
-        public string ToSortableString () {
-            return $"{(char)('a' + sourceX)}{sourceY+1}{(char)('a' + destinationX)}{destinationY+1}{promoteTo.ToShortString()}";                
+        public override bool Equals (object? obj) {
+            return this.Equals(obj as ChessMove);
         }
 
-        int IComparable<ChessMove>.CompareTo (ChessMove? other) {
-            var a = this.ToSortableString();
-            var b = other.ToSortableString();
-            return string.CompareOrdinal(a, b);
+        public bool Equals (ChessMove? other) {
+            return other is not null
+                && srcCoord == other.srcCoord
+                && dstCoord == other.dstCoord
+                && promoteTo == other.promoteTo
+                && enPassant == other.enPassant
+                && castle == other.castle;
         }
 
+        public static bool operator == (ChessMove? left, ChessMove? right) {
+            return left.Equals(right);
+        }
+
+        public static bool operator != (ChessMove? left, ChessMove? right) {
+            return !(left == right);
+        }
     }
 
 }
