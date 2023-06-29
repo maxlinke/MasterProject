@@ -86,6 +86,24 @@ namespace MasterProject.Chess {
             };
         }
 
+        public static IEnumerable<ChessPiece> WhitePawnPromotionOptions {
+            get {
+                yield return WhiteQueen;
+                yield return WhiteRook;
+                yield return WhiteBishop;
+                yield return WhiteKnight;
+            }
+        }
+
+        public static IEnumerable<ChessPiece> BlackPawnPromotionOptions {
+            get {
+                yield return BlackQueen;
+                yield return BlackRook;
+                yield return BlackBishop;
+                yield return BlackKnight;
+            }
+        }
+
     }
 
 }

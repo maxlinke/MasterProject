@@ -28,8 +28,10 @@ namespace MasterProject.Chess {
         public static readonly IReadOnlyList<PossiblePositions> possibleBlackPawnMovePositions;
         public static readonly IReadOnlyList<PossiblePositions> possibleWhitePawnAttackPositions;
         public static readonly IReadOnlyList<PossiblePositions> possibleBlackPawnAttackPositions;
-        public static readonly int whitePawnPromotionY;
-        public static readonly int blackPawnPromotionY;
+        public static readonly int whitePawnHomeRowY;
+        public static readonly int blackPawnHomeRowY;
+        public static readonly int whitePawnEnPassantStartY;
+        public static readonly int blackPawnEnPassantStartY;
 
         private class MoveOffset {
             public readonly int x;
@@ -84,8 +86,10 @@ namespace MasterProject.Chess {
             possibleBlackPawnMovePositions = CreatePawnMovePositions(ChessPiece.BlackPawn);
             possibleWhitePawnAttackPositions = CreatePawnAttackPositions(ChessPiece.WhitePawn);
             possibleBlackPawnAttackPositions = CreatePawnAttackPositions(ChessPiece.BlackPawn);
-            CoordToXY(Array.IndexOf(initBoard, ChessPiece.BlackKing), out _, out whitePawnPromotionY);
-            CoordToXY(Array.IndexOf(initBoard, ChessPiece.WhiteKing), out _, out blackPawnPromotionY);
+            CoordToXY(Array.IndexOf(initBoard, ChessPiece.WhitePawn), out _, out whitePawnHomeRowY);
+            CoordToXY(Array.IndexOf(initBoard, ChessPiece.BlackPawn), out _, out blackPawnHomeRowY);
+            whitePawnEnPassantStartY = blackPawnHomeRowY + (2 * Math.Sign(whitePawnHomeRowY - blackPawnHomeRowY));
+            blackPawnEnPassantStartY = whitePawnHomeRowY + (2 * Math.Sign(blackPawnHomeRowY - whitePawnHomeRowY));
 
             PossiblePositions[] CreatePositions (MoveOffset[] independentOffsets, MoveOffset[][] sequentialOffsets) {
                 var output = new PossiblePositions[64];
@@ -211,30 +215,42 @@ namespace MasterProject.Chess {
                     throw new System.NotImplementedException($"Unknown value \"{pieceTypeId}\"!");
             }
             var output = 0L;
+            foreach (var reachableCoord in EnumerateVacantOrEnemyCoords(board, positions, pieceColorId)) {
+                output |= (1L << reachableCoord);
+            }
+            return output;
+        }
+
+        private static IEnumerable<int> EnumerateVacantOrEnemyCoords (ChessPiece[] board, PossiblePositions positions, int ownColorId) {
             if (positions.independentlyReachableCoordinates != null) {
                 foreach (var reachableCoord in positions.independentlyReachableCoordinates) {
-                    if (((int)(board[reachableCoord]) & MASK_COLOR) != pieceColorId) {   // don't attack same color
-                        output |= (1L << reachableCoord);
+                    if (((int)(board[reachableCoord]) & MASK_COLOR) != ownColorId) {   // don't attack same color
+                        yield return reachableCoord;
                     }
                 }
             }
             if (positions.sequentiallyReachableCoordinates != null) {
-                foreach (var coords in positions.sequentiallyReachableCoordinates) {
-                    foreach (var reachableCoord in coords) {
-                        if (((int)(board[reachableCoord]) & MASK_COLOR) != pieceColorId) {   // don't attack same color
+                foreach (var reachableCoords in positions.sequentiallyReachableCoordinates) {
+                    foreach (var reachableCoord in reachableCoords) {
+                        if (((int)(board[reachableCoord]) & MASK_COLOR) == ownColorId) {   // don't attack same color
                             break;
                         }
-                        output |= (1L << reachableCoord);
+                        yield return reachableCoord;
                         if (board[reachableCoord] != ChessPiece.None) {     // don't attack through enemies
                             break;
                         }
                     }
                 }
             }
-            return output;
         }
 
-        // TODO rename this (like, what's a "regular" move anyways...)
+        public static bool CheckForEnPassant (ChessGameState gs, ChessMove move) {
+            // TODO
+            // check "behind" the move coord (so dst.x but src.y) NOW for enemy pawn and previously nothing
+            // check "in front" the move coord (dst.y, enemy homerow) NOW empty, previously occupied
+            throw new NotImplementedException();
+        }
+
         public static IEnumerable<ChessMove> GetMovesForPiece (ChessGameState gs, int coord) {
             CoordToXY(coord, out var x, out var y);
             var board = gs.board;
@@ -244,105 +260,134 @@ namespace MasterProject.Chess {
             IEnumerable<ChessMove> moves;
             switch (pieceTypeId) {
                 case ID_PAWN:
-                    moves = GetPawnMoves(x, y);
+                    moves = GetPawnMoves();
                     break;
                 case ID_KNIGHT:
-                    moves = GetKnightMoves(x, y);
+                    moves = GetVacantOrCaptureMoves(possibleKnightPositions[coord]);
                     break;
                 case ID_BISHOP:
-                    moves = GetBishopMoves(x, y);
+                    moves = GetVacantOrCaptureMoves(possibleBishopPositions[coord]);
                     break;
                 case ID_ROOK:
-                    moves = GetRookMoves(x, y);
+                    moves = GetVacantOrCaptureMoves(possibleRookPositions[coord]);
                     break;
                 case ID_QUEEN:
-                    moves = GetQueenMoves(x, y);
+                    moves = GetVacantOrCaptureMoves(possibleQueenPositions[coord]);
                     break;
                 case ID_KING:
-                    moves = GetRegularKingMoves(x, y);
+                    moves = GetKingMoves();
                     break;
                 default:
                     throw new System.NotImplementedException($"Unknown value \"{pieceTypeId}\"!");
             }
             foreach (var move in moves) {
+                // i think i could also put the check-check in here
+                // that'd make more sense...
                 yield return move;
             }
 
-            IEnumerable<ChessMove> GetVacantOrCaptureMoves (IEnumerable<MoveOffset> offsets, int x, int y, bool breakIfImpossible) {
-                foreach (var offset in offsets) {
-                    var newX = x + offset.x;
-                    var newY = y + offset.y;
-                    if (CheckIsInbounds(newX, newY)) {
-                        var newCoord = XYToCoord(newX, newY);
-                        var isValidCoord = false;
-                        if (board[newCoord] == ChessPiece.None) {
-                            isValidCoord = true;
-                        } else {
-                            var colorAtCoord = (int)(board[newCoord]) & MASK_COLOR;
-                            var pieceAtCoord = (int)(board[newCoord]) & ~MASK_COLOR;
-                            if (colorAtCoord != pieceColorId) {
-                                isValidCoord = (pieceAtCoord != ID_KING);
-                            }
-                        }
-                        if (isValidCoord) {
-                            yield return new ChessMove() {
-                                srcCoord = coord,
-                                dstCoord = newCoord
-                            };
-                        } else if (breakIfImpossible) {
-                            yield break;
-                        }
-                    } else if (breakIfImpossible) {
-                        yield break;
+            IEnumerable<ChessMove> GetVacantOrCaptureMoves (PossiblePositions positions) {
+                foreach (var reachableCoord in EnumerateVacantOrEnemyCoords(board, positions, pieceColorId)) {
+                    if (!board[reachableCoord].IsKing()) {
+                        yield return new ChessMove() {
+                            srcCoord = coord,
+                            dstCoord = reachableCoord
+                        };
                     }
                 }
             }
 
-            IEnumerable<ChessMove> GetPawnMoves (int x, int y) {
-                // TODO 
-                // remember the conversions
-                // remember en passant
-                throw new NotImplementedException();
-            }
-
-            IEnumerable<ChessMove> GetKnightMoves (int x, int y) {
-
-                throw new NotImplementedException();
-            }
-
-            IEnumerable<ChessMove> GetBishopMoves (int x, int y) {
-
-                throw new NotImplementedException();
-            }
-
-            IEnumerable<ChessMove> GetRookMoves (int x, int y) {
-
-                throw new NotImplementedException();
-            }
-
-            IEnumerable<ChessMove> GetQueenMoves (int x, int y) {
-                foreach (var move in GetBishopMoves(x, y)) {
-                    yield return move;
-                }
-                foreach (var move in GetRookMoves(x, y)) {
-                    yield return move;
-                }
-            }
-
-            IEnumerable<ChessMove> GetRegularKingMoves (int x, int y) {
-
-                throw new NotImplementedException();
-                if (!gs.playerStates[piecePlayerIndex].HasCastled && !gs.playerStates[piecePlayerIndex].IsInCheck) {
-                    if (!gs.GetPositionHasBeenMoved(x, y)) {
-                        // The king and rook involved in castling must not have previously moved;
-                        // There must be no pieces between the king and the rook;
-                        // The king may not currently be under attack,
-                        // .. nor may the king pass through or end up in a square that is under attack by an enemy piece
-                        // .. (though the rook is permitted to be under attack and to pass over an attacked square)
-                        // The castling must be kingside or queenside as shown in the diagram.
-                        throw new System.NotImplementedException();
+            IEnumerable<ChessMove> GetVacantMoves (PossiblePositions positions) {
+                foreach (var reachableCoord in EnumerateVacantOrEnemyCoords(board, positions, pieceColorId)) {
+                    if (board[reachableCoord] == ChessPiece.None) {
+                        yield return new ChessMove() {
+                            srcCoord = coord,
+                            dstCoord = reachableCoord
+                        };
                     }
                 }
+            }
+
+            IEnumerable<ChessMove> GetCaptureMoves (PossiblePositions positions) {
+                foreach (var reachableCoord in EnumerateVacantOrEnemyCoords(board, positions, pieceColorId)) {
+                    if (board[reachableCoord] != ChessPiece.None && !board[reachableCoord].IsKing()) {
+                        yield return new ChessMove() {
+                            srcCoord = coord,
+                            dstCoord = reachableCoord
+                        };
+                    }
+                }
+            }
+
+            IEnumerable<ChessMove> GetPawnMoves () {
+                PossiblePositions movePositions;
+                PossiblePositions attackPositions;
+                int prePromotionY;
+                int enPassantStartY;
+                IEnumerable<ChessPiece> promotionOptions;
+                if (pieceColorId == ID_WHITE) {
+                    movePositions = possibleWhitePawnMovePositions[coord];
+                    attackPositions = possibleWhitePawnAttackPositions[coord];
+                    prePromotionY = blackPawnHomeRowY;
+                    enPassantStartY = whitePawnEnPassantStartY;
+                    promotionOptions = WhitePawnPromotionOptions;
+                } else {
+                    movePositions = possibleBlackPawnMovePositions[coord];
+                    attackPositions = possibleBlackPawnAttackPositions[coord];
+                    prePromotionY = whitePawnHomeRowY;
+                    enPassantStartY = blackPawnEnPassantStartY;
+                    promotionOptions = BlackPawnPromotionOptions;
+                }
+                if (y == prePromotionY) {
+                    foreach (var move in GetVacantMoves(movePositions)) {
+                        foreach (var promotion in promotionOptions) {
+                            move.promoteTo = promotion;
+                            yield return move;
+                        }
+                    }
+                    foreach (var move in GetCaptureMoves(attackPositions)) {
+                        foreach (var promotion in promotionOptions) {
+                            move.promoteTo = promotion;
+                            yield return move;
+                        }
+                    }
+                } else if (y == enPassantStartY) {
+                    foreach (var move in GetVacantMoves(movePositions)) {
+                        yield return move;
+                    }
+                    foreach (var move in GetCaptureMoves(attackPositions)) {
+                        if (CheckForEnPassant(gs, move)) {
+                            move.enPassant = true;
+                        }
+                        yield return move;
+                    }
+                } else {
+                    foreach (var move in GetVacantMoves(movePositions)) {
+                        yield return move;
+                    }
+                    foreach (var move in GetCaptureMoves(attackPositions)) {
+                        yield return move;
+                    }
+                }
+            }
+
+            IEnumerable<ChessMove> GetKingMoves () {
+                foreach (var move in GetVacantOrCaptureMoves(possibleKingPositions[coord])) {
+                    yield return move;
+                }
+                // TODO castling
+                //throw new NotImplementedException();
+                //if (!gs.playerStates[piecePlayerIndex].HasCastled && !gs.playerStates[piecePlayerIndex].IsInCheck) {
+                //    if (!gs.GetPositionHasBeenMoved(x, y)) {
+                //        // The king and rook involved in castling must not have previously moved;
+                //        // There must be no pieces between the king and the rook;
+                //        // The king may not currently be under attack,
+                //        // .. nor may the king pass through or end up in a square that is under attack by an enemy piece
+                //        // .. (though the rook is permitted to be under attack and to pass over an attacked square)
+                //        // The castling must be kingside or queenside as shown in the diagram.
+                //        throw new System.NotImplementedException();
+                //    }
+                //}
             }
         }
 

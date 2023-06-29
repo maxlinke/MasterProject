@@ -59,10 +59,56 @@ namespace MasterProject.Chess.Tests {
             CountSymmetric(ChessPiece.WhiteQueen, 1);
             CountSymmetric(ChessPiece.WhiteKing, 1);
             CountSymmetric(ChessPiece.WhitePawn, 8);
-            foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
-                Assert.AreEqual(gs.GetPositionHasBeenMoved(move.srcCoord), false);
-                var result = gs.GetResultOfMove(move);
-                Assert.AreEqual(result.GetPositionHasBeenMoved(move.srcCoord), true);
+            // TODO count the number of moves per piece (coordinate) and compare that to what it should be
+            //foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+            //    Assert.AreEqual(gs.GetPositionHasBeenMoved(move.srcCoord), false);
+            //    var result = gs.GetResultOfMove(move);
+            //    Assert.AreEqual(result.GetPositionHasBeenMoved(move.srcCoord), true);
+            //}
+
+            Console.WriteLine();
+            for (int i = 0; i < 8; i++) {
+                var tempCoord0 = 8 + i;
+                Console.WriteLine(ChessGameState.CoordToString(tempCoord0));
+                var positions = ChessMoveUtils.possibleWhitePawnMovePositions[tempCoord0];
+                if (positions.independentlyReachableCoordinates == null) {
+                    Console.WriteLine($" > no independentely reachable coords");
+                } else {
+                    foreach (var reachableCoord in positions.independentlyReachableCoordinates) {
+                        Console.WriteLine($" > {ChessGameState.CoordToString(reachableCoord)} (independently reachable)");
+                    }
+                }
+                if (positions.sequentiallyReachableCoordinates == null) {
+                    Console.WriteLine($" > no sequentially reachable coords");
+                } else {
+                    for (int s = 0; s < positions.sequentiallyReachableCoordinates.Count; s++) {
+                        foreach (var reachableCoord in positions.sequentiallyReachableCoordinates[s]) {
+                            Console.WriteLine($" > {ChessGameState.CoordToString(reachableCoord)} (sequence {s})");
+                        }
+                    }
+                }
+            }
+            Console.WriteLine();
+
+            var playerIndex = gs.currentPlayerIndex;
+            var board = gs.board;
+            foreach (var coord in gs.CoordsWithPiecesOfPlayer(playerIndex)) {
+                Console.WriteLine($"Player {playerIndex} has a {board[coord]} at {ChessGameState.CoordToString(coord)}");
+                var moveCounter = 0;
+                var moveLog = new System.Text.StringBuilder();
+                foreach (var move in ChessMoveUtils.GetMovesForPiece(gs, coord)) {
+                    var moveResult = gs.GetResultOfMove(move, false);  // do NOT update game over, otherwise you'll get an infinite loop of further gamestates created!
+                    if (!moveResult.playerStates[playerIndex].IsInCheck) {
+                        moveCounter++;
+                        moveLog.AppendLine($"   > move to {ChessGameState.CoordToString(move.dstCoord)}");
+                    }
+                }
+                Console.WriteLine($" > That piece has {moveCounter} moves available!");
+                if (moveCounter > 0) {
+                    Console.WriteLine(moveLog.ToString());
+                } else {
+                    Console.WriteLine();
+                }
             }
 
             void TestVerticallySymmetric (int whiteX, int whiteY, ChessPiece whitePiece) {

@@ -29,7 +29,7 @@ namespace MasterProject.Chess {
         [JsonIgnore]
         public override int CurrentPlayerIndex => currentPlayerIndex;
 
-        public ChessGameState GetResultOfMove (ChessMove move) {
+        public ChessGameState GetResultOfMove (ChessMove move, bool updateGameOver) {
             var output = new ChessGameState();
             output.board = this.CloneBoard();
             output.playerStates = this.ClonePlayerStates();
@@ -37,7 +37,9 @@ namespace MasterProject.Chess {
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             output.ApplyMove(move);
             output.UpdatePlayerStates();
-            output.UpdateGameIsOver();
+            if (updateGameOver) {
+                output.UpdateGameIsOver();
+            }
             return output;
         }
 
@@ -144,6 +146,11 @@ namespace MasterProject.Chess {
             x = coord % BOARD_SIZE;
         }
 
+        public static string CoordToString (int coord) {
+            CoordToXY(coord, out var x, out var y);
+            return $"{(char)('a' + x)}{y + 1}";
+        }
+
         public static bool CheckIsInbounds (int x, int y) {
             return (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE);
         }
@@ -231,7 +238,11 @@ namespace MasterProject.Chess {
         private IEnumerable<ChessMove> EnumerateLegalMovesForPlayer (int playerIndex) {
             foreach (var coord in CoordsWithPiecesOfPlayer(playerIndex)) {
                 foreach (var move in ChessMoveUtils.GetMovesForPiece(this, coord)) {
-                    if (!GetResultOfMove(move).playerStates[playerIndex].IsInCheck) {
+                    var moveResult = GetResultOfMove(move, false);  // do NOT update game over, otherwise you'll get an infinite loop of further gamestates created!
+                    if (!moveResult.playerStates[playerIndex].IsInCheck) {
+                        // TODO maybe instead of checking a resulting gamestate, just do the comparatively lightweight attack-check with the utils
+                        // it's not a one-liner, but it's probably more efficient than creating an entire new gamestate just to discard it immediately
+                        // i could pretty much change my board and then roll it back
                         yield return move;
                     }
                 }
@@ -283,7 +294,7 @@ namespace MasterProject.Chess {
             return true;
         }
 
-        private IEnumerable<int> CoordsWithPiecesOfPlayer (int playerIndex) {
+        public IEnumerable<int> CoordsWithPiecesOfPlayer (int playerIndex) {
             var playerId = (playerIndex == INDEX_WHITE ? ChessPieceUtils.ID_WHITE : ChessPieceUtils.ID_BLACK);
             for (int i = 0; i < board.Length; i++) {
                 var pieceId = (int)(board[i]);
@@ -296,7 +307,7 @@ namespace MasterProject.Chess {
         public override IReadOnlyList<PossibleOutcome<ChessGameState>> GetPossibleOutcomesForMove (ChessMove move) {
             return new PossibleOutcome<ChessGameState>[]{
                 new PossibleOutcome<ChessGameState>(){
-                    GameState = this.GetResultOfMove(move),
+                    GameState = this.GetResultOfMove(move, true),
                     Probability = 1
                 }
             };

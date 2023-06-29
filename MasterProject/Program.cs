@@ -22,7 +22,7 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
-        //TestChess();
+        TestChess();
 
         //DoTTTTournament();
         //DoTTTBootCamp();
@@ -71,7 +71,6 @@ public class Program {
         var gs = new ChessGameState();
         gs.Initialize();
         Console.WriteLine(gs.ToPrintableString());
-        gs.currentPlayerIndex = 1;
         gs.GetPossibleMovesForCurrentPlayer();
     }
 
