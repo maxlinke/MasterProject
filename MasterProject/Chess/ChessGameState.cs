@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using static MasterProject.Chess.BitMaskUtils;
 
 namespace MasterProject.Chess {
     
@@ -145,14 +146,6 @@ namespace MasterProject.Chess {
 
         public static bool CheckIsInbounds (int x, int y) {
             return (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE);
-        }
-
-        private static bool GetLongBit (long longValue, int index) {
-            return ((longValue >> index) & 1) == 1;
-        }
-
-        private static long SetLongBit (long longValue, int index, bool value) {
-            return (value ? (longValue | (1L << index)) : (longValue & ~(1L << index)));
         }
 
         public bool GetPositionHasBeenMoved (int coord) => GetLongBit(pieceHasMoved, coord);
