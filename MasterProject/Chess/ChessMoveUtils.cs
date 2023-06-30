@@ -221,6 +221,10 @@ namespace MasterProject.Chess {
             return output;
         }
 
+        public static bool CheckCoordIsUnderAttack (long attackMap, int coord) {
+            return ((attackMap >> coord) & 1L) == 1L;
+        }
+
         private static IEnumerable<int> EnumerateVacantOrEnemyCoords (ChessPiece[] board, PossiblePositions positions, int ownColorId) {
             if (positions.independentlyReachableCoordinates != null) {
                 foreach (var reachableCoord in positions.independentlyReachableCoordinates) {
@@ -251,8 +255,7 @@ namespace MasterProject.Chess {
             throw new NotImplementedException();
         }
 
-        public static IEnumerable<ChessMove> GetMovesForPiece (ChessGameState gs, int coord) {
-            CoordToXY(coord, out var x, out var y);
+        public static IEnumerable<ChessMove> GetLegalMovesForPiece (ChessGameState gs, int coord) {
             var board = gs.board;
             var pieceColorId = (int)(board[coord]) & MASK_COLOR;
             var piecePlayerIndex = (pieceColorId == ID_WHITE ? ChessGameState.INDEX_WHITE : ChessGameState.INDEX_BLACK);
@@ -281,9 +284,9 @@ namespace MasterProject.Chess {
                     throw new System.NotImplementedException($"Unknown value \"{pieceTypeId}\"!");
             }
             foreach (var move in moves) {
-                // i think i could also put the check-check in here
-                // that'd make more sense...
-                yield return move;
+                if (!gs.DetermineIfMoveLeavesKingInCheck(move, piecePlayerIndex)) {
+                    yield return move;
+                }
             }
 
             IEnumerable<ChessMove> GetVacantOrCaptureMoves (PossiblePositions positions) {
@@ -338,7 +341,8 @@ namespace MasterProject.Chess {
                     enPassantStartY = blackPawnEnPassantStartY;
                     promotionOptions = BlackPawnPromotionOptions;
                 }
-                if (y == prePromotionY) {
+                CoordToXY(coord, out _, out var pawnY);
+                if (pawnY == prePromotionY) {
                     foreach (var move in GetVacantMoves(movePositions)) {
                         foreach (var promotion in promotionOptions) {
                             move.promoteTo = promotion;
@@ -351,7 +355,7 @@ namespace MasterProject.Chess {
                             yield return move;
                         }
                     }
-                } else if (y == enPassantStartY) {
+                } else if (pawnY == enPassantStartY) {
                     foreach (var move in GetVacantMoves(movePositions)) {
                         yield return move;
                     }
@@ -375,19 +379,53 @@ namespace MasterProject.Chess {
                 foreach (var move in GetVacantOrCaptureMoves(possibleKingPositions[coord])) {
                     yield return move;
                 }
-                // TODO castling
-                //throw new NotImplementedException();
-                //if (!gs.playerStates[piecePlayerIndex].HasCastled && !gs.playerStates[piecePlayerIndex].IsInCheck) {
-                //    if (!gs.GetPositionHasBeenMoved(x, y)) {
-                //        // The king and rook involved in castling must not have previously moved;
-                //        // There must be no pieces between the king and the rook;
-                //        // The king may not currently be under attack,
-                //        // .. nor may the king pass through or end up in a square that is under attack by an enemy piece
-                //        // .. (though the rook is permitted to be under attack and to pass over an attacked square)
-                //        // The castling must be kingside or queenside as shown in the diagram.
-                //        throw new System.NotImplementedException();
-                //    }
-                //}
+                if (!gs.playerStates[piecePlayerIndex].HasCastled && !gs.playerStates[piecePlayerIndex].IsInCheck) {
+                    if (!gs.GetPositionHasBeenMoved(coord)) {
+                        CoordToXY(coord, out var kingX, out var kingY);
+                        var otherPlayerIndex = (piecePlayerIndex + 1) % 2;
+                        var otherPlayerAttackMap = gs.PlayerStates[otherPlayerIndex].AttackMap;
+                        var queensideCastleX = kingX - 2;
+                        if (CanCastleWithRookAtXToX(0, queensideCastleX)) {
+                            yield return new ChessMove() {
+                                srcCoord = coord,
+                                dstCoord = XYToCoord(queensideCastleX, kingY),
+                                castle = true
+                            };
+                        }
+                        var kingSideCastleX = kingX + 2;
+                        if (CanCastleWithRookAtXToX(BOARD_SIZE - 1, kingSideCastleX)) {
+                            yield return new ChessMove() {
+                                srcCoord = coord,
+                                dstCoord = XYToCoord(kingSideCastleX, kingY),
+                                castle = true
+                            };
+                        }
+
+                        bool CanCastleWithRookAtXToX (int rookX, int castleX) {
+                            if (!gs.GetPositionHasBeenMoved(rookX, kingY)) {    // "hardcoding" the rook position and making the assumping that if he hasn't moved, he's still there...
+                                var kingMoveStartX = (kingX < castleX ? kingX + 1 : kingX - 1);
+                                var rookMoveStartX = (rookX < castleX ? rookX + 1 : rookX - 1);
+                                var relaxedMinX = Math.Min(kingMoveStartX, rookMoveStartX);
+                                var relaxedMaxX = Math.Max(kingMoveStartX, rookMoveStartX);
+                                for (int x = relaxedMinX; x <= relaxedMaxX; x++) {
+                                    var coord = XYToCoord(x, kingY);
+                                    if (board[coord] != ChessPiece.None) {
+                                        return false;
+                                    }
+                                }
+                                var strictMinX = Math.Min(kingMoveStartX, castleX);
+                                var strictMaxX = Math.Max(kingMoveStartX, castleX);
+                                for (int x = strictMinX; x <= strictMaxX; x++) {
+                                    var coord = XYToCoord(x, kingY);
+                                    if (CheckCoordIsUnderAttack(otherPlayerAttackMap, coord)) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
             }
         }
 

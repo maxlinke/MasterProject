@@ -29,7 +29,7 @@ namespace MasterProject.Chess {
         [JsonIgnore]
         public override int CurrentPlayerIndex => currentPlayerIndex;
 
-        public ChessGameState GetResultOfMove (ChessMove move, bool updateGameOver) {
+        public ChessGameState GetResultOfMove (ChessMove move) {
             var output = new ChessGameState();
             output.board = this.CloneBoard();
             output.playerStates = this.ClonePlayerStates();
@@ -37,9 +37,7 @@ namespace MasterProject.Chess {
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             output.ApplyMove(move);
             output.UpdatePlayerStates();
-            if (updateGameOver) {
-                output.UpdateGameIsOver();
-            }
+            output.UpdateGameIsOver();
             return output;
         }
 
@@ -65,9 +63,23 @@ namespace MasterProject.Chess {
             board[move.srcCoord] = ChessPiece.None;
             SetPositionHasBeenMoved(move.srcCoord, true);
             if (move.castle) {
-                // TODO
+                CoordToXY(move.srcCoord, out var kingX, out var kingY);
+                CoordToXY(move.dstCoord, out var castleX, out var castleY);
+                int rookSrcX, rookDstX;
+                if (castleX < kingX) {  // queenside
+                    rookSrcX = 0;
+                    rookDstX = castleX + 1;
+                } else {                // kingside
+                    rookSrcX = BOARD_SIZE - 1;
+                    rookDstX = castleX - 1;
+                }
+                var rookSrcCoord = XYToCoord(rookSrcX, kingY);
+                var rookDstCoord = XYToCoord(rookDstX, kingY);
+                board[rookDstCoord] = board[rookSrcCoord];
+                board[rookSrcCoord] = ChessPiece.None;
+                SetPositionHasBeenMoved(rookSrcCoord, true);
+                SetPositionHasBeenMoved(rookDstCoord, true);
                 playerStates[currentPlayerIndex].HasCastled = true;
-                throw new System.NotImplementedException();
             }
             if (move.enPassant) {
                 CoordToXY(move.srcCoord, out _, out var srcY);
@@ -76,6 +88,7 @@ namespace MasterProject.Chess {
                 board[passantCoord] = ChessPiece.None;
             }
             board[move.dstCoord] = ((move.promoteTo != ChessPiece.None) ? move.promoteTo : srcPiece);
+            SetPositionHasBeenMoved(move.dstCoord, true);   // important if we're capturing a piece that hasn't moved
             if (srcPiece.IsKing()) {
                 playerStates[currentPlayerIndex].KingCoord = move.dstCoord;
             }
@@ -235,16 +248,35 @@ namespace MasterProject.Chess {
             return false;
         }
 
+        // leaves out a few things that would happen if i'd just check the result of a move
+        // notably it ignores the attack map for the player we're determining check for
+        // and enables an early return if we quickly find the checking piece
+        // although the search could perhaps be optimized, maybe by checking the pieces that were previously checking the king first
+        // on the other hand, to be sure that the king is not in check we DO need to iterate over every piece
+        // so i'm not sure if that really would give any notable improvement overall
+        public bool DetermineIfMoveLeavesKingInCheck (ChessMove move, int playerIndex) {
+            var temp = new ChessGameState();
+            temp.board = this.CloneBoard();
+            temp.playerStates = this.ClonePlayerStates();
+            temp.ApplyMove(move);
+            var ownKingCoord = temp.playerStates[playerIndex].KingCoord;
+            var otherPlayerColorId = (playerIndex == INDEX_WHITE ? ChessPieceUtils.ID_BLACK : ChessPieceUtils.ID_WHITE);
+            for (int i = 0; i < temp.board.Length; i++) {
+                var pieceColorId = (int)(temp.board[i]) & ChessPieceUtils.MASK_COLOR;
+                if (pieceColorId == otherPlayerColorId) {
+                    var attackMap = ChessMoveUtils.GetAttackMap(temp, i);
+                    if (GetLongBit(attackMap, ownKingCoord)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private IEnumerable<ChessMove> EnumerateLegalMovesForPlayer (int playerIndex) {
             foreach (var coord in CoordsWithPiecesOfPlayer(playerIndex)) {
-                foreach (var move in ChessMoveUtils.GetMovesForPiece(this, coord)) {
-                    var moveResult = GetResultOfMove(move, false);  // do NOT update game over, otherwise you'll get an infinite loop of further gamestates created!
-                    if (!moveResult.playerStates[playerIndex].IsInCheck) {
-                        // TODO maybe instead of checking a resulting gamestate, just do the comparatively lightweight attack-check with the utils
-                        // it's not a one-liner, but it's probably more efficient than creating an entire new gamestate just to discard it immediately
-                        // i could pretty much change my board and then roll it back
-                        yield return move;
-                    }
+                foreach (var move in ChessMoveUtils.GetLegalMovesForPiece(this, coord)) {
+                    yield return move;
                 }
             }
         }
@@ -307,7 +339,7 @@ namespace MasterProject.Chess {
         public override IReadOnlyList<PossibleOutcome<ChessGameState>> GetPossibleOutcomesForMove (ChessMove move) {
             return new PossibleOutcome<ChessGameState>[]{
                 new PossibleOutcome<ChessGameState>(){
-                    GameState = this.GetResultOfMove(move, true),
+                    GameState = this.GetResultOfMove(move),
                     Probability = 1
                 }
             };

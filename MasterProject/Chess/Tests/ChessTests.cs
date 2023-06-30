@@ -11,6 +11,16 @@ namespace MasterProject.Chess.Tests {
     [TestFixture]
     public class ChessTests {
 
+        // TODO test whether castling works properly
+        //      - set up a specific board (also needs the "has moved" stuff)
+        //      - (in the setup, set all fields that match the initial board to not have moved, otherwise they have moved)
+        //      - setup should also setup playerstates (optionally?)
+        // TODO test whether all the moves work as intended
+        // TODO test whether a move that would normally work is not included because it would put the king in check
+        // TODO test checkmate
+
+        // TODO also i still need to implement the other two draw conditions (same state, no captures)
+
         [Test]
         public void TestBoardCreationFromString () {
             var initBoard = @"R N B Q K B N R
@@ -37,7 +47,10 @@ namespace MasterProject.Chess.Tests {
         public void TestDefaultBoard () {
             var gs = new ChessGameState();
             gs.Initialize();
-            Console.WriteLine(gs.ToPrintableString());
+            Console.WriteLine($"{gs.ToPrintableString()}\n");
+            foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+                Console.WriteLine($"Can move {gs.board[move.srcCoord]} from {ChessGameState.CoordToString(move.srcCoord)} to {ChessGameState.CoordToString(move.dstCoord)}");
+            }
             TestFullySymmetric(0, 0, ChessPiece.WhiteRook);
             TestFullySymmetric(1, 0, ChessPiece.WhiteKnight);
             TestFullySymmetric(2, 0, ChessPiece.WhiteBishop);
@@ -46,75 +59,33 @@ namespace MasterProject.Chess.Tests {
             for (int x = 0; x < 8; x++) {
                 TestVerticallySymmetric(x, 1, ChessPiece.WhitePawn);
             }
-            for (int x = 0; x < 8; x++) {
-                for (int y = 2; y < 6; y++) {
-                    Assert.AreEqual(gs.GetPieceAtPosition(x, y), ChessPiece.None);
-                }
+            for (int i = ChessGameState.XYToCoord(0, 2); i < ChessGameState.XYToCoord(0, 6); i++) {
+                Assert.AreEqual(ChessPiece.None, gs.GetPieceAtCoordinate(i));
             }
-            Assert.AreEqual(gs.CountTotalPiecesOfColor(ChessPieceUtils.ID_WHITE), 16);
-            Assert.AreEqual(gs.CountTotalPiecesOfColor(ChessPieceUtils.ID_BLACK), 16);
+            Assert.AreEqual(16, gs.CountTotalPiecesOfColor(ChessPieceUtils.ID_WHITE));
+            Assert.AreEqual(16, gs.CountTotalPiecesOfColor(ChessPieceUtils.ID_BLACK));
             CountSymmetric(ChessPiece.WhiteRook, 2);
             CountSymmetric(ChessPiece.WhiteKnight, 2);
             CountSymmetric(ChessPiece.WhiteBishop, 2);
             CountSymmetric(ChessPiece.WhiteQueen, 1);
             CountSymmetric(ChessPiece.WhiteKing, 1);
             CountSymmetric(ChessPiece.WhitePawn, 8);
-            // TODO count the number of moves per piece (coordinate) and compare that to what it should be
-            //foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
-            //    Assert.AreEqual(gs.GetPositionHasBeenMoved(move.srcCoord), false);
-            //    var result = gs.GetResultOfMove(move);
-            //    Assert.AreEqual(result.GetPositionHasBeenMoved(move.srcCoord), true);
-            //}
-
-            Console.WriteLine();
-            for (int i = 0; i < 8; i++) {
-                var tempCoord0 = 8 + i;
-                Console.WriteLine(ChessGameState.CoordToString(tempCoord0));
-                var positions = ChessMoveUtils.possibleWhitePawnMovePositions[tempCoord0];
-                if (positions.independentlyReachableCoordinates == null) {
-                    Console.WriteLine($" > no independentely reachable coords");
-                } else {
-                    foreach (var reachableCoord in positions.independentlyReachableCoordinates) {
-                        Console.WriteLine($" > {ChessGameState.CoordToString(reachableCoord)} (independently reachable)");
-                    }
-                }
-                if (positions.sequentiallyReachableCoordinates == null) {
-                    Console.WriteLine($" > no sequentially reachable coords");
-                } else {
-                    for (int s = 0; s < positions.sequentiallyReachableCoordinates.Count; s++) {
-                        foreach (var reachableCoord in positions.sequentiallyReachableCoordinates[s]) {
-                            Console.WriteLine($" > {ChessGameState.CoordToString(reachableCoord)} (sequence {s})");
-                        }
-                    }
-                }
-            }
-            Console.WriteLine();
-
-            var playerIndex = gs.currentPlayerIndex;
-            var board = gs.board;
-            foreach (var coord in gs.CoordsWithPiecesOfPlayer(playerIndex)) {
-                Console.WriteLine($"Player {playerIndex} has a {board[coord]} at {ChessGameState.CoordToString(coord)}");
-                var moveCounter = 0;
-                var moveLog = new System.Text.StringBuilder();
-                foreach (var move in ChessMoveUtils.GetMovesForPiece(gs, coord)) {
-                    var moveResult = gs.GetResultOfMove(move, false);  // do NOT update game over, otherwise you'll get an infinite loop of further gamestates created!
-                    if (!moveResult.playerStates[playerIndex].IsInCheck) {
-                        moveCounter++;
-                        moveLog.AppendLine($"   > move to {ChessGameState.CoordToString(move.dstCoord)}");
-                    }
-                }
-                Console.WriteLine($" > That piece has {moveCounter} moves available!");
-                if (moveCounter > 0) {
-                    Console.WriteLine(moveLog.ToString());
-                } else {
-                    Console.WriteLine();
-                }
+            CountNumberOfMovesForPieceType(ChessPiece.WhiteRook, 0);
+            CountNumberOfMovesForPieceType(ChessPiece.WhiteKnight, 4);
+            CountNumberOfMovesForPieceType(ChessPiece.WhiteBishop, 0);
+            CountNumberOfMovesForPieceType(ChessPiece.WhiteQueen, 0);
+            CountNumberOfMovesForPieceType(ChessPiece.WhiteKing, 0);
+            CountNumberOfMovesForPieceType(ChessPiece.WhitePawn, 16);
+            foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+                Assert.AreEqual(false, gs.GetPositionHasBeenMoved(move.srcCoord));
+                var result = gs.GetResultOfMove(move);
+                Assert.AreEqual(true, result.GetPositionHasBeenMoved(move.srcCoord));
             }
 
             void TestVerticallySymmetric (int whiteX, int whiteY, ChessPiece whitePiece) {
-                Assert.AreEqual(gs.GetPieceAtPosition(whiteX, whiteY), whitePiece);
+                Assert.AreEqual(whitePiece, gs.GetPieceAtPosition(whiteX, whiteY));
                 var blackPiece = whitePiece.GetOppositeColor();
-                Assert.AreEqual(gs.GetPieceAtPosition(whiteX, 7 - whiteY), blackPiece);
+                Assert.AreEqual(blackPiece, gs.GetPieceAtPosition(whiteX, 7 - whiteY));
             }
 
             void TestFullySymmetric (int whiteX, int whiteY, ChessPiece whitePiece) {
@@ -123,8 +94,18 @@ namespace MasterProject.Chess.Tests {
             }
 
             void CountSymmetric (ChessPiece whitePiece, int count) {
-                Assert.AreEqual(gs.CountNumberOfPieces(whitePiece), count);
-                Assert.AreEqual(gs.CountNumberOfPieces(whitePiece.GetOppositeColor()), count);
+                Assert.AreEqual(count, gs.CountNumberOfPieces(whitePiece));
+                Assert.AreEqual(count, gs.CountNumberOfPieces(whitePiece.GetOppositeColor()));
+            }
+
+            void CountNumberOfMovesForPieceType (ChessPiece piece, int targetCount) {
+                var count = 0;
+                foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+                    if (gs.board[move.srcCoord] == piece) {
+                        count++;
+                    }
+                }
+                Assert.AreEqual(targetCount, count);
             }
         }
 
