@@ -6,7 +6,7 @@
         public int dstCoord;
 
         public ChessPiece promoteTo;
-        public bool enPassant;
+        public bool enPassantCapture;
         public bool castle;
 
         public override bool Equals (object? obj) {
@@ -18,7 +18,7 @@
                 && srcCoord == other.srcCoord
                 && dstCoord == other.dstCoord
                 && promoteTo == other.promoteTo
-                && enPassant == other.enPassant
+                && enPassantCapture == other.enPassantCapture
                 && castle == other.castle;
         }
 

@@ -19,6 +19,7 @@ namespace MasterProject.Chess {
         public long pieceHasMoved { get; set; }
         public ChessPlayerState[] playerStates { get; set; }
         public int currentPlayerIndex { get; set; }
+        public int movesSinceLastCaptureOrPawnMove { get; set; }
 
         [JsonIgnore]
         public ChessGameState previousState { get; set; }
@@ -35,9 +36,11 @@ namespace MasterProject.Chess {
             output.playerStates = this.ClonePlayerStates();
             output.pieceHasMoved = this.pieceHasMoved;
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
+            output.movesSinceLastCaptureOrPawnMove = this.movesSinceLastCaptureOrPawnMove;
             output.ApplyMove(move);
-            output.UpdatePlayerStates();
+            output.UpdatePlayerAttackMapsAndCheckStates();
             output.UpdateGameIsOver();
+            output.previousState = this;
             return output;
         }
 
@@ -60,6 +63,7 @@ namespace MasterProject.Chess {
 
         public void ApplyMove (ChessMove move) {
             var srcPiece = board[move.srcCoord];
+            var dstPiece = board[move.dstCoord];
             board[move.srcCoord] = ChessPiece.None;
             SetPositionHasBeenMoved(move.srcCoord, true);
             if (move.castle) {
@@ -81,7 +85,7 @@ namespace MasterProject.Chess {
                 SetPositionHasBeenMoved(rookDstCoord, true);
                 playerStates[currentPlayerIndex].HasCastled = true;
             }
-            if (move.enPassant) {
+            if (move.enPassantCapture) {
                 CoordToXY(move.srcCoord, out _, out var srcY);
                 CoordToXY(move.dstCoord, out var dstX, out _);
                 var passantCoord = XYToCoord(dstX, srcY);
@@ -92,9 +96,22 @@ namespace MasterProject.Chess {
             if (srcPiece.IsKing()) {
                 playerStates[currentPlayerIndex].KingCoord = move.dstCoord;
             }
+            playerStates[currentPlayerIndex].EnPassantableColumn = -1;  // the "reset" as en passant only works if the move was made the previous turn
+            if (srcPiece.IsPawn()) {
+                CoordToXY(move.srcCoord, out var srcX, out var srcY);
+                CoordToXY(move.dstCoord, out var dstX, out var dstY);
+                if ((srcX == dstX) && (Math.Abs(srcY - dstY) > 1)) {
+                    playerStates[currentPlayerIndex].EnPassantableColumn = srcX;    // the set here is deep down in two ifs, but the reset is always done beforehand
+                }
+                movesSinceLastCaptureOrPawnMove = 0;
+            } else if ((dstPiece != ChessPiece.None) && (srcPiece.IsWhite() != dstPiece.IsWhite())) {
+                movesSinceLastCaptureOrPawnMove = 0;
+            } else {
+                movesSinceLastCaptureOrPawnMove++;
+            }
         }
 
-        public void UpdatePlayerStates () {
+        public void UpdatePlayerAttackMapsAndCheckStates () {
             var whiteAttackMap = 0L;
             var blackAttackMap = 0L;
             for (int i = 0; i < board.Length; i++) {
@@ -121,20 +138,19 @@ namespace MasterProject.Chess {
                 SetDraw();
                 return;
             }
+            // the following two rules are only draws if a player claims them as such, but for the sake of not drawing out tournaments even longer i'll just auto-claim the draw
+            if (movesSinceLastCaptureOrPawnMove > 100) {    // - There has been no capture or pawn move in the last fifty moves (move = both players get to play) by each player, if the last move was not a checkmate (see fifty-move rule).
+                SetDraw();
+                return;
+            }
+            if (DetermineHasRepeatedMultipleTimes(3)) {     // - The same board position has occurred three times with the same player to move and all pieces having the same rights to move, including the right to castle or capture en passant(see threefold repetition rule).
+                SetDraw();
+                return;
+            }
             if (DetermineIfBoardIsDeadPosition()) {
                 SetDraw();
                 return;
             }
-            // Other draw conditions (https://en.wikipedia.org/wiki/Rules_of_chess)
-            // The player having the move claims a draw by correctly declaring that one of the following conditions exists, or by correctly declaring an intention to make a move which will bring about one of these conditions:
-            // - The same board position has occurred three times with the same player to move and all pieces having the same rights to move, including the right to castle or capture en passant(see threefold repetition rule).
-            //      > check parent of parent (if that even exists)
-            //      > if the boards differ, that's already a fail
-            //      > otherwise i'll have to compare all available moves
-            //        luckily, as they are generated in a deterministic and fixed order, i can just compare them
-            // - There has been no capture or pawn move in the last fifty moves (move = both players get to play) by each player, if the last move was not a checkmate (see fifty-move rule).
-            //      > this is easily tracked with a counter that resets if any of the things mentioned above do happen
-            //      > remember that 50 moves is 100 chessmoves
 
             void SetDraw () {
                 for (int i = 0; i < PLAYER_COUNT; i++) {
@@ -209,11 +225,15 @@ namespace MasterProject.Chess {
             this.playerStates = new ChessPlayerState[PLAYER_COUNT];
             for (int i = 0; i < PLAYER_COUNT; i++) {
                 playerStates[i] = new ChessPlayerState();
+                playerStates[i].IsInCheck = false;
+                playerStates[i].HasCastled = false;
+                playerStates[i].EnPassantableColumn = -1;
             }
             playerStates[INDEX_WHITE].KingCoord = Array.IndexOf(board, ChessPiece.WhiteKing);
             playerStates[INDEX_BLACK].KingCoord = Array.IndexOf(board, ChessPiece.BlackKing);
-            UpdatePlayerStates();
+            UpdatePlayerAttackMapsAndCheckStates();
             this.currentPlayerIndex = INDEX_WHITE;
+            this.movesSinceLastCaptureOrPawnMove = 0;
         }
 
         public string ToPrintableString (bool includeRowAndColumnLabels = true) {
@@ -279,6 +299,53 @@ namespace MasterProject.Chess {
                     yield return move;
                 }
             }
+        }
+
+        public bool DetermineHasRepeatedMultipleTimes (int targetNumberOfTimes) {
+            var tempParent = this.previousState;
+            var numberOfRepeats = 0;
+            while(true){
+                if (tempParent == null) {
+                    return false;
+                }
+                var checkState = tempParent.previousState;
+                if (checkState == null) {
+                    return false;
+                }
+                if (!CompareBoardAndAvailableMovesIdentical(this, checkState)) {
+                    return false;
+                }
+                numberOfRepeats++;
+                if (numberOfRepeats >= targetNumberOfTimes) {
+                    return true;
+                }
+                tempParent = checkState.previousState;
+            }
+        }
+
+        public static bool CompareBoardAndAvailableMovesIdentical (ChessGameState a, ChessGameState b) {
+            if (a.currentPlayerIndex != b.currentPlayerIndex) {
+                return false;
+            }
+            var playerColorId = ((a.currentPlayerIndex == INDEX_WHITE) ? ChessPieceUtils.ID_WHITE : ChessPieceUtils.ID_BLACK);
+            for (int i = 0; i < a.board.Length; i++) {
+                if (a.board[i] != b.board[i]) {
+                    return false;
+                }
+            }
+            foreach (var coord in a.CoordsWithPiecesOfPlayer(a.currentPlayerIndex)) {
+                var aMoves = a.GetPossibleMovesForCurrentPlayer();
+                var bMoves = b.GetPossibleMovesForCurrentPlayer();
+                if (aMoves.Count != bMoves.Count) {
+                    return false;
+                }
+                for (int i = 0; i < aMoves.Count; i++) {
+                    if (aMoves[i] != bMoves[i]) {   // this comparison can be made as moves are returned in a deterministic order
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public bool DetermineIfBoardIsDeadPosition () {

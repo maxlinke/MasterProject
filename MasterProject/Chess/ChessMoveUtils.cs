@@ -248,13 +248,6 @@ namespace MasterProject.Chess {
             }
         }
 
-        public static bool CheckForEnPassant (ChessGameState gs, ChessMove move) {
-            // TODO
-            // check "behind" the move coord (so dst.x but src.y) NOW for enemy pawn and previously nothing
-            // check "in front" the move coord (dst.y, enemy homerow) NOW empty, previously occupied
-            throw new NotImplementedException();
-        }
-
         public static IEnumerable<ChessMove> GetLegalMovesForPiece (ChessGameState gs, int coord) {
             var board = gs.board;
             var pieceColorId = (int)(board[coord]) & MASK_COLOR;
@@ -355,22 +348,30 @@ namespace MasterProject.Chess {
                             yield return move;
                         }
                     }
-                } else if (pawnY == enPassantStartY) {
-                    foreach (var move in GetVacantMoves(movePositions)) {
-                        yield return move;
-                    }
-                    foreach (var move in GetCaptureMoves(attackPositions)) {
-                        if (CheckForEnPassant(gs, move)) {
-                            move.enPassant = true;
-                        }
-                        yield return move;
-                    }
                 } else {
                     foreach (var move in GetVacantMoves(movePositions)) {
                         yield return move;
                     }
                     foreach (var move in GetCaptureMoves(attackPositions)) {
                         yield return move;
+                    }
+                    if (pawnY == enPassantStartY) {
+                        var otherPlayerIndex = (gs.currentPlayerIndex + 1) % 2;
+                        if (gs.playerStates[otherPlayerIndex].EnPassantableColumn >= 0) {
+                            foreach (var possibleDstCoord in attackPositions.independentlyReachableCoordinates) {   // only need to check these coords
+                                CoordToXY(possibleDstCoord, out var possibleDstX, out _);
+                                if (possibleDstX == gs.playerStates[otherPlayerIndex].EnPassantableColumn) {
+                                    var otherPiece = board[XYToCoord(possibleDstX, pawnY)];
+                                    if (otherPiece.IsPawn()) {
+                                        yield return new ChessMove() {
+                                            srcCoord = coord,
+                                            dstCoord = possibleDstCoord,
+                                            enPassantCapture = true
+                                        };
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
