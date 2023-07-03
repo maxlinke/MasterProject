@@ -9,6 +9,10 @@ namespace MasterProject {
     public static class StringExtensions {
 
         public static string HorizontalConcat (this string left, string right) {
+            return HorizontalConcat(left, right, string.Empty);
+        }
+
+        public static string HorizontalConcat (this string left, string right, string separator) {
             var leftLines = left.Split(System.Environment.NewLine);
             var rightLines = right.Split(System.Environment.NewLine);
             var maxLines = Math.Max(leftLines.Length, rightLines.Length);
@@ -24,6 +28,7 @@ namespace MasterProject {
                 } else {
                     sb.Append(new string(' ', longestLeftLineLength));
                 }
+                sb.Append(separator);
                 if (i < rightLines.Length) {
                     sb.Append(rightLines[i]);
                 }

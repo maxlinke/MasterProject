@@ -35,11 +35,11 @@ namespace MasterProject.Chess {
             output.board = this.CloneBoard();
             output.playerStates = this.ClonePlayerStates();
             output.pieceHasMoved = this.pieceHasMoved;
-            output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             output.movesSinceLastCaptureOrPawnMove = this.movesSinceLastCaptureOrPawnMove;
+            output.currentPlayerIndex = this.currentPlayerIndex;
             output.ApplyMove(move);
             output.UpdatePlayerAttackMapsAndCheckStates();
-            output.UpdateGameIsOver();
+            output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
             output.previousState = this;
             return output;
         }
@@ -253,13 +253,29 @@ namespace MasterProject.Chess {
         }
 
         public string ToPrintableString (bool includeRowAndColumnLabels = true) {
+            return GetPrintableString((coord) => board[coord].ToShortString()[0], includeRowAndColumnLabels);
+        }
+
+        public static string MakePrintableAttackMap (int pieceCoord, long map, bool includeRowAndColumnLabels = true) {
+            return GetPrintableString((coord) => {
+                if (coord == pieceCoord) {
+                    return '@';
+                } else if (BitMaskUtils.GetLongBit(map, coord)) {
+                    return '#';
+                } else {
+                    return '-';
+                }
+            }, includeRowAndColumnLabels);
+        }
+
+        private static string GetPrintableString (System.Func<int, char> getCharacterForCoordinate, bool includeRowAndColumnLabels) {
             var sb = new System.Text.StringBuilder();
             for (int y = BOARD_SIZE - 1; y >= 0; y--) {
                 if (includeRowAndColumnLabels) {
-                    sb.Append($"{y+1}   ");
+                    sb.Append($"{y + 1}   ");
                 }
                 for (int x = 0; x < BOARD_SIZE; x++) {
-                    sb.Append($"{board[XYToCoord(x, y)].ToShortString()} ");
+                    sb.Append($"{getCharacterForCoordinate(XYToCoord(x, y))} ");
                 }
                 sb.Append(System.Environment.NewLine);
             }
@@ -294,6 +310,7 @@ namespace MasterProject.Chess {
             var temp = new ChessGameState();
             temp.board = this.CloneBoard();
             temp.playerStates = this.ClonePlayerStates();
+            temp.currentPlayerIndex = this.currentPlayerIndex;
             temp.ApplyMove(move);
             var ownKingCoord = temp.playerStates[playerIndex].KingCoord;
             var otherPlayerColorId = (playerIndex == INDEX_WHITE ? ChessPieceUtils.ID_BLACK : ChessPieceUtils.ID_WHITE);
