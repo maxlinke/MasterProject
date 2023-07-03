@@ -7,7 +7,7 @@ using NUnit.Framework;
 using static MasterProject.Chess.Tests.ChessTestUtils;
 
 namespace MasterProject.Chess.Tests {
-    
+
     [TestFixture]
     public class ChessTests {
 
@@ -143,6 +143,45 @@ namespace MasterProject.Chess.Tests {
                     Assert.AreEqual(gs.GetPositionHasBeenMoved(j), false);
                 }
                 gs.SetPositionHasBeenMoved(i, false);
+            }
+        }
+
+        [Test]
+        public void VerifyMoveUtilsPositionsInbounds () {
+            var basicBoard = ChessPieceUtils.GetInitialBoard();
+            VerifyPositions(ChessMoveUtils.possibleKingPositions);
+            VerifyPositions(ChessMoveUtils.possibleQueenPositions);
+            VerifyPositions(ChessMoveUtils.possibleBishopPositions);
+            VerifyPositions(ChessMoveUtils.possibleKnightPositions);
+            VerifyPositions(ChessMoveUtils.possibleRookPositions);
+            VerifyPositions(ChessMoveUtils.possibleWhitePawnMovePositions);
+            VerifyPositions(ChessMoveUtils.possibleBlackPawnMovePositions);
+            VerifyPositions(ChessMoveUtils.possibleWhitePawnAttackPositions);
+            VerifyPositions(ChessMoveUtils.possibleBlackPawnAttackPositions);
+
+            void VerifyPositions (IReadOnlyList<ChessMoveUtils.PossiblePositions> positions) {
+                for (int i = 0; i < positions.Count; i++) {
+                    var position = positions[i];
+                    if (position.independentlyReachableCoordinates != null) {
+                        for (int j = 0; j < position.independentlyReachableCoordinates.Count; j++) {
+                            var coord = position.independentlyReachableCoordinates[j];
+                            if (coord < 0 || coord >= basicBoard.Length) {
+                                Assert.Fail($"{ChessGameState.CoordToString(i)} -> independent coord {j} -> {coord}");
+                            }
+                        }
+                    }
+                    if (position.sequentiallyReachableCoordinates != null) {
+                        for (int j = 0; j < position.sequentiallyReachableCoordinates.Count; j++) {
+                            var coords = position.sequentiallyReachableCoordinates[j];
+                            for (int k = 0; k < coords.Count; k++) {
+                                var coord = coords[k];
+                                if (coord < 0 || coord >= basicBoard.Length) {
+                                    Assert.Fail($"{ChessGameState.CoordToString(i)} -> sequence {j} coord {k} -> {coord}");
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

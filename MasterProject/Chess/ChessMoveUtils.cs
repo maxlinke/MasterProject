@@ -126,7 +126,7 @@ namespace MasterProject.Chess {
                         }
                     }
                     output[i] = new PossiblePositions(
-                        (sequentialPositions != null ? sequentialPositions.ToArray() : null), 
+                        (sequentialPositions != null ? sequentialPositions.ToArray() : null),
                         (independentPositions != null ? independentPositions.ToArray() : null)
                     );
                 }
@@ -138,7 +138,7 @@ namespace MasterProject.Chess {
                 CoordToXY(Array.IndexOf(initBoard, piece), out _, out var startY);
                 int dy = Math.Sign((BOARD_SIZE / 2) - startY);
                 for (int x = 0; x < BOARD_SIZE; x++) {
-                    output[XYToCoord(x, 0)]              = new PossiblePositions(null, null);  // can't ever be here
+                    output[XYToCoord(x, 0)] = new PossiblePositions(null, null);  // can't ever be here
                     output[XYToCoord(x, BOARD_SIZE - 1)] = new PossiblePositions(null, null);  // can't ever be here
                     output[XYToCoord(x, startY)] = new PossiblePositions(new int[][]{
                         new int[]{
@@ -161,17 +161,17 @@ namespace MasterProject.Chess {
                 CoordToXY(Array.IndexOf(initBoard, piece), out _, out var startY);
                 int dy = Math.Sign((BOARD_SIZE / 2) - startY);
                 for (int x = 0; x < BOARD_SIZE; x++) {
-                    output[XYToCoord(x, startY - dy)]       = new PossiblePositions(null, null);
+                    output[XYToCoord(x, startY - dy)] = new PossiblePositions(null, null);
                     output[XYToCoord(x, startY + (6 * dy))] = new PossiblePositions(null, null);
                     for (int i = 0; i < 6; i++) {
                         var y = startY + (i * dy);
                         var outputCoord = XYToCoord(x, y);
                         var leftAttackCoord = XYToCoord(x - 1, y + dy);
                         var rightAttackCoord = XYToCoord(x + 1, y + dy);
-                        var includeLeft = (x < (BOARD_SIZE - 1));
-                        var includeRight = (x > 0);
+                        var includeLeft = (x > 0);
+                        var includeRight = (x < (BOARD_SIZE - 1));
                         if (includeLeft && includeRight) {
-                            output[outputCoord] = new PossiblePositions(null, new int[] { leftAttackCoord, rightAttackCoord }); 
+                            output[outputCoord] = new PossiblePositions(null, new int[] { leftAttackCoord, rightAttackCoord });
                         } else if (includeLeft) {
                             output[outputCoord] = new PossiblePositions(null, new int[] { leftAttackCoord });
                         } else if (includeRight) {
@@ -228,6 +228,9 @@ namespace MasterProject.Chess {
         private static IEnumerable<int> EnumerateVacantOrEnemyCoords (ChessPiece[] board, PossiblePositions positions, int ownColorId) {
             if (positions.independentlyReachableCoordinates != null) {
                 foreach (var reachableCoord in positions.independentlyReachableCoordinates) {
+                    if (reachableCoord < 0 || reachableCoord >= board.Length) {
+                        throw new System.IndexOutOfRangeException($"Index {reachableCoord} is out of range (max {board.Length})");
+                    }
                     if (((int)(board[reachableCoord]) & MASK_COLOR) != ownColorId) {   // don't attack same color
                         yield return reachableCoord;
                     }
