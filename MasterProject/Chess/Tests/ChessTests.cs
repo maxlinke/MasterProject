@@ -19,7 +19,8 @@ namespace MasterProject.Chess.Tests {
         // TODO test whether a move that would normally work is not included because it would put the king in check
         // TODO test checkmate
 
-        // TODO also i still need to implement the other two draw conditions (same state, no captures)
+        // TODO i don't think check works...
+        // TODO 
 
         [Test]
         public void TestBoardCreationFromString () {

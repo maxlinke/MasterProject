@@ -72,35 +72,43 @@ public class Program {
         //gs.Initialize();
         //Console.WriteLine(gs.ToPrintableString());
         //gs.GetPossibleMovesForCurrentPlayer();
-        var sw = new System.Diagnostics.Stopwatch();
-        sw.Start();
-        for (int i = 0; i < 100; i++) {
-            var g = new ChessGame();
-            g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
-            g.RunSynced(new ChessAgent[]{
-                new MasterProject.Chess.Agents.RandomAgent(),
-                new MasterProject.Chess.Agents.RandomAgent()
-            });
-        }
-        sw.Stop();
-        var withLogs = sw.ElapsedMilliseconds;
-        sw.Restart();
-        for (int i = 0; i < 100; i++) {
-            var g = new ChessGame();
-            g.AllowedConsoleOutputs = Game.ConsoleOutputs.Nothing;
-            g.RunSynced(new ChessAgent[]{
-                new MasterProject.Chess.Agents.RandomAgent(),
-                new MasterProject.Chess.Agents.RandomAgent()
-            });
-        }
-        sw.Stop();
-        var withoutLogs = sw.ElapsedMilliseconds;
-        Console.WriteLine();
-        Console.WriteLine();
-        Console.WriteLine($"with logs: {withLogs} ms");
-        Console.WriteLine($"without logs: {withoutLogs} ms");
-        Console.WriteLine();
-        Console.WriteLine();
+
+        //var sw = new System.Diagnostics.Stopwatch();
+        //sw.Start();
+        //for (int i = 0; i < 100; i++) {
+        //    var g = new ChessGame();
+        //    g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+        //    g.RunSynced(new ChessAgent[]{
+        //        new MasterProject.Chess.Agents.RandomAgent(),
+        //        new MasterProject.Chess.Agents.RandomAgent()
+        //    });
+        //}
+        //sw.Stop();
+        //var withLogs = sw.ElapsedMilliseconds;
+        //sw.Restart();
+        //for (int i = 0; i < 100; i++) {
+        //    var g = new ChessGame();
+        //    g.AllowedConsoleOutputs = Game.ConsoleOutputs.Nothing;
+        //    g.RunSynced(new ChessAgent[]{
+        //        new MasterProject.Chess.Agents.RandomAgent(),
+        //        new MasterProject.Chess.Agents.RandomAgent()
+        //    });
+        //}
+        //sw.Stop();
+        //var withoutLogs = sw.ElapsedMilliseconds;
+        //Console.WriteLine();
+        //Console.WriteLine();
+        //Console.WriteLine($"with logs: {withLogs} ms");           // about 32 seconds
+        //Console.WriteLine($"without logs: {withoutLogs} ms");     // about 4 seconds
+        //Console.WriteLine();
+        //Console.WriteLine();
+
+        var g = new ChessGame();
+        g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+        g.RunSynced(new ChessAgent[]{
+            new MasterProject.Chess.Agents.Human(),
+            new MasterProject.Chess.Agents.RandomAgent()
+        });
     }
 
     static void DoG44PTournament () {

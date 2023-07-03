@@ -9,6 +9,16 @@
         public bool enPassantCapture;
         public bool castle;
 
+        public ChessMove Clone () {
+            return new ChessMove() {
+                srcCoord = this.srcCoord,
+                dstCoord = this.dstCoord,
+                promoteTo = this.promoteTo,
+                enPassantCapture = this.enPassantCapture,
+                castle = this.castle
+            };
+        }
+
         public override bool Equals (object? obj) {
             return this.Equals(obj as ChessMove);
         }

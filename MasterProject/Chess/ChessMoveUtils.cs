@@ -341,14 +341,16 @@ namespace MasterProject.Chess {
                 if (pawnY == prePromotionY) {
                     foreach (var move in GetVacantMoves(movePositions)) {
                         foreach (var promotion in promotionOptions) {
-                            move.promoteTo = promotion;
-                            yield return move;
+                            var outputMove = move.Clone();
+                            outputMove.promoteTo = promotion;
+                            yield return outputMove;
                         }
                     }
                     foreach (var move in GetCaptureMoves(attackPositions)) {
                         foreach (var promotion in promotionOptions) {
-                            move.promoteTo = promotion;
-                            yield return move;
+                            var outputMove = move.Clone();
+                            outputMove.promoteTo = promotion;
+                            yield return outputMove;
                         }
                     }
                 } else {

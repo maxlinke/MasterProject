@@ -180,6 +180,22 @@ namespace MasterProject.Chess {
             return $"{(char)('a' + x)}{y + 1}";
         }
 
+        public static int CoordFromString (string value) {
+            if (string.IsNullOrWhiteSpace(value)) {
+                return -1;
+            }
+            if (value.Length != 2) {
+                return -1;
+            }
+            
+            var x = (char.ToLower(value[0]) - (int)('a'));
+            var y = (value[1] - (int)('1'));
+            if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) {
+                return -1;
+            }
+            return XYToCoord(x, y);
+        }
+
         public static bool CheckIsInbounds (int x, int y) {
             return (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE);
         }
@@ -425,6 +441,36 @@ namespace MasterProject.Chess {
 
         public override ChessGameState GetVisibleGameStateForPlayer (int playerIndex) {
             return this;
+        }
+
+        public static ChessGameState RunSeriesOfMovesAsStrings (ChessGameState src, bool printDebugStuff, params string[] moves) {
+            var gs = src;
+            for (int i = 0; i < moves.Length; i++) {
+                if (printDebugStuff) {
+                    Console.WriteLine($" > {moves[i]}");
+                }
+                var moveSplit = moves[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var srcCoord = CoordFromString(moveSplit[0]);
+                var dstCoord = CoordFromString(moveSplit[1]);
+                var nextMoveFound = false;
+                var nextMove = default(ChessMove);
+                foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+                    if (move.srcCoord == srcCoord && move.dstCoord == dstCoord) {
+                        nextMoveFound = true;
+                        nextMove = move;
+                        break;
+                    }
+                }
+                if (!nextMoveFound) {
+                    throw new System.Exception($"Something went wrong at move index {i} (\"{moves[i]}\")");
+                } else {
+                    gs = gs.GetResultOfMove(nextMove);
+                }
+                if (printDebugStuff) {
+                    Console.WriteLine(gs.ToPrintableString());
+                }
+            }
+            return gs;
         }
 
     }
