@@ -312,30 +312,41 @@ namespace MasterProject.Chess {
                 if (checkState == null) {
                     return false;
                 }
-                if (!CompareBoardAndAvailableMovesIdentical(this, checkState)) {
-                    return false;
-                }
-                numberOfRepeats++;
-                if (numberOfRepeats >= targetNumberOfTimes) {
-                    return true;
+                if (CompareBoardAndAvailableMovesIdentical(this, checkState)) {
+                    numberOfRepeats++;
+                    if (numberOfRepeats >= targetNumberOfTimes) {
+                        return true;
+                    }
                 }
                 tempParent = checkState.previousState;
             }
         }
 
+        // TODO if this part takes too long, i could speed it up with a hashcode
+        // precalculate and cache moves in the result-gamestate-getter (and initialization of course) (and then return that cache when asked for it)
+        // only if hashes match, do a more in-depth comparison
+        // on the other hand, the boards already do need to be identical for there to be a chance of moves matching too
+        // and that requires both players to be repeating everything
+        // in which case the game will be ended
+        // eh. just see how long a random vs random match takes
+        // if it's in the order of a second, maybe that's a problem
+        // then i can see what's taking so long
+        // and if it is this part, which will take longer and longer the longer the game goes on, i can work on this
+        // but assuming even one player is trying to do something, then the game should not take forever
+        // ...
+        // i hope...
         public static bool CompareBoardAndAvailableMovesIdentical (ChessGameState a, ChessGameState b) {
             if (a.currentPlayerIndex != b.currentPlayerIndex) {
                 return false;
             }
-            var playerColorId = ((a.currentPlayerIndex == INDEX_WHITE) ? ChessPieceUtils.ID_WHITE : ChessPieceUtils.ID_BLACK);
             for (int i = 0; i < a.board.Length; i++) {
                 if (a.board[i] != b.board[i]) {
                     return false;
                 }
             }
             foreach (var coord in a.CoordsWithPiecesOfPlayer(a.currentPlayerIndex)) {
-                var aMoves = a.GetPossibleMovesForCurrentPlayer();
-                var bMoves = b.GetPossibleMovesForCurrentPlayer();
+                var aMoves = new List<ChessMove>(ChessMoveUtils.GetLegalMovesForPiece(a, coord));
+                var bMoves = new List<ChessMove>(ChessMoveUtils.GetLegalMovesForPiece(b, coord));
                 if (aMoves.Count != bMoves.Count) {
                     return false;
                 }
