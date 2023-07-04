@@ -104,7 +104,7 @@ public class Program {
         //Console.WriteLine();
 
         var g = new ChessGame();
-        g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+        g.AllowedConsoleOutputs = ~Game.ConsoleOutputs.Debug;
         g.RunSynced(new ChessAgent[]{
             new MasterProject.Chess.Agents.Human(),
             new MasterProject.Chess.Agents.RandomAgent()

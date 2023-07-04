@@ -40,6 +40,7 @@ namespace MasterProject.Chess {
             output.ApplyMove(move);
             output.UpdatePlayerAttackMapsAndCheckStates();
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
+            output.UpdateGameIsOver();
             output.previousState = this;
             return output;
         }
@@ -132,7 +133,7 @@ namespace MasterProject.Chess {
         public void UpdateGameIsOver () {
             if (!AnyLegalMovesForPlayer(currentPlayerIndex)) {
                 if (playerStates[currentPlayerIndex].IsInCheck) {
-                    SetVictoryForPlayer(this.currentPlayerIndex);
+                    SetVictoryForPlayer((currentPlayerIndex + 1) % PLAYER_COUNT);
                     return;
                 }
                 SetDraw();
