@@ -103,12 +103,27 @@ public class Program {
         //Console.WriteLine();
         //Console.WriteLine();
 
+        //var g = new ChessGame();
+        //g.AllowedConsoleOutputs = ~Game.ConsoleOutputs.Debug;
+        //g.RunSynced(new ChessAgent[]{
+        //    new MasterProject.Chess.Agents.Human(),
+        //    new MasterProject.Chess.Agents.RandomAgent()
+        //});
+
         var g = new ChessGame();
-        g.AllowedConsoleOutputs = ~Game.ConsoleOutputs.Debug;
-        g.RunSynced(new ChessAgent[]{
-            new MasterProject.Chess.Agents.Human(),
-            new MasterProject.Chess.Agents.RandomAgent()
+        g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+        g.RunSynced(new Agent<ChessGame, ChessGameState, ChessMove>[]{
+            //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SuicideKing()),
+            //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SameColor()),
+            //new MasterProject.Chess.Agents.RandomAgent()
+            new MasterProject.Chess.Agents.SameColor(),
+            new MasterProject.Chess.Agents.OppositeColor(),
         });
+        while (true) {
+            Console.WriteLine("Finished");
+            Thread.Sleep(100);
+            Console.ReadLine();
+        }
     }
 
     static void DoG44PTournament () {

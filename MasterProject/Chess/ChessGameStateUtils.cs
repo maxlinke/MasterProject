@@ -4,6 +4,33 @@ namespace MasterProject.Chess {
 
     public static class ChessGameStateUtils {
 
+        static ChessGameStateUtils () {
+            var wfc = new List<int>();
+            var bfc = new List<int>();
+            var totalFieldCount = ChessGameState.BOARD_SIZE * ChessGameState.BOARD_SIZE;
+            for (int i = 0; i < totalFieldCount; i++) {
+                if (BoardIsWhiteAtCoordinate(i)) {
+                    wfc.Add(i);
+                } else {
+                    bfc.Add(i);
+                }
+            }
+            whiteFieldCoords = wfc.ToArray();
+            blackFieldCoords = bfc.ToArray();
+        }
+
+        public static readonly IReadOnlyList<int> whiteFieldCoords;
+        public static readonly IReadOnlyList<int> blackFieldCoords;
+
+        public static bool BoardIsWhiteAtCoordinate (int coord) {
+            CoordToXY(coord, out var x, out var y);
+            return BoardIsWhiteAtXY(x, y);
+        }
+
+        public static bool BoardIsWhiteAtXY (int x, int y) {
+            return ((x + y) % 2) != 0;
+        }
+
         public static int XYToCoord (int x, int y) {
             return (y * BOARD_SIZE) + x;
         }

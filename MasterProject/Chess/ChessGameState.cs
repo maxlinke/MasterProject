@@ -7,6 +7,15 @@ namespace MasterProject.Chess {
     
     public class ChessGameState : GameState<ChessGameState, ChessMove, ChessPlayerState> {
 
+        public enum GameOverType {
+            None,
+            Checkmate,
+            DeadPosition,
+            Stalemate,
+            FiftyMoveRule,
+            ThreefoldRepetitionRule
+        }
+
         public const int BOARD_SIZE = 8;
 
         public const int INDEX_WHITE = 0;
@@ -21,6 +30,7 @@ namespace MasterProject.Chess {
         public ChessPlayerState[] playerStates { get; set; }
         public int currentPlayerIndex { get; set; }
         public int movesSinceLastCaptureOrPawnMove { get; set; }
+        public GameOverType gameOverType { get; set; }
 
         [JsonIgnore]
         public ChessGameState previousState { get; set; }
@@ -38,6 +48,7 @@ namespace MasterProject.Chess {
             output.pieceHasMoved = this.pieceHasMoved;
             output.movesSinceLastCaptureOrPawnMove = this.movesSinceLastCaptureOrPawnMove;
             output.currentPlayerIndex = this.currentPlayerIndex;
+            output.gameOverType = this.gameOverType;
             output.ApplyMove(move);
             output.UpdatePlayerAttackMapsAndCheckStates();
             output.currentPlayerIndex = (this.currentPlayerIndex + 1) % PLAYER_COUNT;
@@ -134,37 +145,39 @@ namespace MasterProject.Chess {
         public void UpdateGameIsOver () {
             if (!AnyLegalMovesForPlayer(currentPlayerIndex)) {
                 if (playerStates[currentPlayerIndex].IsInCheck) {
-                    SetVictoryForPlayer((currentPlayerIndex + 1) % PLAYER_COUNT);
+                    SetVictoryForPlayer((currentPlayerIndex + 1) % PLAYER_COUNT, GameOverType.Checkmate);
                     return;
                 }
-                SetDraw();
+                SetDraw(GameOverType.Stalemate);
                 return;
             }
             // the following two rules are only draws if a player claims them as such, but for the sake of not drawing out tournaments even longer i'll just auto-claim the draw
             if (movesSinceLastCaptureOrPawnMove > 100) {    // - There has been no capture or pawn move in the last fifty moves (move = both players get to play) by each player, if the last move was not a checkmate (see fifty-move rule).
-                SetDraw();
+                SetDraw(GameOverType.FiftyMoveRule);
                 return;
             }
             if (DetermineHasRepeatedMultipleTimes(3)) {     // - The same board position has occurred three times with the same player to move and all pieces having the same rights to move, including the right to castle or capture en passant(see threefold repetition rule).
-                SetDraw();
+                SetDraw(GameOverType.ThreefoldRepetitionRule);
                 return;
             }
             if (DetermineIfBoardIsDeadPosition()) {
-                SetDraw();
+                SetDraw(GameOverType.DeadPosition);
                 return;
             }
 
-            void SetDraw () {
+            void SetDraw (GameOverType gameOverType) {
                 for (int i = 0; i < PLAYER_COUNT; i++) {
                     playerStates[i].HasDrawn = true;
                 }
+                this.gameOverType = gameOverType;
             }
 
-            void SetVictoryForPlayer (int playerIndex) {
+            void SetVictoryForPlayer (int playerIndex, GameOverType gameOverType) {
                 for (int i = 0; i < PLAYER_COUNT; i++) {
                     playerStates[i].HasWon = (i == playerIndex);
                     playerStates[i].HasLost = (i != playerIndex);
                 }
+                this.gameOverType = gameOverType;
             }
         }
 
@@ -222,6 +235,7 @@ namespace MasterProject.Chess {
             UpdatePlayerAttackMapsAndCheckStates();
             this.currentPlayerIndex = INDEX_WHITE;
             this.movesSinceLastCaptureOrPawnMove = 0;
+            this.gameOverType = GameOverType.None;
         }
 
         public string ToPrintableString (bool includeRowAndColumnLabels = true) {

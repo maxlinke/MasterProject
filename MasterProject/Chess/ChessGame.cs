@@ -19,6 +19,7 @@
         protected override void OnGameOver () {
             base.OnGameOver();
             var gs = (ChessGameState)GetFinalGameState();
+            TryLog(ConsoleOutputs.GameOver, gs.gameOverType);
             for (int i = 0; i < gs.PlayerStates.Count; i++) {
                 if (gs.PlayerStates[i].HasWon) {
                     TryLog(ConsoleOutputs.GameOver, $"Player {i} won!");
