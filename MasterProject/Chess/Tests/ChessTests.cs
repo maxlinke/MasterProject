@@ -12,17 +12,6 @@ namespace MasterProject.Chess.Tests {
     [TestFixture]
     public class ChessTests {
 
-        // TODO test whether castling works properly
-        //      - set up a specific board (also needs the "has moved" stuff)
-        //      - (in the setup, set all fields that match the initial board to not have moved, otherwise they have moved)
-        //      - setup should also setup playerstates (optionally?)
-        // TODO test whether all the moves work as intended
-        // TODO test whether a move that would normally work is not included because it would put the king in check
-        // TODO test checkmate
-
-        // TODO i don't think check works...
-        // TODO 
-
         [Test]
         public void TestBoardCreationFromString () {
             var initBoard = @"R N B Q K B N R
