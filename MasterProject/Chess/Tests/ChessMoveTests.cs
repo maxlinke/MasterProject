@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using static MasterProject.Chess.ChessGameStateUtils;
 using static MasterProject.Chess.Tests.ChessTestUtils;
 
 namespace MasterProject.Chess.Tests {
@@ -22,13 +23,13 @@ namespace MasterProject.Chess.Tests {
                 "b5 b6", "f7 f6",
                 "b6 a7", "e7 e6"
             );
-            var coord = ChessGameState.CoordFromString("a7");
+            var coord = CoordFromString("a7");
             var moves = new List<ChessMove>(ChessMoveUtils.GetLegalMovesForPiece(gs, coord));
             var options = new List<ChessPiece>(ChessPieceUtils.WhitePawnPromotionOptions);
             Console.WriteLine("Move options: ");
             for (int i = 0; i < moves.Count; i++) {
                 var move = moves[i];
-                Console.WriteLine($"{ChessGameState.CoordToString(move.srcCoord)} to {ChessGameState.CoordToString(move.dstCoord)} and promote to {move.promoteTo}");
+                Console.WriteLine($"{CoordToString(move.srcCoord)} to {CoordToString(move.dstCoord)} and promote to {move.promoteTo}");
             }
             for (int i = 0; i < moves.Count; i++) {
                 Assert.AreEqual(options[i], moves[i].promoteTo);
@@ -47,13 +48,13 @@ namespace MasterProject.Chess.Tests {
                 "d2 d3", "g3 h2",
                 "e2 e3"
             );
-            var coord = ChessGameState.CoordFromString("h2");
+            var coord = CoordFromString("h2");
             var moves = new List<ChessMove>(ChessMoveUtils.GetLegalMovesForPiece(gs, coord));
             var options = new List<ChessPiece>(ChessPieceUtils.BlackPawnPromotionOptions);
             Console.WriteLine("Move options: ");
             for (int i = 0; i < moves.Count; i++) {
                 var move = moves[i];
-                Console.WriteLine($"{ChessGameState.CoordToString(move.srcCoord)} to {ChessGameState.CoordToString(move.dstCoord)} and promote to {move.promoteTo}");
+                Console.WriteLine($"{CoordToString(move.srcCoord)} to {CoordToString(move.dstCoord)} and promote to {move.promoteTo}");
             }
             for (int i = 0; i < moves.Count; i++) {
                 Assert.AreEqual(options[i], moves[i].promoteTo);
@@ -141,12 +142,12 @@ namespace MasterProject.Chess.Tests {
             var whiteMove = GetMoveFromString(gs.GetPossibleMovesForCurrentPlayer(), "f2 g3");
             gs = gs.GetResultOfMove(whiteMove);
             var board = gs.ToPrintableString();
-            var bishopCoord = ChessGameState.CoordFromString("g3");
+            var bishopCoord = CoordFromString("g3");
             var bishopMap = ChessGameState.MakePrintableAttackMap(bishopCoord, ChessMoveUtils.GetAttackMap(gs, bishopCoord), false);
-            var blackKingCoord = ChessGameState.CoordFromString("d6");
+            var blackKingCoord = CoordFromString("d6");
             var blackKingMap = ChessGameState.MakePrintableAttackMap(blackKingCoord, ChessMoveUtils.GetAttackMap(gs, blackKingCoord), false);
             Console.WriteLine(board.HorizontalConcat(bishopMap, "  |  ").HorizontalConcat(blackKingMap, "  |  "));
-            Console.WriteLine($"black king is at {ChessGameState.CoordToString(gs.playerStates[ChessGameState.INDEX_BLACK].KingCoord)}");
+            Console.WriteLine($"black king is at {CoordToString(gs.playerStates[ChessGameState.INDEX_BLACK].KingCoord)}");
             Assert.AreEqual(false, gs.PlayerStates[ChessGameState.INDEX_WHITE].IsInCheck);
             Assert.AreEqual(true, gs.PlayerStates[ChessGameState.INDEX_BLACK].IsInCheck);
             var blackMoves = gs.GetPossibleMovesForCurrentPlayer();

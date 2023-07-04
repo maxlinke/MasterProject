@@ -20,7 +20,7 @@
         }
 
         public string CoordinatesToString () {
-            return $"{ChessGameState.CoordToString(srcCoord)} {ChessGameState.CoordToString(dstCoord)}";
+            return $"{ChessGameStateUtils.CoordToString(srcCoord)} {ChessGameStateUtils.CoordToString(dstCoord)}";
         }
 
         public override bool Equals (object? obj) {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using static MasterProject.Chess.ChessGameState;
+using static MasterProject.Chess.ChessGameStateUtils;
 using static MasterProject.Chess.ChessPieceUtils;
 using static MasterProject.Chess.BitMaskUtils;
 

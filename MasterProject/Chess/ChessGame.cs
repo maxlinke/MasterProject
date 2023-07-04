@@ -34,18 +34,24 @@
 
         protected override void OnGameStarted () {
             base.OnGameStarted();
-            TryDebugLog($"\n{CurrentGameState.ToPrintableString()}");
+            if (DebugLogIsAllowed()) {
+                TryDebugLog($"\n{CurrentGameState.ToPrintableString()}");
+            }
         }
 
         protected override void OnGameStateUpdated () {
             base.OnGameStateUpdated();
-            TryDebugLog($"\n{CurrentGameState.ToPrintableString()}");
+            if (DebugLogIsAllowed()) {
+                TryDebugLog($"\n{CurrentGameState.ToPrintableString()}");
+            }
         }
 
         protected override void OnAfterMoveChosen (int agentIndex, IReadOnlyList<ChessMove> moves, int chosenMove) {
             base.OnAfterMoveChosen(agentIndex, moves, chosenMove);
-            var move = moves[chosenMove];
-            TryDebugLog($"{ChessGameState.CoordToString(move.srcCoord)} to {ChessGameState.CoordToString(move.dstCoord)}");
+            if (DebugLogIsAllowed()) {
+                var move = moves[chosenMove];
+                TryDebugLog(move.CoordinatesToString());
+            }
         }
 
     }

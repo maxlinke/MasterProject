@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using static MasterProject.Chess.ChessGameStateUtils;
 using static MasterProject.Chess.Tests.ChessTestUtils;
 
 namespace MasterProject.Chess.Tests {
@@ -50,7 +51,7 @@ namespace MasterProject.Chess.Tests {
             gs.Initialize();
             Console.WriteLine($"{gs.ToPrintableString()}\n");
             foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
-                Console.WriteLine($"Can move {gs.board[move.srcCoord]} from {ChessGameState.CoordToString(move.srcCoord)} to {ChessGameState.CoordToString(move.dstCoord)}");
+                Console.WriteLine($"Can move {gs.board[move.srcCoord]} from {CoordToString(move.srcCoord)} to {CoordToString(move.dstCoord)}");
             }
             TestFullySymmetric(0, 0, ChessPiece.WhiteRook);
             TestFullySymmetric(1, 0, ChessPiece.WhiteKnight);
@@ -60,7 +61,7 @@ namespace MasterProject.Chess.Tests {
             for (int x = 0; x < 8; x++) {
                 TestVerticallySymmetric(x, 1, ChessPiece.WhitePawn);
             }
-            for (int i = ChessGameState.XYToCoord(0, 2); i < ChessGameState.XYToCoord(0, 6); i++) {
+            for (int i = XYToCoord(0, 2); i < XYToCoord(0, 6); i++) {
                 Assert.AreEqual(ChessPiece.None, gs.GetPieceAtCoordinate(i));
             }
             Assert.AreEqual(16, gs.CountTotalPiecesOfColor(ChessPieceUtils.ID_WHITE));
@@ -115,8 +116,8 @@ namespace MasterProject.Chess.Tests {
             var coordOccurrences = new int[64];
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
-                    var coord = ChessGameState.XYToCoord(x, y);
-                    ChessGameState.CoordToXY(coord, out var newX, out var newY);
+                    var coord = XYToCoord(x, y);
+                    CoordToXY(coord, out var newX, out var newY);
                     Assert.AreEqual(x, newX);
                     Assert.AreEqual(y, newY);
                     coordOccurrences[coord]++;
@@ -167,7 +168,7 @@ namespace MasterProject.Chess.Tests {
                         for (int j = 0; j < position.independentlyReachableCoordinates.Count; j++) {
                             var coord = position.independentlyReachableCoordinates[j];
                             if (coord < 0 || coord >= basicBoard.Length) {
-                                Assert.Fail($"{ChessGameState.CoordToString(i)} -> independent coord {j} -> {coord}");
+                                Assert.Fail($"{CoordToString(i)} -> independent coord {j} -> {coord}");
                             }
                         }
                     }
@@ -177,7 +178,7 @@ namespace MasterProject.Chess.Tests {
                             for (int k = 0; k < coords.Count; k++) {
                                 var coord = coords[k];
                                 if (coord < 0 || coord >= basicBoard.Length) {
-                                    Assert.Fail($"{ChessGameState.CoordToString(i)} -> sequence {j} coord {k} -> {coord}");
+                                    Assert.Fail($"{CoordToString(i)} -> sequence {j} coord {k} -> {coord}");
                                 }
                             }
                         }

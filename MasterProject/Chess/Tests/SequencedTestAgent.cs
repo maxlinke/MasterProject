@@ -24,8 +24,8 @@
             var nextMoveAsString = this.moves[nextMoveIndex];
             nextMoveIndex++;
             var split = nextMoveAsString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var srcCoord = ChessGameState.CoordFromString(split[0]);
-            var dstCoord = ChessGameState.CoordFromString(split[1]);
+            var srcCoord = ChessGameStateUtils.CoordFromString(split[0]);
+            var dstCoord = ChessGameStateUtils.CoordFromString(split[1]);
             for (int i = 0; i < moves.Count; i++) {
                 if (moves[i].srcCoord == srcCoord && moves[i].dstCoord == dstCoord) {
                     return i;

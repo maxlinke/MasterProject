@@ -26,8 +26,8 @@ namespace MasterProject.Chess.Agents {
                 if (split.Length != 2) {
                     continue;
                 }
-                var srcCoord = ChessGameState.CoordFromString(split[0]);
-                var dstCoord = ChessGameState.CoordFromString(split[1]);
+                var srcCoord = ChessGameStateUtils.CoordFromString(split[0]);
+                var dstCoord = ChessGameStateUtils.CoordFromString(split[1]);
                 if (srcCoord < 0 || dstCoord < 0) {
                     continue;
                 }

@@ -1,4 +1,6 @@
-﻿namespace MasterProject.Chess.Tests {
+﻿using static MasterProject.Chess.ChessGameStateUtils;
+
+namespace MasterProject.Chess.Tests {
 
     public static class ChessTestUtils {
 
@@ -20,7 +22,7 @@
             var board = new ChessPiece[ChessGameState.BOARD_SIZE * ChessGameState.BOARD_SIZE];
             for (int i = 0; i < lines.Length; i++) {
                 for (int j = 0; j < lines[i].Length; j += 2) {
-                    var coord = ChessGameState.XYToCoord(j / 2, ChessGameState.BOARD_SIZE - 1 - i);
+                    var coord = XYToCoord(j / 2, ChessGameState.BOARD_SIZE - 1 - i);
                     board[coord] = ChessPieceUtils.FromShortString(lines[i][j].ToString());
                 }
             }
@@ -46,8 +48,8 @@
 
         public static ChessMove GetMoveFromString (IEnumerable<ChessMove> moves, string s) {
             var moveSplit = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var srcCoord = ChessGameState.CoordFromString(moveSplit[0]);
-            var dstCoord = ChessGameState.CoordFromString(moveSplit[1]);
+            var srcCoord = CoordFromString(moveSplit[0]);
+            var dstCoord = CoordFromString(moveSplit[1]);
             foreach (var move in moves) {
                 if (move.srcCoord == srcCoord && move.dstCoord == dstCoord) {
                     return move;
@@ -65,7 +67,7 @@
             foreach (var kingMove in gs.GetPossibleMovesForCurrentPlayer().Where(move => gs.board[move.srcCoord] == kingPiece)) {
                 kingMoveCount++;
                 if (kingMove.srcCoord != kingCoord) {
-                    Console.WriteLine($"Got different king coords! \"{ChessGameState.CoordToString(kingCoord)}\" and \"{ChessGameState.CoordToString(kingMove.srcCoord)}\"!");
+                    Console.WriteLine($"Got different king coords! \"{CoordToString(kingCoord)}\" and \"{CoordToString(kingMove.srcCoord)}\"!");
                 }
                 kingMap = (kingMap | (1L << kingMove.dstCoord));
                 sb.AppendLine($"{kingPiece} can move {kingMove.CoordinatesToString()}");
