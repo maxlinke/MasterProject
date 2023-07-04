@@ -428,6 +428,7 @@ namespace MasterProject.Chess {
                                         return false;
                                     }
                                 }
+                                return true;
                             }
                             return false;
                         }
