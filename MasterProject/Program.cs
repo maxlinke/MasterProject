@@ -22,7 +22,26 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
-        TestChess();
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+
+        //TestChess();
+        DoChessTournament();
+
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
 
         //DoTTTTournament();
         //DoTTTBootCamp();
@@ -124,6 +143,23 @@ public class Program {
             Thread.Sleep(100);
             Console.ReadLine();
         }
+    }
+
+    static void DoChessTournament () {
+        DoTournament<ChessGame>(
+            continueId: "",
+            numberOfPlayersPerMatchup: ChessGameState.PLAYER_COUNT,
+            numberOfGamesToPlay: 100,
+            filter: MatchupFilter.AllowAllMatchups,
+            agents: new ChessAgent[]{
+                new MasterProject.Chess.Agents.RandomAgent(),
+                new MasterProject.Chess.Agents.SuicideKing(),
+                new MasterProject.Chess.Agents.SameColor(),
+                new MasterProject.Chess.Agents.OppositeColor(),
+            },
+            saveResult: true
+        );
+        ;
     }
 
     static void DoG44PTournament () {
