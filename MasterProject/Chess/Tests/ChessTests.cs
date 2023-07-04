@@ -186,6 +186,86 @@ namespace MasterProject.Chess.Tests {
             }
         }
 
+        [Test]
+        public void TestFoolsMate () {
+            var wMoves = new List<string>();
+            var bMoves = new List<string>();
+            wMoves.Add("g2 g4");
+            bMoves.Add("e7 e5");
+            wMoves.Add("f2 f3");
+            bMoves.Add("d8 h4");
+            var g = new ChessGame();
+            g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+            g.RunSynced(new ChessAgent[]{
+                new SequencedTestAgent(wMoves),
+                new SequencedTestAgent(bMoves)
+            });
+            var gs = g.GetFinalGameState();
+            Assert.AreEqual(true, gs.GameOver);
+            Assert.AreEqual(true, gs.GetPlayerHasLost(0));
+            Assert.AreEqual(true, gs.GetPlayerHasWon(1));
+        }
+
+        [Test]
+        public void TestEvenMoreFoolishMate () {
+            var wMoves = new List<string>();
+            var bMoves = new List<string>();
+            wMoves.Add("a2 a3");
+            bMoves.Add("g7 g5");
+            wMoves.Add("e2 e4");
+            bMoves.Add("f7 f6");
+            wMoves.Add("d1 h5");
+            var g = new ChessGame();
+            g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+            g.RunSynced(new ChessAgent[]{
+                new SequencedTestAgent(wMoves),
+                new SequencedTestAgent(bMoves)
+            });
+            var gs = g.GetFinalGameState();
+            Assert.AreEqual(true, gs.GameOver);
+            Assert.AreEqual(true, gs.GetPlayerHasWon(0));
+            Assert.AreEqual(true, gs.GetPlayerHasLost(1));
+        }
+
+        [Test]
+        public void TestScholarsMate () {
+            var wMoves = new List<string>();
+            var bMoves = new List<string>();
+            wMoves.Add("e2 e4");
+            bMoves.Add("e7 e5");
+            wMoves.Add("d1 h5");
+            bMoves.Add("b8 c6");
+            wMoves.Add("f1 c4");
+            bMoves.Add("g8 f6");
+            wMoves.Add("h5 f7");
+            var g = new ChessGame();
+            g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+            g.RunSynced(new ChessAgent[]{
+                new SequencedTestAgent(wMoves),
+                new SequencedTestAgent(bMoves)
+            });
+            var gs = g.GetFinalGameState();
+            Assert.AreEqual(true, gs.GameOver);
+            Assert.AreEqual(true, gs.GetPlayerHasWon(0));
+            Assert.AreEqual(true, gs.GetPlayerHasLost(1));
+        }
+
+        [Test]
+        public void TestStalemate () {
+            var gs = SetupGameState(@"k - - - - - - -
+                                      - - - - - - - -
+                                      - - - - - - - -
+                                      - - - - - - - -
+                                      - - - - - - - -
+                                      - - - - - - - -
+                                      - - - - - - - -
+                                      - - Q - - - - K", 0);
+            gs = gs.GetResultOfMove(GetMoveFromString(gs.GetPossibleMovesForCurrentPlayer(), "c1 c7"));
+            Assert.AreEqual(true, gs.GameOver);
+            Assert.AreEqual(true, gs.PlayerStates[0].HasDrawn);
+            Assert.AreEqual(true, gs.PlayerStates[1].HasDrawn);
+        }
+
     }
 
 }

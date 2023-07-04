@@ -22,6 +22,7 @@
 
         public override int GetMoveIndex (ChessGameState gameState, IReadOnlyList<ChessMove> moves) {
             var nextMoveAsString = this.moves[nextMoveIndex];
+            nextMoveIndex++;
             var split = nextMoveAsString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var srcCoord = ChessGameState.CoordFromString(split[0]);
             var dstCoord = ChessGameState.CoordFromString(split[1]);
