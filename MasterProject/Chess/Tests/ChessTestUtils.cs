@@ -46,6 +46,10 @@ namespace MasterProject.Chess.Tests {
             return gs;
         }
 
+        public static ChessMove GetMoveFromString (ChessGameState gs, string s) {
+            return GetMoveFromString(gs.GetPossibleMovesForCurrentPlayer(), s);
+        }
+
         public static ChessMove GetMoveFromString (IEnumerable<ChessMove> moves, string s) {
             var moveSplit = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var srcCoord = CoordFromString(moveSplit[0]);
