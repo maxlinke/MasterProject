@@ -61,6 +61,13 @@ namespace MasterProject.Chess {
             return XYToCoord(x, y);
         }
 
+        // https://en.wikipedia.org/wiki/Chebyshev_distance
+        public static int ChebyshevDistanceBetweenCoords (int coordA, int coordB) {
+            CoordToXY(coordA, out var xA, out var yA);
+            CoordToXY(coordB, out var xB, out var yB);
+            return Math.Max(Math.Abs(xA - xB), Math.Abs(yA - yB));
+        }
+
     }
 
 }

@@ -6,25 +6,28 @@ using System.Threading.Tasks;
 
 namespace MasterProject.Chess.Agents {
 
-    public class SuicideKing : ChessAgent {
+    public class Huddle : ChessAgent {
 
         public override bool IsStateless => true;
 
         public override bool IsTournamentEligible => true;
 
         public override Agent Clone () {
-            return new SuicideKing();
+            return new Huddle();
         }
 
         public override int GetMoveIndex (ChessGameState gameState, IReadOnlyList<ChessMove> moves) {
-            float[] kingDistances = new float[moves.Count];
+            var totalDists = new float[moves.Count];
             for (int i = 0; i < moves.Count; i++) {
                 var result = gameState.GetResultOfMove(moves[i]);
-                kingDistances[i] = ChessGameStateUtils.ChebyshevDistanceBetweenCoords(result.playerStates[0].KingCoord, result.playerStates[1].KingCoord);
+                totalDists[i] = 0;
+                var kingCoord = result.playerStates[gameState.currentPlayerIndex].KingCoord;
+                foreach (var coord in result.CoordsWithPiecesOfPlayer(gameState.currentPlayerIndex)) {
+                    totalDists[i] += ChessGameStateUtils.ChebyshevDistanceBetweenCoords(kingCoord, coord);
+                }
             }
-            return GetIndexOfMinimum(kingDistances, true);
+            return GetIndexOfMinimum(totalDists, true);
         }
-
     }
 
 }

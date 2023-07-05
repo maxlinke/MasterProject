@@ -87,41 +87,6 @@ public class Program {
     }
 
     static void TestChess () {
-        //var gs = new ChessGameState();
-        //gs.Initialize();
-        //Console.WriteLine(gs.ToPrintableString());
-        //gs.GetPossibleMovesForCurrentPlayer();
-
-        //var sw = new System.Diagnostics.Stopwatch();
-        //sw.Start();
-        //for (int i = 0; i < 100; i++) {
-        //    var g = new ChessGame();
-        //    g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
-        //    g.RunSynced(new ChessAgent[]{
-        //        new MasterProject.Chess.Agents.RandomAgent(),
-        //        new MasterProject.Chess.Agents.RandomAgent()
-        //    });
-        //}
-        //sw.Stop();
-        //var withLogs = sw.ElapsedMilliseconds;
-        //sw.Restart();
-        //for (int i = 0; i < 100; i++) {
-        //    var g = new ChessGame();
-        //    g.AllowedConsoleOutputs = Game.ConsoleOutputs.Nothing;
-        //    g.RunSynced(new ChessAgent[]{
-        //        new MasterProject.Chess.Agents.RandomAgent(),
-        //        new MasterProject.Chess.Agents.RandomAgent()
-        //    });
-        //}
-        //sw.Stop();
-        //var withoutLogs = sw.ElapsedMilliseconds;
-        //Console.WriteLine();
-        //Console.WriteLine();
-        //Console.WriteLine($"with logs: {withLogs} ms");           // about 32 seconds
-        //Console.WriteLine($"without logs: {withoutLogs} ms");     // about 4 seconds
-        //Console.WriteLine();
-        //Console.WriteLine();
-
         //var g = new ChessGame();
         //g.AllowedConsoleOutputs = ~Game.ConsoleOutputs.Debug;
         //g.RunSynced(new ChessAgent[]{
@@ -134,9 +99,10 @@ public class Program {
         g.RunSynced(new Agent<ChessGame, ChessGameState, ChessMove>[]{
             //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SuicideKing()),
             //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SameColor()),
-            //new MasterProject.Chess.Agents.RandomAgent()
-            new MasterProject.Chess.Agents.SameColor(),
-            new MasterProject.Chess.Agents.OppositeColor(),
+            new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.Huddle()),
+            new MasterProject.Chess.Agents.RandomAgent()
+            //new MasterProject.Chess.Agents.SameColor(),
+            //new MasterProject.Chess.Agents.OppositeColor(),
         });
         while (true) {
             Console.WriteLine("Finished");
@@ -147,15 +113,16 @@ public class Program {
 
     static void DoChessTournament () {
         DoTournament<ChessGame>(
-            continueId: "",
+            continueId: "Tournament_ChessGame_638241658339634770",
             numberOfPlayersPerMatchup: ChessGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 100,
+            numberOfGamesToPlay: 200,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new ChessAgent[]{
                 new MasterProject.Chess.Agents.RandomAgent(),
                 new MasterProject.Chess.Agents.SuicideKing(),
                 new MasterProject.Chess.Agents.SameColor(),
                 new MasterProject.Chess.Agents.OppositeColor(),
+                new MasterProject.Chess.Agents.Huddle()
             },
             saveResult: true
         );
