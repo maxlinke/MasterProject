@@ -99,10 +99,12 @@ public class Program {
         g.RunSynced(new Agent<ChessGame, ChessGameState, ChessMove>[]{
             //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SuicideKing()),
             //new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.SameColor()),
-            new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.Huddle()),
+            new MasterProject.HumanObserverWrapperAgent<ChessGame, ChessGameState, ChessMove>(new MasterProject.Chess.Agents.CCCP()),
             new MasterProject.Chess.Agents.RandomAgent()
             //new MasterProject.Chess.Agents.SameColor(),
             //new MasterProject.Chess.Agents.OppositeColor(),
+            //new MasterProject.Chess.Agents.Huddle(),
+            //new MasterProject.Chess.Agents.Swarm(),
         });
         while (true) {
             Console.WriteLine("Finished");
@@ -113,16 +115,18 @@ public class Program {
 
     static void DoChessTournament () {
         DoTournament<ChessGame>(
-            continueId: "Tournament_ChessGame_638241658339634770",
+            continueId: "Tournament_ChessGame_638242818609807932",
             numberOfPlayersPerMatchup: ChessGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 200,
+            numberOfGamesToPlay: 500,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new ChessAgent[]{
                 new MasterProject.Chess.Agents.RandomAgent(),
                 new MasterProject.Chess.Agents.SuicideKing(),
                 new MasterProject.Chess.Agents.SameColor(),
                 new MasterProject.Chess.Agents.OppositeColor(),
-                new MasterProject.Chess.Agents.Huddle()
+                new MasterProject.Chess.Agents.Huddle(),
+                new MasterProject.Chess.Agents.Swarm(),
+                new MasterProject.Chess.Agents.CCCP()
             },
             saveResult: true
         );
