@@ -178,6 +178,7 @@ namespace MasterProject.Chess.Tests {
 
         [Test]
         public void TestFoolsMate () {
+            Logger.consoleOnly = true;
             var wMoves = new List<string>();
             var bMoves = new List<string>();
             wMoves.Add("g2 g4");
@@ -198,6 +199,7 @@ namespace MasterProject.Chess.Tests {
 
         [Test]
         public void TestEvenMoreFoolishMate () {
+            Logger.consoleOnly = true;
             var wMoves = new List<string>();
             var bMoves = new List<string>();
             wMoves.Add("a2 a3");
@@ -219,6 +221,7 @@ namespace MasterProject.Chess.Tests {
 
         [Test]
         public void TestScholarsMate () {
+            Logger.consoleOnly = true;
             var wMoves = new List<string>();
             var bMoves = new List<string>();
             wMoves.Add("e2 e4");

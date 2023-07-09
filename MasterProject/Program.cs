@@ -22,33 +22,14 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-
         //TestChess();
-        DoChessTournament();
-
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
-        //Console.WriteLine("I still don't have tests for 50 move (seems to be working tho) and threefold repetition!");
+        //DoChessTournament();
 
         //DoTTTTournament();
         //DoTTTBootCamp();
 
         //DoG44PTournament();
         //DoG44PBootCamp();
-
 
         // testing if i could simplify updating/copying player states
         // if they are simply value type
