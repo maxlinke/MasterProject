@@ -22,6 +22,8 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
+        TestGodfield();
+
         //TestChess();
         //DoChessTournament();
 
@@ -37,14 +39,14 @@ public class Program {
         // but that's about it
         // for the ones without payload, i'll need a default payload
 
-        var s = new GenericStruct<OtherStruct>[2];
-        //s[0].myT.myString = "Hello, world!";                            // illegal
-        //s[0].myT = new OtherStruct() { myString = "Hello, world!" };    // cumbersome
-        s[0].myT = s[0].myT.WithString("Hello, world!");                  // slightly less cumbersome
-        //s[0].myT.SetString("Hello, world!");                            // doesn't work
-        Console.WriteLine(s[0].myT.myString);
-        var s2 = (GenericStruct<OtherStruct>[])(s.Clone());
-        Console.WriteLine(s2[0].myT.myString);
+        //var s = new GenericStruct<OtherStruct>[2];
+        ////s[0].myT.myString = "Hello, world!";                            // illegal
+        ////s[0].myT = new OtherStruct() { myString = "Hello, world!" };    // cumbersome
+        //s[0].myT = s[0].myT.WithString("Hello, world!");                  // slightly less cumbersome
+        ////s[0].myT.SetString("Hello, world!");                            // doesn't work
+        //Console.WriteLine(s[0].myT.myString);
+        //var s2 = (GenericStruct<OtherStruct>[])(s.Clone());
+        //Console.WriteLine(s2[0].myT.myString);
 
         DataSaver.Flush();
         Logger.Flush();
@@ -65,6 +67,10 @@ public class Program {
         public void SetString (string s) {
             myString = s;
         }
+    }
+
+    static void TestGodfield () {
+        var c = MasterProject.GodfieldLight.Card.GetRandomCard();
     }
 
     static void TestChess () {

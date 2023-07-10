@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using MasterProject.GodfieldLight.Cards;
 
 namespace MasterProject.GodfieldLight {
 
@@ -11,7 +9,7 @@ namespace MasterProject.GodfieldLight {
 
         public int DEFAULT_CARD_COUNT = 9;
         public int INIT_HEALTH = 40;
-        public int MAX_HEALTH = 99;
+        public int MAX_HEALTH = 99;         
 
         // this should be more "inspired" by godfield than actual godfield
         // what i want is a card game, not a board game
@@ -47,6 +45,11 @@ namespace MasterProject.GodfieldLight {
         public bool isRealState { get; set; }
         public int turnNumber { get; set; }
 
+        // i need fields for the currrent attack
+        // and for chance attacks, which players we still need to hit
+
+        public int turnPlayer => turnNumber % playerStates.Length;
+
         public override IReadOnlyList<GodfieldPlayerState> PlayerStates => playerStates;
         public override int CurrentPlayerIndex => currentPlayerIndex;
 
@@ -58,47 +61,64 @@ namespace MasterProject.GodfieldLight {
 
         public override IReadOnlyList<GodfieldMove> GetPossibleMovesForCurrentPlayer () {
             ThrowErrorIfNotRealState();
+            var output = new List<GodfieldMove>();
+            var anyAttacks = false;
             // TODO
             throw new NotImplementedException();
+            if (!anyAttacks) {
+                // "pray" (no cards, targets self)
+                throw new NotImplementedException();
+            }
+            return output;
         }
 
         public override IReadOnlyList<PossibleOutcome<GodfieldGameState>> GetPossibleOutcomesForMove (GodfieldMove move) {
             ThrowErrorIfNotRealState();
             // TODO
+            // check for "pray" (specified above)
             throw new NotImplementedException();
         }
 
         public override GodfieldGameState GetVisibleGameStateForPlayer (int playerIndex) {
             ThrowErrorIfNotRealState();
-            // TODO
-            // actually important here
-            // do i want to implement fog?
-            // or "status effects" in general?
-            // could also implement dream that way
-            // although dream would require some kind of "parameter matching" to find cards that do the same thing, but differently
-            throw new NotImplementedException();
+            var output = new GodfieldGameState();
+            output.isRealState = false;
+            output.currentPlayerIndex = this.currentPlayerIndex;
+            output.turnNumber = this.turnNumber;
+            output.playerStates = new GodfieldPlayerState[this.playerStates.Length];
+            for (int i = 0; i < output.playerStates.Length; i++) {
+                // dream and fog *would* have to be implemented here
+                output.playerStates[i] = this.playerStates[i].Clone(cloneDeck : (i == playerIndex));   // we can't see other players' decks
+            }
+            return output;
         }
 
         public void Initialize (int playerCount) {
+            this.isRealState = true;
+            this.turnNumber = 0;
+            this.currentPlayerIndex = 0;
             this.playerStates = new GodfieldPlayerState[playerCount];
             for (int i = 0; i < playerCount; i++) {
                 playerStates[i].health = INIT_HEALTH;
-                playerStates[i].cards = new List<Cards.Card>();
+                playerStates[i].cards = new List<Card>();
+                playerStates[i].cardIds = new List<string>();
                 for (int j = 0; j < DEFAULT_CARD_COUNT; j++) {
-                    playerStates[i].cards.Add(CardData.GetRandomCard());
+                    var newCard = Card.GetRandomCard();
+                    playerStates[i].cards.Add(newCard);
+                    playerStates[i].cardIds.Add(newCard.id);
                 }
             }
-            this.currentPlayerIndex = 0;
-            this.turnNumber = 0;
-            this.isRealState = true;
         }
 
         public void ResolveUnresolvedCards () {
             for (int i = 0; i < playerStates.Length; i++) {
                 var cards = playerStates[i].cards;
+                var cardIds = playerStates[i].cardIds;
                 for (int j = 0; j < cards.Count; j++) {
                     if (cards[j] == Card.Unresolved) {
-                        cards[j] = CardData.GetRandomCard();
+                        var newCard = Card.GetRandomCard();
+                        cards[j] = newCard;
+                        cardIds[j] = newCard.id;
                     }
                 }
             }
