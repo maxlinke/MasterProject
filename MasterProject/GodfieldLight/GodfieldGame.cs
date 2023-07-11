@@ -33,6 +33,22 @@
             }
         }
 
+        protected override void OnGameOver () {
+            base.OnGameOver();
+            var gs = CurrentGameState;
+            for (int i = 0; i < gs.PlayerStates.Count; i++) {
+                if (gs.PlayerStates[i].HasWon) {
+                    TryLog(ConsoleOutputs.GameOver, $"Player {i} won!");
+                }
+                if (gs.PlayerStates[i].HasLost) {
+                    TryLog(ConsoleOutputs.GameOver, $"Player {i} lost!");
+                }
+                if (gs.PlayerStates[i].HasDrawn) {
+                    TryLog(ConsoleOutputs.GameOver, $"Player {i} drew!");
+                }
+            }
+        }
+
     }
 
 }

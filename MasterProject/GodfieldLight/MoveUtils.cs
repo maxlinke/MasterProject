@@ -9,28 +9,22 @@ namespace MasterProject.GodfieldLight {
     public static class MoveUtils {
 
         public static IEnumerable<GodfieldMove> GetOwnTurnMovesForCurrentPlayer (GodfieldGameState gs) {
-            var anyAttacks = false;
             var ps = gs.playerStates[gs.CurrentPlayerIndex];
             var bonusWeaponIndices = new List<int>();
             var otherPlayerIndices = new List<int>();
             for (int i = 0; i < gs.playerStates.Length; i++) {
-                if (i != gs.CurrentPlayerIndex) {
+                if (i != gs.CurrentPlayerIndex && gs.PlayerStates[i].health > 0) {
                     otherPlayerIndices.Add(i);
                 }
             }
             for (int i = 0; i < ps.cards.Count; i++) {
                 var card = ps.cards[i];
-                if (card.attackValue > 0) {
-                    anyAttacks = true;
-                }
+                yield return GodfieldMove.DiscardMove(i);
                 if (card.isBonusDamage) {
                     bonusWeaponIndices.Add(i);
                 }
             }
             var bonusWeaponPermutations = BinaryPermutationUtils.GetBinaryPermutations(bonusWeaponIndices);
-            if (!anyAttacks) {
-                yield return GodfieldMove.EmptyMove();  // "pray"
-            }
             for (int i = 0; i < ps.cards.Count; i++) {
                 var card = ps.cards[i];
                 if (card.attackValue > 0 && !card.isBonusDamage) {  // purely bonus based attacks are processed further below

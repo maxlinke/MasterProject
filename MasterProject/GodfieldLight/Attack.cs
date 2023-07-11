@@ -8,7 +8,7 @@
         public bool lethalIfUnblocked;
         public IReadOnlyList<int> remainingTargetPlayerIndices;
 
-        public Attack? GetResultWithOneFewerTargetPlayers () {
+        public Attack? GetResultWithFirstTargetRemoved () {
             if (remainingTargetPlayerIndices.Count <= 1) {
                 return null;
             }
@@ -24,6 +24,18 @@
                 remainingTargetPlayerIndices = newIndices,
             };
         }
+
+        public Attack Redirected (int redirectingPlayerIndex, int targetPlayerIndex) {
+            return new Attack() {
+                instigatorPlayerIndex = redirectingPlayerIndex,
+                damage = this.damage,
+                hitProbability = 1,
+                lethalIfUnblocked = this.lethalIfUnblocked,
+                remainingTargetPlayerIndices = new int[] { targetPlayerIndex }
+            };
+        }
+
+
 
     }
 

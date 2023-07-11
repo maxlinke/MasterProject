@@ -18,31 +18,62 @@ namespace MasterProject.GodfieldLight {
 
         public bool isRealState { get; set; }
         public int turnNumber { get; set; }
+        public bool currentPlayerWasHit { get; set; }
 
-        public Stack<Attack> attacks { get; set; }
-        public Attack? currentAttack {
-            get {
-                if (attacks.Count > 0) {
-                    return attacks.Peek();
-                }
-                return null;
-            }
-        }
+        public List<Attack> attacks { get; set; }
+        public Attack? currentAttack => (attacks.Count > 0 ? attacks[0] : null);
 
         public int turnPlayer => turnNumber % playerStates.Length;
+        public int livingPlayerCount => GodfieldPlayerState.GetLivingPlayerCount(this.playerStates);
 
         public override IReadOnlyList<GodfieldPlayerState> PlayerStates => playerStates;
 
-        public override int CurrentPlayerIndex {
-            get {
-                if (currentAttack != null) {
-                    return currentAttack.remainingTargetPlayerIndices[0];
-                }
-                return turnPlayer;
-            }
-        }
+        public override int CurrentPlayerIndex => (currentAttack != null ? currentAttack.remainingTargetPlayerIndices[0] : turnPlayer);
 
         private static readonly Random rng = new Random();
+
+        public GodfieldGameState Clone () {
+            ThrowErrorIfNotRealState();
+            var output = new GodfieldGameState() {
+                game = this.game,
+                playerStates = GodfieldPlayerState.CreateProperArrayClone(this.playerStates),
+                isRealState = true,
+                turnNumber = this.turnNumber,
+                attacks = new List<Attack>(this.attacks),
+            };
+            return output;
+        }
+
+        public GodfieldGameState CloneWithFirstAttackTargetRemovedAndUsedCardsUnresolved (int[] usedCardsIndices) {
+            var output = this.Clone();
+            var attackResult = this.currentAttack.GetResultWithFirstTargetRemoved();
+            if (attackResult == null) {
+                output.attacks.RemoveAt(0);
+            } else {
+                output.attacks[0] = attackResult;
+            }
+            var outputPlayerState = output.playerStates[this.CurrentPlayerIndex];
+            for (int i = 0; i < usedCardsIndices.Length; i++) {
+                outputPlayerState.cards[i] = Card.Unresolved;
+                outputPlayerState.cardIds[i] = Card.Unresolved.id;
+            }
+            return output;
+        }
+
+        public override GodfieldGameState GetVisibleGameStateForPlayer (int playerIndex) {
+            ThrowErrorIfNotRealState();
+            var output = new GodfieldGameState();
+            output.isRealState = false;
+            output.turnNumber = this.turnNumber;
+            output.currentPlayerWasHit = this.currentPlayerWasHit;
+            output.attacks = this.attacks;  // is this safe? probably...
+            output.playerStates = new GodfieldPlayerState[this.playerStates.Length];
+            for (int i = 0; i < output.playerStates.Length; i++) {
+                // dream and fog *would* have to be implemented here
+                output.playerStates[i] = this.playerStates[i].Clone(cloneDeck: (i == playerIndex));   // we can't see other players' decks
+            }
+            return output;
+        }
 
         void ThrowErrorIfNotRealState () {
             if (!isRealState) {
@@ -53,7 +84,17 @@ namespace MasterProject.GodfieldLight {
         public override IReadOnlyList<GodfieldMove> GetPossibleMovesForCurrentPlayer () {
             ThrowErrorIfNotRealState();
             if (currentAttack != null) {
-                return MoveUtils.GetDefensiveMovesForCurrentPlayer(this).ToArray();
+                if (currentPlayerWasHit) {
+                    if (currentAttack.instigatorPlayerIndex == CurrentPlayerIndex) {
+                        return new GodfieldMove[] { GodfieldMove.EmptyMove() };     // if an attack was bounced back to one self, it can't be blocked
+                    }
+                    return MoveUtils.GetDefensiveMovesForCurrentPlayer(this).ToArray();
+                } else {
+                    // if a percentage attack missed, this will happen
+                    // game will ask for the possible results of null
+                    // so that needs to be accounted for
+                    return new GodfieldMove[0];
+                }
             } else if (CurrentPlayerIndex == turnPlayer) {
                 return MoveUtils.GetOwnTurnMovesForCurrentPlayer(this).ToArray();
             } else {
@@ -62,25 +103,25 @@ namespace MasterProject.GodfieldLight {
         }
 
         public override IReadOnlyList<PossibleOutcome<GodfieldGameState>> GetPossibleOutcomesForMove (GodfieldMove move) {
-            ThrowErrorIfNotRealState();
-            // TODO
-            // process 
-            // check for "pray" (specified above)
-            throw new NotImplementedException();
-        }
-
-        public override GodfieldGameState GetVisibleGameStateForPlayer (int playerIndex) {
-            ThrowErrorIfNotRealState();
-            var output = new GodfieldGameState();
-            output.isRealState = false;
-            output.turnNumber = this.turnNumber;
-            output.attacks = this.attacks;  // is this safe? probably...
-            output.playerStates = new GodfieldPlayerState[this.playerStates.Length];
-            for (int i = 0; i < output.playerStates.Length; i++) {
-                // dream and fog *would* have to be implemented here
-                output.playerStates[i] = this.playerStates[i].Clone(cloneDeck : (i == playerIndex));   // we can't see other players' decks
+            ThrowErrorIfNotRealState(); // do i want this?
+            if (currentAttack != null) {
+                if (currentPlayerWasHit) {
+                    return GameStateUtils.GetOutcomesOfTakenHit(this, move);
+                } else {
+                    if (move != null) throw new System.NotImplementedException("????");
+                    return GameStateUtils.GetOutcomeOfMissedAttack(this);
+                }
             }
-            return output;
+            if (move.healValue > 0) {
+                return GameStateUtils.GetHealMoveResult(this, move);
+            }
+            if (move.attack != null) {
+                return GameStateUtils.GetAttackMoveOutcomes(this, move);
+            }
+            // in godfield you can "pray" to get MORE cards if you have no attacks available, but this increases the number of cards you have
+            // because this runs the risk of adding more armor cards here and therefore more armor combinations, i have decided against adding this
+            // and instead there is only "discard" which simply replaces a card with the unresolved one
+            return GameStateUtils.GetDiscardResult(this, move);
         }
 
         public void Initialize (GodfieldGame game) {
@@ -92,7 +133,7 @@ namespace MasterProject.GodfieldLight {
         public void Initialize (int playerCount) {
             this.isRealState = true;
             this.turnNumber = 0;
-            this.attacks = new Stack<Attack>();
+            this.attacks = new List<Attack>();
             this.playerStates = new GodfieldPlayerState[playerCount];
             for (int i = 0; i < playerStates.Length; i++) {
                 playerStates[i] = new GodfieldPlayerState();
@@ -107,6 +148,10 @@ namespace MasterProject.GodfieldLight {
             }
         }
 
+        public void UpdatePlayerHealth (int playerIndex, int newHealth) {
+            playerStates[playerIndex].health = Math.Clamp(newHealth, 0, MAX_HEALTH);
+        }
+
         public void ResolveUnresolvedCards () {
             for (int i = 0; i < playerStates.Length; i++) {
                 var ps = playerStates[i];
@@ -118,11 +163,12 @@ namespace MasterProject.GodfieldLight {
                 for (int j = 0; j < cards.Count; j++) {
                     if (cards[j] == Card.Unresolved) {
                         if (turnNumber >= APOCALYPSE_START_TURN) {
-                            while (ps.health > 0 && Devils.CheckIfDevilAppears(rng, out var devilId, out var deltaHp)) {
+                            while (ps.health > 0 && Devils.CheckIfDevilAppears(rng, out var devilId, out var dmg)) {
+                                var hpDelta = -dmg;
                                 if (game != null && game.LogIsAllowed(Game.ConsoleOutputs.Move)) {
-                                    game.TryLog(Game.ConsoleOutputs.Move, $"Player {i} pulled {devilId}");
+                                    game.TryLog(Game.ConsoleOutputs.Move, $"Player {i} pulled {devilId} ({(hpDelta > 0 ? "+" : "")}{hpDelta} hp)");
                                 }
-                                ps.health = Math.Clamp(ps.health + deltaHp, 0, MAX_HEALTH);
+                                UpdatePlayerHealth(i, ps.health + hpDelta);
                             }
                             if (ps.health <= 0) {
                                 break;
@@ -137,18 +183,7 @@ namespace MasterProject.GodfieldLight {
         }
 
         public void UpdateGameOver () {
-            var livingPlayerCount = 0;
-            var newlyDeadPlayerCount = 0;
-            for (int i = 0; i < playerStates.Length; i++) {
-                var ps = playerStates[i];
-                if (!ps.HasLost) {
-                    if (ps.health > 0) {
-                        livingPlayerCount++;
-                    }else{
-                        newlyDeadPlayerCount++;
-                    }
-                }
-            }
+            var livingPlayerCount = this.livingPlayerCount;
             for (int i = 0; i < playerStates.Length; i++) {
                 var ps = playerStates[i];
                 if (!ps.HasLost) {

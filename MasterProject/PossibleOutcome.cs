@@ -12,6 +12,15 @@ namespace MasterProject {
 
         public TGameState GameState { get; set; }
 
+        public static PossibleOutcome<TGameState>[] CertainOutcome (TGameState gs) {
+            return new PossibleOutcome<TGameState>[]{
+                new PossibleOutcome<TGameState>(){
+                    Probability = 1,
+                    GameState = gs
+                }
+            };
+        }
+
     }
 
     public static class PossibleOutcomeExtensions {

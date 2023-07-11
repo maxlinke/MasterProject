@@ -20,6 +20,17 @@
             };
         }
 
+        public static GodfieldMove DiscardMove (int cardIndex) {
+            return new GodfieldMove() {
+                usedCardIndices = new int[] { cardIndex },
+                attack = null,
+                defenseValue = 0,
+                bounceAttack = false,
+                reflectAttack = false,
+                healValue = 0,
+            };
+        }
+
         public static GodfieldMove AttackMove (GodfieldPlayerState ps, int cardIndex, int targetPlayerIndex) {
             return AttackMove(ps, cardIndex, new int[] { targetPlayerIndex });
         }

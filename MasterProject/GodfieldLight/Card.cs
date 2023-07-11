@@ -7,40 +7,15 @@ namespace MasterProject.GodfieldLight {
         static Card () {
             Unresolved = new Card("Unresolved");
             var total = 0;
-            var damageCardOccurrences = 0;
-            var totalDamage = 0f;
-            var defenseCardOccurrences = 0;
-            var totalDefense = 0;
-            var healCardOccurrences = 0;
-            var totalHeal = 0;
             var proportionalList = new List<Card>();
             foreach (var card in allCards) {
                 total += card.occurrences;
                 for (int i = 0; i < card.occurrences; i++) {
                     proportionalList.Add(card);
                 }
-                if (card.attackValue > 0) {
-                    damageCardOccurrences += card.occurrences;
-                    totalDamage += (card.attackValue * card.hitProbability * card.occurrences);
-                }
-                if (card.usableWhileDefending) {
-                    defenseCardOccurrences += card.occurrences;                 // does count reflect and bounce
-                    totalDefense += (card.defenseValue * card.occurrences);     // doesn't count reflect and bounce (because 0 defense value)
-                }
-                if (card.healValue > 0) {
-                    healCardOccurrences += card.occurrences;
-                    totalHeal += (card.healValue * card.occurrences);
-                }
             }
             occurrenceTotal = total;
             allCardsOccurringProportionallyOften = proportionalList.ToArray();
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"There are {allCards.Count} cards in total");
-            sb.AppendLine($"The proportional list contains {allCardsOccurringProportionallyOften.Count} elements");
-            sb.AppendLine($"Cards dealing damage appear {damageCardOccurrences} times with a total damage of {totalDamage}");
-            sb.AppendLine($"Cards blocking damage appear {defenseCardOccurrences} times with a total defense of {totalDefense}");
-            sb.AppendLine($"Cards healing appear {healCardOccurrences} times with a total heal of {totalHeal}");
-            Console.WriteLine(sb.ToString());
         }
 
         public static Card GetRandomCard (System.Random rng) => allCardsOccurringProportionallyOften[rng.Next(occurrenceTotal)];

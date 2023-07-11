@@ -71,18 +71,31 @@ public class Program {
 
     static void TestGodfield () {
         //var c = MasterProject.GodfieldLight.Card.GetRandomCard();
-        var foo = new string[] { "A", "B", "C", "D" };
-        var perms = MasterProject.GodfieldLight.BinaryPermutationUtils.GetBinaryPermutations(foo);
-        foreach (var perm in perms) {
-            var sb = new System.Text.StringBuilder();
-            foreach (var f in foo) {
-                if (perm.Contains(f)) {
-                    sb.Append($"{f} ");
-                } else {
-                    sb.Append($"- ");
-                }
-            }
-            Console.WriteLine(sb);
+
+        //var foo = new string[] { "A", "B", "C", "D" };
+        //var perms = MasterProject.GodfieldLight.BinaryPermutationUtils.GetBinaryPermutations(foo);
+        //foreach (var perm in perms) {
+        //    var sb = new System.Text.StringBuilder();
+        //    foreach (var f in foo) {
+        //        if (perm.Contains(f)) {
+        //            sb.Append($"{f} ");
+        //        } else {
+        //            sb.Append($"- ");
+        //        }
+        //    }
+        //    Console.WriteLine(sb);
+        //}
+
+        var stack1 = new Stack<string>();
+        stack1.Push("First");
+        stack1.Push("Middle");
+        stack1.Push("Last");
+        var stack2 = new Stack<string>(stack1);
+        for (int i = 0; i < 3; i++) {
+            Console.Write(stack1.Pop());
+            Console.Write(" <> ");
+            Console.Write(stack2.Pop());
+            Console.WriteLine();
         }
     }
 
