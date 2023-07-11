@@ -43,9 +43,7 @@ namespace MasterProject.GodfieldLight {
             Console.WriteLine(sb.ToString());
         }
 
-        public static Card GetRandomCard () => allCardsOccurringProportionallyOften[rng.Next(occurrenceTotal)];
-
-        private static readonly Random rng = new Random();
+        public static Card GetRandomCard (System.Random rng) => allCardsOccurringProportionallyOften[rng.Next(occurrenceTotal)];
 
         private static readonly int occurrenceTotal;
 
@@ -110,6 +108,8 @@ namespace MasterProject.GodfieldLight {
         public readonly bool lethalIfUnblocked;
         public readonly bool isBonusDamage;
         public readonly int healValue;
+
+        public bool canStackBonusDamage => (hitProbability == 1 && !lethalIfUnblocked);
 
         public bool usableWhileDefending => (defenseValue > 0 || bouncesAttack || reflectsAttack);
         public readonly int defenseValue;

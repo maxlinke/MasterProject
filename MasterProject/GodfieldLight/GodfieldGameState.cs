@@ -7,51 +7,42 @@ namespace MasterProject.GodfieldLight {
 
     public class GodfieldGameState : GameState<GodfieldGameState, GodfieldMove, GodfieldPlayerState> {
 
-        public int DEFAULT_CARD_COUNT = 9;
+        public int DEFAULT_CARD_COUNT = 7;  // reduced from 9 because of the POSSIBLE number of defense permutations (2 to the power of armor cards, so at 9 there would be 512, at 7 only 128 in the worst case)
         public int INIT_HEALTH = 40;
-        public int MAX_HEALTH = 99;         
+        public int MAX_HEALTH = 99;
+        public int APOCALYPSE_START_TURN = 50;
 
-        // this should be more "inspired" by godfield than actual godfield
-        // what i want is a card game, not a board game
-        // what i want is imperfect information
-        // what i want is that there are moves that give multiple possible results
-        // i don't need guardians
-        // i don't need miracles
-        // that means i don't need mana
-        // or money
-        // basically just hp, attack and defense cards
-        // i do want the instakill attacks that must be defended against
-        // so there is some strategy
-        // and i want random weapons
-        // and the bounce sword
-        // and the reflect sword
-        // so there is SOME tactics
-
-        // adding back money/mana and the exchange card would be cool
-        // but it clashes with the framework a bit
-        // i will have to write that into the thesis
-        // it is not impossible to fit it into the framework
-        // but with 40 hp, 10 mp and 20$ there are (TODO CALCULATE) possible ways to use exchange
-        // here's a way to make godfield work within this framework
-        // move outcomes are only for weapon randomness
-        // cards and such are simply "resolved" upon deciding on a state
-        // i need a callback for that
-        // well, i think i have
-        // in game
+        [System.Text.Json.Serialization.JsonIgnore] GodfieldGame game;
 
         public GodfieldPlayerState[] playerStates { get; set; }
-        public int currentPlayerIndex { get; set; }
 
         public bool isRealState { get; set; }
         public int turnNumber { get; set; }
 
-        // i need fields for the currrent attack
-        // and for chance attacks, which players we still need to hit
+        public Stack<Attack> attacks { get; set; }
+        public Attack? currentAttack {
+            get {
+                if (attacks.Count > 0) {
+                    return attacks.Peek();
+                }
+                return null;
+            }
+        }
 
         public int turnPlayer => turnNumber % playerStates.Length;
 
         public override IReadOnlyList<GodfieldPlayerState> PlayerStates => playerStates;
-        public override int CurrentPlayerIndex => currentPlayerIndex;
+
+        public override int CurrentPlayerIndex {
+            get {
+                if (currentAttack != null) {
+                    return currentAttack.remainingTargetPlayerIndices[0];
+                }
+                return turnPlayer;
+            }
+        }
+
+        private static readonly Random rng = new Random();
 
         void ThrowErrorIfNotRealState () {
             if (!isRealState) {
@@ -61,20 +52,19 @@ namespace MasterProject.GodfieldLight {
 
         public override IReadOnlyList<GodfieldMove> GetPossibleMovesForCurrentPlayer () {
             ThrowErrorIfNotRealState();
-            var output = new List<GodfieldMove>();
-            var anyAttacks = false;
-            // TODO
-            throw new NotImplementedException();
-            if (!anyAttacks) {
-                // "pray" (no cards, targets self)
-                throw new NotImplementedException();
+            if (currentAttack != null) {
+                return MoveUtils.GetDefensiveMovesForCurrentPlayer(this).ToArray();
+            } else if (CurrentPlayerIndex == turnPlayer) {
+                return MoveUtils.GetOwnTurnMovesForCurrentPlayer(this).ToArray();
+            } else {
+                throw new System.NotImplementedException("???");
             }
-            return output;
         }
 
         public override IReadOnlyList<PossibleOutcome<GodfieldGameState>> GetPossibleOutcomesForMove (GodfieldMove move) {
             ThrowErrorIfNotRealState();
             // TODO
+            // process 
             // check for "pray" (specified above)
             throw new NotImplementedException();
         }
@@ -83,8 +73,8 @@ namespace MasterProject.GodfieldLight {
             ThrowErrorIfNotRealState();
             var output = new GodfieldGameState();
             output.isRealState = false;
-            output.currentPlayerIndex = this.currentPlayerIndex;
             output.turnNumber = this.turnNumber;
+            output.attacks = this.attacks;  // is this safe? probably...
             output.playerStates = new GodfieldPlayerState[this.playerStates.Length];
             for (int i = 0; i < output.playerStates.Length; i++) {
                 // dream and fog *would* have to be implemented here
@@ -93,17 +83,24 @@ namespace MasterProject.GodfieldLight {
             return output;
         }
 
+        public void Initialize (GodfieldGame game) {
+            this.game = game;
+            Initialize(game.PlayerCount);
+        }
+
+        // this one's here for testing
         public void Initialize (int playerCount) {
             this.isRealState = true;
             this.turnNumber = 0;
-            this.currentPlayerIndex = 0;
+            this.attacks = new Stack<Attack>();
             this.playerStates = new GodfieldPlayerState[playerCount];
-            for (int i = 0; i < playerCount; i++) {
+            for (int i = 0; i < playerStates.Length; i++) {
+                playerStates[i] = new GodfieldPlayerState();
                 playerStates[i].health = INIT_HEALTH;
                 playerStates[i].cards = new List<Card>();
                 playerStates[i].cardIds = new List<string>();
                 for (int j = 0; j < DEFAULT_CARD_COUNT; j++) {
-                    var newCard = Card.GetRandomCard();
+                    var newCard = Card.GetRandomCard(rng);
                     playerStates[i].cards.Add(newCard);
                     playerStates[i].cardIds.Add(newCard.id);
                 }
@@ -112,13 +109,54 @@ namespace MasterProject.GodfieldLight {
 
         public void ResolveUnresolvedCards () {
             for (int i = 0; i < playerStates.Length; i++) {
-                var cards = playerStates[i].cards;
-                var cardIds = playerStates[i].cardIds;
+                var ps = playerStates[i];
+                if (ps.health <= 0) {
+                    continue;
+                }
+                var cards = ps.cards;
+                var cardIds = ps.cardIds;
                 for (int j = 0; j < cards.Count; j++) {
                     if (cards[j] == Card.Unresolved) {
-                        var newCard = Card.GetRandomCard();
+                        if (turnNumber >= APOCALYPSE_START_TURN) {
+                            while (ps.health > 0 && Devils.CheckIfDevilAppears(rng, out var devilId, out var deltaHp)) {
+                                if (game != null && game.LogIsAllowed(Game.ConsoleOutputs.Move)) {
+                                    game.TryLog(Game.ConsoleOutputs.Move, $"Player {i} pulled {devilId}");
+                                }
+                                ps.health = Math.Clamp(ps.health + deltaHp, 0, MAX_HEALTH);
+                            }
+                            if (ps.health <= 0) {
+                                break;
+                            }
+                        }
+                        var newCard = Card.GetRandomCard(rng);
                         cards[j] = newCard;
                         cardIds[j] = newCard.id;
+                    }
+                }
+            }
+        }
+
+        public void UpdateGameOver () {
+            var livingPlayerCount = 0;
+            var newlyDeadPlayerCount = 0;
+            for (int i = 0; i < playerStates.Length; i++) {
+                var ps = playerStates[i];
+                if (!ps.HasLost) {
+                    if (ps.health > 0) {
+                        livingPlayerCount++;
+                    }else{
+                        newlyDeadPlayerCount++;
+                    }
+                }
+            }
+            for (int i = 0; i < playerStates.Length; i++) {
+                var ps = playerStates[i];
+                if (!ps.HasLost) {
+                    if (ps.health > 0) {
+                        ps.HasWon = (livingPlayerCount == 1);
+                    } else {
+                        ps.HasLost = (livingPlayerCount > 0);
+                        ps.HasDrawn = (livingPlayerCount == 0);
                     }
                 }
             }

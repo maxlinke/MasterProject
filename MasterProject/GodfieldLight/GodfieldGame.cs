@@ -16,7 +16,7 @@
 
         protected override GodfieldGameState GetInitialGameState () {
             var output = new GodfieldGameState();
-            output.Initialize(this.PlayerCount);
+            output.Initialize(this);
             return output;
         }
 
@@ -29,6 +29,7 @@
             base.OnGameStateUpdated();
             if (CurrentGameState.turnNumber != previousTurn) {
                 CurrentGameState.ResolveUnresolvedCards();
+                CurrentGameState.UpdateGameOver();
             }
         }
 

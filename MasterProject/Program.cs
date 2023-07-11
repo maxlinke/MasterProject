@@ -70,7 +70,20 @@ public class Program {
     }
 
     static void TestGodfield () {
-        var c = MasterProject.GodfieldLight.Card.GetRandomCard();
+        //var c = MasterProject.GodfieldLight.Card.GetRandomCard();
+        var foo = new string[] { "A", "B", "C", "D" };
+        var perms = MasterProject.GodfieldLight.BinaryPermutationUtils.GetBinaryPermutations(foo);
+        foreach (var perm in perms) {
+            var sb = new System.Text.StringBuilder();
+            foreach (var f in foo) {
+                if (perm.Contains(f)) {
+                    sb.Append($"{f} ");
+                } else {
+                    sb.Append($"- ");
+                }
+            }
+            Console.WriteLine(sb);
+        }
     }
 
     static void TestChess () {
