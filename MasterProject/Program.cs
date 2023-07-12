@@ -86,17 +86,17 @@ public class Program {
         //    Console.WriteLine(sb);
         //}
 
-        var stack1 = new Stack<string>();
-        stack1.Push("First");
-        stack1.Push("Middle");
-        stack1.Push("Last");
-        var stack2 = new Stack<string>(stack1);
-        for (int i = 0; i < 3; i++) {
-            Console.Write(stack1.Pop());
-            Console.Write(" <> ");
-            Console.Write(stack2.Pop());
-            Console.WriteLine();
-        }
+        // TODO sometimes a player can't defend even though they have armor
+        // i've seen this happen when attacked with the bounce sword for example
+        // i doubt it's about the bounce sword itself though
+        // i think i also saw it with a percentage weapon
+        // the defense code is very simple though so i'm not sure what's going on there
+        var g = new MasterProject.GodfieldLight.GodfieldGame();
+        g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
+        g.RunSynced(new Agent[]{
+            new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+            new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+        });
     }
 
     static void TestChess () {
