@@ -7,7 +7,7 @@ function processTournamentData (input) {
     });
     const commonPrefix = findCommonNamespacePrefix(input.playerIds);
     output.players = input.playerIds.map((id, i) => { return { 
-        id: id.substring(commonPrefix.length),
+        id: replaceCaretCharacters(id.substring(commonPrefix.length)),
         index: i,
         totalGamesPlayed: playerGameCounts[i],
         totalWins: input.totalWins[i],

@@ -37,3 +37,7 @@ function initDropdown (dropdown, options, onValueChanged) {
         dropdown.addEventListener("change", () => onValueChanged());
     }
 }
+
+function replaceCaretCharacters (input) {
+    return input.replace("<", "&lt;").replace(">", "&gt;");
+}

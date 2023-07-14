@@ -21,7 +21,7 @@ function processBootCampData (input) {
         return generation.map((individual, individualIndex) => {
             const outputIndividual = {};    // we're only copying what we need and format the rest to a nice string
             outputIndividual.guid = individual.guid;
-            outputIndividual.agentId = individual.agentId.substring(agentIdPrefix.length);
+            outputIndividual.agentId = replaceCaretCharacters(individual.agentId.substring(agentIdPrefix.length));
             outputIndividual.individualType = output.individualTypes[individual.IndividualType];
             outputIndividual.generation = genIndex;
             outputIndividual.fitness = individual.finalFitness;

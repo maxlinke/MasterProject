@@ -5,6 +5,7 @@ using MasterProject.TicTacToe;
 using MasterProject.G44P;
 using MasterProject.Chess;
 using MasterProject.GodfieldLight;
+using MasterProject.GodfieldLight.RatingFunctions;
 using MasterProject.Records;
 using MasterProject.MachineLearning;
 using System.Text.Json;
@@ -88,66 +89,39 @@ public class Program {
         //    Console.WriteLine(sb);
         //}
 
-        // TODO sometimes a player can't defend even though they have armor
-        // i've seen this happen when attacked with the bounce sword for example
-        // i doubt it's about the bounce sword itself though
-        // i think i also saw it with a percentage weapon
-        // the defense code is very simple though so i'm not sure what's going on there
-        var agentCombos = new Agent[][]{
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+        var playersByHealth = new List<GodfieldPlayerState>() {
+            new GodfieldPlayerState(){
+                index = 0,
+                health = 20
             },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+            new GodfieldPlayerState(){
+                index = 1,
+                health = 10
             },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+            new GodfieldPlayerState(){
+                index = 2,
+                health = 30
             },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
-            },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-            },
-
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
-            },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
-                new MasterProject.GodfieldLight.Agents.RandomAgent(),
-            },
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
-                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-            },
-
-            new Agent[]{
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+            new GodfieldPlayerState(){
+                index = 4,
+                health = 5
             },
         };
-        for (int i = 0; i < 1000; i++) {
-            var combo = agentCombos[i % agentCombos.Length];
-            Console.WriteLine();
-            Console.Write($" >>>> ");
-            foreach (var agent in combo) {
-                Console.Write($"{agent.GetType()}, ");
-            }
-            Console.Write(" <<<< ");
-            var g = new MasterProject.GodfieldLight.GodfieldGame();
-            g.AllowedConsoleOutputs = Game.ConsoleOutputs.GameOver;
-            g.RunSynced(combo);
+        playersByHealth.Sort((a, b) => (b.health - a.health));
+        foreach (var p in playersByHealth) {
+            Console.WriteLine($"{p.index}, {p.health}");
         }
+
+        //var g = new MasterProject.GodfieldLight.GodfieldGame();
+        //g.AllowedConsoleOutputs = Game.ConsoleOutputs.GameOver;
+        //g.RunSynced(new Agent[]{
+        //    new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+        //    new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+        //});
     }
 
     static void DoGodfieldTournament () {
+        // TODO when i have a couple of agents, run tournaments with 2, 3 and 4 players and see how players stack up when the number of players is varied
         DoTournament<GodfieldGame>(
             continueId: "",
             numberOfPlayersPerMatchup: GodfieldGame.MIN_PLAYER_COUNT,
@@ -156,7 +130,9 @@ public class Program {
             agents: new Agent[]{
                 new MasterProject.GodfieldLight.Agents.RandomAgent(),
                 new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense()
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamage(), new EconomizeDefense()),
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstStrongest(), new EconomizeDefense()),
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstWeakest(), new EconomizeDefense()),
             },
             saveResult: true
         );
