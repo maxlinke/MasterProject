@@ -54,8 +54,8 @@ namespace MasterProject.GodfieldLight {
             }
             var outputPlayerState = output.playerStates[this.CurrentPlayerIndex];
             for (int i = 0; i < usedCardsIndices.Length; i++) {
-                outputPlayerState.cards[i] = Card.Unresolved;
-                outputPlayerState.cardIds[i] = Card.Unresolved.id;
+                outputPlayerState.cards[usedCardsIndices[i]] = Card.Unresolved;
+                outputPlayerState.cardIds[usedCardsIndices[i]] = Card.Unresolved.id;
             }
             return output;
         }
@@ -137,6 +137,7 @@ namespace MasterProject.GodfieldLight {
             this.playerStates = new GodfieldPlayerState[playerCount];
             for (int i = 0; i < playerStates.Length; i++) {
                 playerStates[i] = new GodfieldPlayerState();
+                playerStates[i].index = i;
                 playerStates[i].health = INIT_HEALTH;
                 playerStates[i].cards = new List<Card>();
                 playerStates[i].cardIds = new List<string>();

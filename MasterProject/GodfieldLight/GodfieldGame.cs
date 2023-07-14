@@ -4,11 +4,14 @@
 
         // a reduced version of https://godfield.net/
 
+        public const int MIN_PLAYER_COUNT = 2;
+        public const int MAX_PLAYER_COUNT = 9;
+
         private int previousTurn;
 
-        public override int MinimumNumberOfAgentsRequired => 2;
+        public override int MinimumNumberOfAgentsRequired => MIN_PLAYER_COUNT;
 
-        public override int MaximumNumberOfAgentsAllowed => 9;
+        public override int MaximumNumberOfAgentsAllowed => MAX_PLAYER_COUNT;
 
         public override Agent GetRandomAgent () {
             return new MasterProject.GodfieldLight.Agents.RandomAgent();

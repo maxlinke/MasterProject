@@ -4,6 +4,7 @@ using MasterProject;
 using MasterProject.TicTacToe;
 using MasterProject.G44P;
 using MasterProject.Chess;
+using MasterProject.GodfieldLight;
 using MasterProject.Records;
 using MasterProject.MachineLearning;
 using System.Text.Json;
@@ -22,7 +23,8 @@ public class Program {
     public static void Main (string[] args) {
         Logger.consoleOnly = true;
 
-        TestGodfield();
+        //TestGodfield();
+        DoGodfieldTournament();
 
         //TestChess();
         //DoChessTournament();
@@ -91,12 +93,73 @@ public class Program {
         // i doubt it's about the bounce sword itself though
         // i think i also saw it with a percentage weapon
         // the defense code is very simple though so i'm not sure what's going on there
-        var g = new MasterProject.GodfieldLight.GodfieldGame();
-        g.AllowedConsoleOutputs = Game.ConsoleOutputs.Everything;
-        g.RunSynced(new Agent[]{
-            new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-            new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
-        });
+        var agentCombos = new Agent[][]{
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+            },
+
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+            },
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+            },
+
+            new Agent[]{
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense(),
+            },
+        };
+        for (int i = 0; i < 1000; i++) {
+            var combo = agentCombos[i % agentCombos.Length];
+            Console.WriteLine();
+            Console.Write($" >>>> ");
+            foreach (var agent in combo) {
+                Console.Write($"{agent.GetType()}, ");
+            }
+            Console.Write(" <<<< ");
+            var g = new MasterProject.GodfieldLight.GodfieldGame();
+            g.AllowedConsoleOutputs = Game.ConsoleOutputs.GameOver;
+            g.RunSynced(combo);
+        }
+    }
+
+    static void DoGodfieldTournament () {
+        DoTournament<GodfieldGame>(
+            continueId: "",
+            numberOfPlayersPerMatchup: GodfieldGame.MIN_PLAYER_COUNT,
+            numberOfGamesToPlay: 100,
+            filter: MatchupFilter.AllowAllMatchups,
+            agents: new Agent[]{
+                new MasterProject.GodfieldLight.Agents.RandomAgent(),
+                new MasterProject.GodfieldLight.Agents.RandomButAvoidDiscarding(),
+                new MasterProject.GodfieldLight.Agents.MaximizeDamageAndEconomizeDefense()
+            },
+            saveResult: true
+        );
     }
 
     static void TestChess () {
