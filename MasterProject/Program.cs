@@ -121,9 +121,14 @@ public class Program {
     }
 
     static void DoGodfieldTournament () {
-        // TODO when i have a couple of agents, run tournaments with 2, 3 and 4 players and see how players stack up when the number of players is varied
+
+        const string twoPlayerTournamentId = "Tournament_GodfieldGame_638250524388790415";
+        const string threePlayerTournamentId = "Tournament_GodfieldGame_638250525977960577";
+        const string fourPlayerTournamentId = "Tournament_GodfieldGame_638250527938684115";
+
         DoTournament<GodfieldGame>(
-            continueId: "",
+            //continueId: "",
+            continueId: fourPlayerTournamentId,
             numberOfPlayersPerMatchup: 4,
             numberOfGamesToPlay: 500,
             filter: MatchupFilter.AllowAllMatchups,
@@ -133,6 +138,9 @@ public class Program {
                 new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamage(), new EconomizeDefense()),
                 new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstStrongest(), new EconomizeDefense()),
                 new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstWeakest(), new EconomizeDefense()),
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new AvoidHurtingOthers(), new EconomizeDefense()),
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new AvoidHurtingOthers(), new SmartDefense()),
+                new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstStrongest(), new SmartDefense()),
             },
             saveResult: true
         );
