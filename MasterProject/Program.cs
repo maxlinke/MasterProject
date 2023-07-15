@@ -124,8 +124,8 @@ public class Program {
         // TODO when i have a couple of agents, run tournaments with 2, 3 and 4 players and see how players stack up when the number of players is varied
         DoTournament<GodfieldGame>(
             continueId: "",
-            numberOfPlayersPerMatchup: GodfieldGame.MIN_PLAYER_COUNT,
-            numberOfGamesToPlay: 100,
+            numberOfPlayersPerMatchup: 4,
+            numberOfGamesToPlay: 500,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent[]{
                 new MasterProject.GodfieldLight.Agents.RandomAgent(),
