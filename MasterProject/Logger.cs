@@ -14,10 +14,10 @@ namespace MasterProject {
         static FileStream fs;
         static StreamWriter sw;
 
-        public static bool consoleOnly { get; set; }
+        public static bool logToDisk { get; set; }
 
         public static void Log (object message) {
-            if (!consoleOnly && !fileStreamInitialized) {
+            if (logToDisk && !fileStreamInitialized) {
                 var logsDirectory = Path.Combine(Program.GetProjectPath(), "Logs");
                 if (!Directory.Exists(logsDirectory)) {
                     Directory.CreateDirectory(logsDirectory);
@@ -30,7 +30,7 @@ namespace MasterProject {
             }
             var msg = message.ToString();
             Console.WriteLine(msg);
-            if (!consoleOnly) {
+            if (logToDisk) {
                 sw.WriteLine(msg);
             }
         }

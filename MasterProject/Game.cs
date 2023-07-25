@@ -71,7 +71,7 @@ namespace MasterProject {
 
         public abstract int MaximumNumberOfAgentsAllowed { get; }
 
-        protected abstract Task Run (IEnumerable<Agent> agents);
+        public abstract Task Run (IEnumerable<Agent> agents);
 
         public bool CollectRecord { get; set; } = false;
 
@@ -158,7 +158,7 @@ namespace MasterProject {
 
         protected virtual void OnGameOver () { }
 
-        protected override async Task Run (IEnumerable<Agent> agentsTouse) {
+        public override async Task Run (IEnumerable<Agent> agentsTouse) {
             VerifyOnlyOneRun();
             TrySetAgents(agentsTouse);
             VerifyNumberOfAgents();

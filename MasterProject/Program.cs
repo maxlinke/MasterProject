@@ -22,8 +22,7 @@ public class Program {
     }
 
     public static void Main (string[] args) {
-        Logger.consoleOnly = true;
-
+        Logger.logToDisk = false;
         //TestGodfield();
         DoGodfieldTournament();
 

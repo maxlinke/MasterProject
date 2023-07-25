@@ -270,7 +270,7 @@ namespace MasterProject {
                             gameRuns.Add(new GameRun() {
                                 game = game,
                                 agentIds = matchupAgentIds.ToArray(),
-                                runTask = game.RunAsync(agents)
+                                runTask = ((MaxNumberOfGamesToRunInParallel > 1) ? game.RunAsync(agents) : game.Run(agents))
                             });
                             remainingGameCounter[i]--;
                             if (gameRuns.Count >= MaxNumberOfGamesToRunInParallel) {
