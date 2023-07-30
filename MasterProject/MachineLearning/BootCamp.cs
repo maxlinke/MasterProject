@@ -372,7 +372,7 @@ namespace MasterProject.MachineLearning {
                 var firstGen = new TIndividual[generationConfig.generationSize];
                 for (int i = 0; i < firstGen.Length; i++) {
                     firstGen[i] = new TIndividual();
-                    firstGen[i].InitializeWithRandomCoefficients();
+                    firstGen[i].InitializeWithRandomParameters();
                     firstGen[i].guid = System.Guid.NewGuid().ToString();
                     firstGen[i].agentId = firstGen[i].CreateAgent().Id;
                 }
@@ -385,7 +385,7 @@ namespace MasterProject.MachineLearning {
                 var nextGen = new List<TIndividual>(generationConfig.generationSize);
                 AddIndividualsToNextGen(generationConfig.newIndividualCount, _ => {
                     var newAgent = new TIndividual();
-                    newAgent.InitializeWithRandomCoefficients();
+                    newAgent.InitializeWithRandomParameters();
                     return newAgent;
                 });
                 AddIndividualsToNextGen(generationConfig.bestCloneCount, i => {

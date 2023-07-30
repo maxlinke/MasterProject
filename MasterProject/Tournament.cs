@@ -11,7 +11,7 @@ namespace MasterProject {
 
         public const int NO_AUTOSAVE = int.MaxValue;
 
-        int _maxNumberOfGamesToRunInParallel = 1;
+        int _maxNumberOfGamesToRunInParallel = 16;
         public int MaxNumberOfGamesToRunInParallel {
             get => _maxNumberOfGamesToRunInParallel;
             set => _maxNumberOfGamesToRunInParallel = Math.Max(1, value);
@@ -129,7 +129,7 @@ namespace MasterProject {
 
         private void VerifyOnlyOneRun () {
             if (hasRun) {
-                throw new NotSupportedException($"Running a game multiple times is not allowed!");
+                throw new NotSupportedException($"Running a tournament multiple times is not allowed!");
             }
         }
 

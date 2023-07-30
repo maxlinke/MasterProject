@@ -30,13 +30,13 @@ namespace MasterProject.MachineLearning {
 
         public abstract Agent CreateAgent ();
 
-        public void InitializeWithRandomCoefficients () {
-            RandomizeCoefficients();
+        public void InitializeWithRandomParameters () {
+            RandomizeParameters();
             this.IndividualType = IndividualType.NewRandom;
             this.parentGuids = new string[0];
         }
 
-        protected abstract void RandomizeCoefficients ();
+        protected abstract void RandomizeParameters ();
 
         public Individual Clone () {
             var output = GetClone();
@@ -49,33 +49,33 @@ namespace MasterProject.MachineLearning {
 
         public Individual CombinedClone (Individual other) {
             var output = GetClone();
-            output.CombineCoefficients(other);
+            output.CombineParameters(other);
             output.IndividualType = IndividualType.Combination;
             output.parentGuids = new string[] { this.guid, other.guid };
             return output;
         }
 
-        protected abstract void CombineCoefficients (Individual other);
+        protected abstract void CombineParameters (Individual other);
 
         public Individual MutatedClone () {
             var output = GetClone();
-            output.MutateCoefficients();
+            output.MutateParameters();
             output.IndividualType = IndividualType.Mutation;
             output.parentGuids = new string[] { this.guid };
             return output;
         }
 
-        protected abstract void MutateCoefficients ();
+        protected abstract void MutateParameters ();
 
         public Individual InvertedClone () {
             var output = GetClone();
-            output.InvertCoefficients();
+            output.InvertParameters();
             output.IndividualType = IndividualType.InvertedClone;
             output.parentGuids = new string[] { this.guid };
             return output;
         }
 
-        protected abstract void InvertCoefficients ();
+        protected abstract void InvertParameters ();
 
         public static IReadOnlyList<T> RandomlyPickFromBoth<T> (IReadOnlyList<T> a, IReadOnlyList<T> b, double ratio) {
             if (a.Count != b.Count) {
@@ -110,7 +110,7 @@ namespace MasterProject.MachineLearning {
         
         public TParams agentParams { get; set; }
 
-        protected override void CombineCoefficients (Individual other) {
+        protected override void CombineParameters (Individual other) {
             if (!(other is Individual<TParams, TParam>)) {
                 throw new ArgumentException($"Can't automatically combine with agent of type {other.GetType()}!");
             }
@@ -127,7 +127,7 @@ namespace MasterProject.MachineLearning {
 
         public abstract float GetMaximumMutationStrength ();
 
-        protected override void InvertCoefficients () {
+        protected override void InvertParameters () {
             agentParams = agentParams ?? new TParams();
             var oldParams = agentParams.GetParameterList();
             var newParams = new float[oldParams.Count];
@@ -144,7 +144,7 @@ namespace MasterProject.MachineLearning {
             agentParams.ApplyParameterList(newParams);
         }
 
-        protected override void MutateCoefficients () {
+        protected override void MutateParameters () {
             agentParams = agentParams ?? new TParams();
             var oldParams = agentParams.GetParameterList();
             var newParams = new float[oldParams.Count];
@@ -158,7 +158,7 @@ namespace MasterProject.MachineLearning {
             agentParams.ApplyParameterList(newParams);
         }
 
-        protected override void RandomizeCoefficients () {
+        protected override void RandomizeParameters () {
             agentParams = agentParams ?? new TParams();
             var newParams = new float[agentParams.GetParameterList().Count];
             for (int i = 0; i < newParams.Length; i++) {

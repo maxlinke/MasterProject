@@ -54,7 +54,7 @@ namespace MasterProject.Tests {
         [Test]
         public void TestProperSelfInitialization () {
             var a = new TestIndividual();
-            a.InitializeWithRandomCoefficients();
+            a.InitializeWithRandomParameters();
             Console.WriteLine($"individual has {a.agentParams.parameters.Length} parameters");
             Assert.AreEqual(a.agentParams.parameters.Length, TestParams.DEFAULT_PARAM_COUNT);
         }
@@ -62,7 +62,7 @@ namespace MasterProject.Tests {
         [Test]
         public void TestProperSerializationAndDeserialization () {
             var a = new TestIndividual();
-            a.InitializeWithRandomCoefficients();
+            a.InitializeWithRandomParameters();
             Console.WriteLine($"original has parameters {JsonSerializer.Serialize(a.agentParams.parameters)}");
             var json = JsonSerializer.Serialize(a);
             Console.WriteLine($"json is \"{json}\"");
@@ -87,7 +87,7 @@ namespace MasterProject.Tests {
             TestParams.paramRangeMax = max;
             TestParams.uninvertableParamIndex = uninvertibleParamIndex;
             var output = new TestIndividual();
-            output.InitializeWithRandomCoefficients();
+            output.InitializeWithRandomParameters();
             return output;
         }
 
@@ -95,7 +95,7 @@ namespace MasterProject.Tests {
             Console.WriteLine($"Testing random initialization with values from {min} to {max}");
             var a = Setup(min, max);
             TestRepeatedly(() => {
-                a.InitializeWithRandomCoefficients();
+                a.InitializeWithRandomParameters();
                 Console.WriteLine($"{JsonSerializer.Serialize(a.agentParams.parameters)}");
                 Assert.AreEqual(a.agentParams.parameters.Length, TestParams.DEFAULT_PARAM_COUNT);
                 foreach (var coeff in a.agentParams.parameters) {
@@ -174,7 +174,7 @@ namespace MasterProject.Tests {
             var rangePivot = (max + min) / 2;
             var approxRange = (max - min) / 10000;
             TestRepeatedly(() => {
-                a.InitializeWithRandomCoefficients();
+                a.InitializeWithRandomParameters();
                 var b = (TestIndividual)(a.InvertedClone());
                 for (int i = 0; i < a.agentParams.parameters.Length; i++) {
                     var origVal = a.agentParams.parameters[i];
@@ -197,7 +197,7 @@ namespace MasterProject.Tests {
             Console.WriteLine($"testing mutation of range {min} to {max}");
             var a = Setup(min, max);
             TestRepeatedly(() => {
-                a.InitializeWithRandomCoefficients();
+                a.InitializeWithRandomParameters();
                 var b = (TestIndividual)(a.MutatedClone());
                 for (int i = 0; i < a.agentParams.parameters.Length; i++) {
                     var origVal = a.agentParams.parameters[i];

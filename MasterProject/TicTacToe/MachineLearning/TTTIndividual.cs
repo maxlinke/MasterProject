@@ -13,7 +13,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
             return new ParametrizedABAgent(this.agentParams, this.guid);
         }
 
-        protected override void CombineCoefficients (Individual otherIndividual) {
+        protected override void CombineParameters (Individual otherIndividual) {
             var other = (TTTIndividual)otherIndividual;
             var remainingFromThis = 2;
             var remainingFromOther = 2;
@@ -45,7 +45,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
             return new TTTIndividual() { agentParams = this.agentParams.Clone() };
         }
 
-        protected override void InvertCoefficients () {
+        protected override void InvertParameters () {
             SetCoeffs(
                 -agentParams.winScore,
                 -agentParams.drawScore,
@@ -54,7 +54,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
             );
         }
 
-        protected override void MutateCoefficients () {
+        protected override void MutateParameters () {
             var mag = 0.25 * rng.NextDouble();  // to make the progress a bit slower (just for the graphs)
             AlterCoeffs(
                 (rng.NextDouble() - 0.5) * 4 * mag,
@@ -64,7 +64,7 @@ namespace MasterProject.TicTacToe.MachineLearning {
             );
         }
 
-        protected override void RandomizeCoefficients () {
+        protected override void RandomizeParameters () {
             SetCoeffs(
                 (rng.NextDouble() - 0.5) * 2,
                 (rng.NextDouble() - 0.5) * 2,

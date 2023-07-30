@@ -15,33 +15,23 @@ namespace MasterProject.Records {
             public const char DRAW = 'D';
 
             public string[] playerIds { get; set; }
-            public List<string> gameResults { get; set; }       // not optional. strings because of the json export. makes everything easier to parse and is shorter than another array which would have commas
-            public List<GameRecord> gameRecords { get; set; }   // optional (full info on the entire game)
+            public List<string> gameResults { get; set; }       // strings because of the json export. makes everything easier to parse and is shorter than another array which would have commas
 
             public override bool Equals (object? obj) {
                 return obj is MatchupRecord other
                     && CompareCollection(this.playerIds, other.playerIds)
                     && CompareCollection(this.gameResults, other.gameResults)
-                    && CompareCollection(this.gameRecords, other.gameRecords)
                 ;
             }
 
             public override int GetHashCode () {
-                return HashCode.Combine(playerIds, gameResults, gameRecords);
+                return HashCode.Combine(playerIds, gameResults);
             }
 
             public MatchupRecord Clone () {
                 var output = new MatchupRecord();
                 output.playerIds = this.playerIds.Select((id) => id).ToArray(); // simple string duplication
                 output.gameResults = new List<string>(this.gameResults);        // simple string duplication
-                output.gameRecords = new List<GameRecord>();                    // inefficient but simple cloning via serialization
-                foreach(var gr in this.gameRecords){
-                    var json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(gr);
-                    var clone = System.Text.Json.JsonSerializer.Deserialize<GameRecord>(json);
-                    if (clone != default) {
-                        output.gameRecords.Add(clone);
-                    }
-                };
                 return output;
             }
 
@@ -96,7 +86,6 @@ namespace MasterProject.Records {
                 var newMatchupRecord = output.matchupRecords[i];
                 newMatchupRecord.playerIds = output.GetMatchupFromIndex(i).ToArray();
                 newMatchupRecord.gameResults = new List<string>();
-                newMatchupRecord.gameRecords = new List<GameRecord>();
             }
             return output;
         }
@@ -244,7 +233,6 @@ namespace MasterProject.Records {
                         var players = src.GetMatchupFromIndex(i);
                         var outputIndex = output.GetMatchupIndex(players);
                         output.matchupRecords[outputIndex].gameResults.AddRange(srcRecordClone.gameResults);
-                        output.matchupRecords[outputIndex].gameRecords.AddRange(srcRecordClone.gameRecords);
                     }
                 }
             }
