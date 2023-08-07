@@ -177,9 +177,7 @@ function onTournamentResultFileLoaded (input) {
                         const newField = document.createElement("td");
                         newRow.appendChild(newField);
                         newField.className = "matrixDataField";
-                        const timeBeforeInfo = Date.now();
                         const info = getInfo(mainPlayer, secondaryPlayer);
-                        const timeAfterInfo = Date.now();
                         newField.style = `background-color: ${info.color}`;
                         if(info.deterministic && highlightFixed){
                             const overlay = document.createElement("div");
