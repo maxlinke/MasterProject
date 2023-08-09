@@ -55,12 +55,7 @@ namespace MasterProject.TicTacToe {
         }
 
         public override IReadOnlyList<PossibleOutcome<TTTGameState>> GetPossibleOutcomesForMove (TTTMove move) {
-            var output = new List<PossibleOutcome<TTTGameState>>();
-            output.Add(new PossibleOutcome<TTTGameState>() {
-                Probability = 1,
-                GameState = this.GetResultOfMove(move)
-            });
-            return output;
+            return PossibleOutcome<TTTGameState>.CertainOutcome(GetResultOfMove(move));
         }
 
         // 0 1 2

@@ -24,6 +24,8 @@ public class Program {
     public static void Main (string[] args) {
         Logger.logToDisk = false;
 
+        //TTTGame.PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABWinFast(), true);
+
         //TestGodfield();
         //DoGodfieldTournament();
 
@@ -32,6 +34,13 @@ public class Program {
 
         //DoTTTTournament();
         //DoTTTBootCamp();
+
+        //Tournament.TryLoadWinLossDrawRecord("g44p/g44p_1000r_ab_only_19_30_minutes", out var a);
+        //Tournament.TryLoadWinLossDrawRecord("g44p/g44p_1000r_ignore_only_1_second", out var b);
+        //Tournament.TryLoadWinLossDrawRecord("g44p/g44p_1000r_random_only", out var c);
+        //var ab = WinLossDrawRecord.Merge(a, b);
+        //var abc = WinLossDrawRecord.Merge(ab, c);
+        //DataSaver.SaveInProject("abc.tournamentResult", abc.ToJsonBytes());
 
         //DoG44PTournament();
         //DoG44PBootCamp();
@@ -162,21 +171,38 @@ public class Program {
     }
 
     static void DoG44PTournament () {
-        var bestFromBootCamp = BootCamp<G44PGame, G44PIndividual>.Load("BC_638233760553840225_Generation10").GetFittestIndividual();
-        Console.WriteLine($"Fittest individual from bootcamp is:\n{JsonUtility.ToJson(bestFromBootCamp, true)}\n");
+        //var bestFromBootCamp = BootCamp<G44PGame, G44PIndividual>.Load("BC_638233760553840225_Generation10").GetFittestIndividual();
+        //Console.WriteLine($"Fittest individual from bootcamp is:\n{JsonUtility.ToJson(bestFromBootCamp, true)}\n");
         DoTournament<G44PGame>(
-            //continueId: "MasterProject.G44P.G44PGame_638215217298322126",
+            //continueId: "Tournament_G44PGame_638272218291492769",
             continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 100,
-            filter: MatchupFilter.OnlyThisAgentExceptOneOther(new MasterProject.G44P.Agents.RandomAgent()),
+            numberOfGamesToPlay: 1000,
+            //filter: MatchupFilter.PreventAnyDuplicateAgents,
+            //filter: MatchupFilter.AllowAllMatchups,
             //agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
             //    new MasterProject.G44P.Agents.RandomAgent(),
             //    new MasterProject.G44P.Agents.Random2x(),
-            //    //new MasterProject.G44P.Agents.ZigZag(),
-            //    //new MasterProject.G44P.Agents.ZagZig(),
-            //    //new MasterProject.G44P.Agents.OnlyFirst(),
-            //    //new MasterProject.G44P.Agents.OnlyLast(),
+            //    new MasterProject.G44P.Agents.ZigZag(),
+            //    new MasterProject.G44P.Agents.ZagZig(),
+            //    new MasterProject.G44P.Agents.OnlyFirst(),
+            //    new MasterProject.G44P.Agents.OnlyLast(),
+            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 4),
+            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
+            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
+            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
+            //},
+
+            //filter: MatchupFilter.OnlyThisAgentExceptOneOther(new MasterProject.G44P.Agents.RandomAgent()),
+            //agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
+            //    new MasterProject.G44P.Agents.RandomAgent(),
+            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    //(Agent<G44PGame, G44PGameState, G44PMove>)(bestFromBootCamp.CreateAgent())
             //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 4),
             //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
             //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
@@ -186,15 +212,16 @@ public class Program {
             //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
             //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
             //},
-            agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
-                new MasterProject.G44P.Agents.RandomAgent(),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-                (Agent<G44PGame, G44PGameState, G44PMove>)(bestFromBootCamp.CreateAgent())
+
+            filter: MatchupFilter.AllowAllMatchups,
+            agents: new Agent<G44PGame, G44PGameState, G44PMove>[] { 
+                new MasterProject.G44P.Agents.RandomAgent()
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8)
+                //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.AutosaveIntervalMinutes = 5;
+                //tournament.AutosaveIntervalMinutes = 5;
                 //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
         );
@@ -217,35 +244,35 @@ public class Program {
     }
 
     static void DoTTTTournament () {
-        //const string continueTournamentId = "MasterProject.TicTacToe.TTTGame_638204554117514045";
-        const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 10;
-        var filter = MatchupFilter.PreventMirrorMatches;
+        const string continueTournamentId = "Tournament_TTTGame_638271098303961146";
+        //const string continueTournamentId = "";
+        const int numberOfGamesToPlay = 500;
+        var filter = MatchupFilter.AllowAllMatchups;
         DoTournament<TTTGame>(
             continueId: continueTournamentId,
             numberOfPlayersPerMatchup: 2,
             numberOfGamesToPlay: numberOfGamesToPlay,
             filter: filter,
             agents: new Agent<TTTGame, TTTGameState, TTTMove>[]{
-                //new MasterProject.TicTacToe.Agents.RandomAgent(),
-                //new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
-                //new MasterProject.TicTacToe.Agents.LineBuilder(),
-                //new MasterProject.TicTacToe.Agents.ABWin(),
+                new MasterProject.TicTacToe.Agents.RandomAgent(),
+                new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
+                new MasterProject.TicTacToe.Agents.LineBuilder(),
+                new MasterProject.TicTacToe.Agents.ABWin(),
                 //new MasterProject.TicTacToe.Agents.ABLose(),
                 new MasterProject.TicTacToe.Agents.ABWinFast(),
-                //new MasterProject.TicTacToe.Agents.ABLoseFast(),
-                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.5f),
-                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.8f),
-                //new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.9f),
-                new MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(
-                    new MasterProject.TicTacToe.MachineLearning.AgentParameters(){
-                        winScore = 1,
-                        drawScore = 0,
-                        lossScore = -1,
-                        randomProbability = 0
-                    },
-                    System.Guid.NewGuid().ToString()
-                )
+                new MasterProject.TicTacToe.Agents.ABLoseFast(),
+                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.5f),
+                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.8f),
+                new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.9f),
+                //new MasterProject.TicTacToe.MachineLearning.ParametrizedABAgent(
+                //    new MasterProject.TicTacToe.MachineLearning.AgentParameters(){
+                //        winScore = 1,
+                //        drawScore = 0,
+                //        lossScore = -1,
+                //        randomProbability = 0
+                //    },
+                //    System.Guid.NewGuid().ToString()
+                //)
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
