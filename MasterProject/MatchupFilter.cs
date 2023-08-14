@@ -67,6 +67,17 @@ namespace MasterProject {
             });
         }
 
+        public static IMatchupFilter Pad1v1WithThisAgent (Agent agent) {
+            return new DynamicFilter(agentIds => {
+                for (int i = 2; i < agentIds.Count; i++) {
+                    if (agentIds[i] != agent.Id) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
     }
 
 }

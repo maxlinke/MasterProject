@@ -16,14 +16,16 @@
 
         protected override void OnGameStateUpdated () {
             base.OnGameStateUpdated();
-            //var previousGameState = GameStates[GameStates.Count - 1];
-            //var previousPlayerIndex = previousGameState.currentPlayerIndex;
-            //var latestMoveRecord = MoveRecords[MoveRecords.Count - 1];
-            //var latestMoveField = ((G44PMove)(latestMoveRecord.AvailableMoves[latestMoveRecord.ChosenMoveIndex])).fieldIndex;
-            //var log = previousGameState.ToPrintableString(previousPlayerIndex, latestMoveField, false);
-            //log = log.HorizontalConcat("\n\n\n ->  ".Replace("\n", System.Environment.NewLine));
-            //log = log.HorizontalConcat(CurrentGameState.ToPrintableString(CurrentGameState.CurrentPlayerIndex, true));
-            //TryDebugLog($"\n{log}\n");
+            if (DebugLogIsAllowed() && GameStates.Count > 0) {
+                var previousGameState = GameStates[GameStates.Count - 1];
+                var previousPlayerIndex = previousGameState.currentPlayerIndex;
+                var latestMoveRecord = MoveRecords[MoveRecords.Count - 1];
+                var latestMoveField = ((G44PMove)(latestMoveRecord.AvailableMoves[latestMoveRecord.ChosenMoveIndex])).fieldIndex;
+                var log = previousGameState.ToPrintableString(previousPlayerIndex, latestMoveField, false);
+                log = log.HorizontalConcat("\n\n\n ->  ".Replace("\n", System.Environment.NewLine));
+                log = log.HorizontalConcat(CurrentGameState.ToPrintableString(CurrentGameState.CurrentPlayerIndex, true));
+                TryDebugLog($"\n{log}\n");
+            }
         }
 
     }

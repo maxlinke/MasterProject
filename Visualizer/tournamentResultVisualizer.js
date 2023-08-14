@@ -12,7 +12,9 @@ function onTournamentResultFileLoaded (input) {
 
     const winPercentMetric = "Win%";
     const wlBalanceMetric = "W/L-Balance";
-    const rankingOptions = [ winPercentMetric, wlBalanceMetric ];
+    const alphabeticMetric = "Name";
+    const noSorting = "Index";
+    const rankingOptions = [ winPercentMetric, wlBalanceMetric, alphabeticMetric, noSorting ];
     const rankingOptionsDropdown = document.getElementById("rankingOptionsSelection");
     function getCurrentRankingOption () { return rankingOptionsDropdown.value; }
 
@@ -81,6 +83,8 @@ function onTournamentResultFileLoaded (input) {
             switch(currentRankingOption){
                 case winPercentMetric: aVal = a.winPercentage;     bVal = b.winPercentage;     break;
                 case wlBalanceMetric:  aVal = a.rawWinLossBalance; bVal = b.rawWinLossBalance; break;
+                case alphabeticMetric: return a.id.localeCompare(b.id);
+                case noSorting:        aVal = a.index;             bVal = b.index;             break;
             }
             return (aVal > bVal ? 1 : (aVal < bVal) ? -1 : 0);
         });
