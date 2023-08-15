@@ -29,6 +29,16 @@ label {
     width: 5em;
 }
 
+.numberSlider {
+    display: inline-block;
+    margin: auto;
+    height: 18.5px;
+    border-radius: 4px;
+    transform: translate(0px, 4px);
+    width: 240px;
+    background-color: grey;
+}
+
 #agentRankingTable, .rankingTableColumnLabel, .rankingTableRowLabel, .rankingTableDataField {
     border: 0px;
     padding: 4px;

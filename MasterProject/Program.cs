@@ -188,65 +188,67 @@ public class Program {
     }
 
     static void DoG44PTournament () {
-        //var bestFromBootCamp = BootCamp<G44PGame, G44PIndividual>.Load("BC_638233760553840225_Generation10").GetFittestIndividual();
-        //Console.WriteLine($"Fittest individual from bootcamp is:\n{JsonUtility.ToJson(bestFromBootCamp, true)}\n");
+        var bestFromBootCamp = BootCamp<G44PGame, G44PIndividual>.Load("BC_638233760553840225_Generation20").GetFittestIndividual();
+        Console.WriteLine($"Fittest individual from bootcamp is:\n{JsonUtility.ToJson(bestFromBootCamp, true)}\n");
         DoTournament<G44PGame>(
-            continueId: "Tournament_G44PGame_638276260968314204",
+            continueId: "Tournament_G44PGame_638277161378718641",
             //continueId: "",
             numberOfPlayersPerMatchup: G44PGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 250,
+            numberOfGamesToPlay: 10000,
             //filter: MatchupFilter.PreventAnyDuplicateAgents,
-            //filter: MatchupFilter.AllowAllMatchups,
-            filter: MatchupFilter.Pad1v1WithThisAgent(new MasterProject.G44P.Agents.RandomPadding()),
-            agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
-                new MasterProject.G44P.Agents.RandomPadding(),
-                new MasterProject.G44P.Agents.RandomAgent(),
-                new MasterProject.G44P.Agents.Random2x(),
-                new MasterProject.G44P.Agents.ZigZag(),
-                new MasterProject.G44P.Agents.ZagZig(),
-                new MasterProject.G44P.Agents.OnlyFirst(),
-                new MasterProject.G44P.Agents.OnlyLast(),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 4),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
-                new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
-                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
-            },
+            filter: MatchupFilter.AllowAllMatchups,
+            //filter: MatchupFilter.Pad1v1WithThisAgent(new MasterProject.G44P.Agents.RandomPadding()),
+            //agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
+            //    new MasterProject.G44P.Agents.RandomPadding(),
+            //    new MasterProject.G44P.Agents.RandomAgent(),
+            //    new MasterProject.G44P.Agents.Random2x(),
+            //    new MasterProject.G44P.Agents.ZigZag(),
+            //    new MasterProject.G44P.Agents.ZagZig(),
+            //    new MasterProject.G44P.Agents.OnlyFirst(),
+            //    new MasterProject.G44P.Agents.OnlyLast(),
+            //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 4),
+            //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeOwnScore(), 8),
+            //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+            //    new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
+            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
+            //    new MasterProject.G44P.Agents.ABIgnore(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4, 8),
+            //    new MasterProject.G44P.Agents.ABIgnore(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8, 8),
+            //},
 
             //filter: MatchupFilter.OnlyThisAgentExceptOneOther(new MasterProject.G44P.Agents.RandomAgent()),
-            //agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
-            //    new MasterProject.G44P.Agents.RandomAgent(),
-            //    //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-            //    //(Agent<G44PGame, G44PGameState, G44PMove>)(bestFromBootCamp.CreateAgent())
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 1),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 2),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 3),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 5),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 6),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 7),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 9),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 10),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 11),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 13),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 14),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 15),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 17),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 18),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 19),
-            //    new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 20),
-            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
-            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
-            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
-            //    //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
-            //},
+            agents: new Agent<G44PGame, G44PGameState, G44PMove>[] {
+                new MasterProject.G44P.Agents.RandomAgent(),
+                //new MasterProject.G44P.Agents.ABAgent(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                (Agent<G44PGame, G44PGameState, G44PMove>)(bestFromBootCamp.CreateAgent()),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 1),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 2),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 3),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 5),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 6),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 7),
+                new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 9),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 10),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 11),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 13),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 14),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 15),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 17),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 18),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 19),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 20),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 4),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 8),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 12),
+                //new MasterProject.G44P.Agents.IgnoreOpponentMoves(new MasterProject.G44P.RatingFunctions.MaximizeLead(), 16),
+            },
 
             //filter: MatchupFilter.AllowAllMatchups,
             //agents: new Agent<G44PGame, G44PGameState, G44PMove>[] { 
@@ -257,6 +259,7 @@ public class Program {
             saveResult: true,
             onBeforeRun: (tournament) => {
                 tournament.AutosaveIntervalMinutes = 5;
+                tournament.MaxNumberOfGamesToRunInParallel = 1024;
                 //tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = true;
                 //tournament.AllowedGameConsoleOutputs = Game.ConsoleOutputs.Everything;
             }
@@ -264,8 +267,9 @@ public class Program {
     }
 
     static void DoG44PBootCamp () {
-        const string continueId = "";
-        const int genCount = 10;
+        //const string continueId = "";
+        const string continueId = "BC_638233760553840225_Generation10";
+        const int genCount = 20;
         var tc = BootCamp.DefaultTournamentConfig(playersPerGame: 4);
         tc.parallelGameCount = 1024;    // to reduce the console spam
         DoBootCamp<G44PGame, G44PIndividual>(

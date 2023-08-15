@@ -72,6 +72,18 @@ function onBootCampDataFileLoaded (input) {
     function getTournamentType () { return tournamentTypeDropdown.value; }
     function getTournamentResultSource () { return tournamentResultSourceDropdown.value; }
 
+    const bubbleSizeSlider = document.getElementById("svgBubbleSizeSlider");
+    bubbleSizeSlider.oninput = updateSvg;
+
+    const generationSpacingSlider = document.getElementById("svgGenerationSpacingSlider");
+    generationSpacingSlider.oninput = updateSvg;
+    
+    const svgBubbleRadius = 10;
+    const defaultSvgGenerationSpacing = 60;
+
+    let actualBubbleRadius = svgBubbleRadius;
+    let svgGenerationSpacing = defaultSvgGenerationSpacing;
+
     // https://www.w3schools.com/tags/tag_svg.asp
     // https://www.w3schools.com/html/html5_svg.asp
     // https://www.w3schools.com/graphics/svg_intro.asp
@@ -85,6 +97,8 @@ function onBootCampDataFileLoaded (input) {
     let legendInitialized = false;
 
     function updateSvg () {
+        actualBubbleRadius = svgBubbleRadius * Number(bubbleSizeSlider.value);
+        svgGenerationSpacing = defaultSvgGenerationSpacing * Number(generationSpacingSlider.value);
         svg.replaceChildren();
         svgOverlay.replaceChildren();
         if(loadedData.generations.length > 0){
@@ -192,9 +206,6 @@ function onBootCampDataFileLoaded (input) {
             legendInitialized = true;
         }
     }
-    
-    const svgBubbleRadius = 10;
-    const svgGenerationSpacing = 60;
 
     function getCustomMinAndMaxYAxisMinorLabels (minLabel, maxLabel, rectHeight) {
         return [
@@ -254,13 +265,13 @@ function onBootCampDataFileLoaded (input) {
             const x = generationIndexToXCoord(contentOffset.x, genIndex);
             generation.forEach((individual, individualIndex) => {
                 const y = contentOffset.y + svgBubbleRadius + (individualIndex * ((2 * svgBubbleRadius) + individualSpacing));
-                const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, svgBubbleRadius);
+                const newBubble = svgCircle(individualTypeGroups[individual.individualType], x, y, actualBubbleRadius);
                 allBubbles[individual.guid] = newBubble;
                 allLines[individual.guid] = [];
                 allPopups[individual.guid] = createIndividualPopup(individual, x, y);
                 individual.parentGuids.forEach(parentGuid => {
                     const parentXY = individualCoords[parentGuid];
-                    const newLine = svgLine(lineGroup, parentXY.x + svgBubbleRadius, parentXY.y, x - svgBubbleRadius, y);
+                    const newLine = svgLine(lineGroup, parentXY.x + actualBubbleRadius, parentXY.y, x - actualBubbleRadius, y);
                     allLines[individual.guid].push(newLine);
                 });
                 individualCoords[individual.guid] = {x: x, y: y};
@@ -356,7 +367,7 @@ function onBootCampDataFileLoaded (input) {
             individualsWithValidValues.forEach((individualWithValue, i) => {
                 const y = valueToY(individualWithValue.value);
                 const actualX = x + getDotScatterXOffset();
-                const newCircle = svgCircle(bubbleGroup, actualX, y, svgBubbleRadius);
+                const newCircle = svgCircle(bubbleGroup, actualX, y, actualBubbleRadius);
                 newCircle.setAttribute("fill", loadedData.individualTypeColors[individualWithValue.individual.individualType]);
                 rawValues.push(individualWithValue.value);
                 rawValueSum += individualWithValue.value;
