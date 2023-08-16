@@ -155,6 +155,43 @@ namespace MasterProject.TicTacToe {
             }
         }
 
+        public static void CalculateAndLogAllPossibleOutcomes () {
+            var totalFinalStates = 0;
+            var totalWinsForFirst = 0;
+            var totalWinsForSecond = 0;
+            var totalDraws = 0;
+            var gs = new TTTGameState();
+            gs.Initialize();
+            AnalyzeMovesOrIncrementCounters(gs);
+            Console.WriteLine($"There are {totalFinalStates} total ways to play the game");
+            Console.WriteLine($"{totalWinsForFirst} games are won by the first player ({100f * totalWinsForFirst / totalFinalStates}%)");
+            Console.WriteLine($"{totalWinsForSecond} games are won by the second player ({100f * totalWinsForSecond / totalFinalStates}%)");
+            Console.WriteLine($"{totalDraws} games end in a draw ({100f * totalDraws / totalFinalStates}%)");
+
+            void AnalyzeMovesOrIncrementCounters (TTTGameState gs) {
+                if (gs.gameOver) {
+                    totalFinalStates++;
+                    switch (gs.WinnerIndex) {
+                        case 0:
+                            totalWinsForFirst++;
+                            break;
+                        case 1:
+                            totalWinsForSecond++;
+                            break;
+                        case -1:
+                            totalDraws++;
+                            break;
+                        default:
+                            throw new System.Exception($"??? got value {gs.WinnerIndex}");
+                    }
+                } else {
+                    foreach (var move in gs.GetPossibleMovesForCurrentPlayer()) {
+                        AnalyzeMovesOrIncrementCounters(gs.GetResultOfMove(move));
+                    }
+                }
+            }
+        }
+
     }
 
 }

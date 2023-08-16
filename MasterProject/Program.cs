@@ -24,7 +24,8 @@ public class Program {
     public static void Main (string[] args) {
         Logger.logToDisk = false;
 
-        //TTTGame.PlayAgainstBot(new MasterProject.TicTacToe.Agents.ABWinFast(), true);
+        TTTGameState.CalculateAndLogAllPossibleOutcomes();
+        //TTTGame.PlayAgainstBot(new MasterProject.TicTacToe.Agents.MinMaxer(), true);
 
         //TestGodfield();
         //DoGodfieldTournament();
@@ -43,7 +44,7 @@ public class Program {
         //DataSaver.SaveInProject("abc.tournamentResult", abc.ToJsonBytes());
 
         //TestG44P();
-        DoG44PTournament();
+        //DoG44PTournament();
         //DoG44PBootCamp();
 
         DataSaver.Flush();
@@ -153,9 +154,9 @@ public class Program {
 
     static void DoChessTournament () {
         DoTournament<ChessGame>(
-            continueId: "Tournament_ChessGame_638242818609807932",
+            continueId: "Tournament_ChessGame_638242820786667189",
             numberOfPlayersPerMatchup: ChessGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 500,
+            numberOfGamesToPlay: 1000,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new ChessAgent[]{
                 new MasterProject.Chess.Agents.RandomAgent(),
@@ -284,9 +285,9 @@ public class Program {
     }
 
     static void DoTTTTournament () {
-        const string continueTournamentId = "Tournament_TTTGame_638271098303961146";
+        const string continueTournamentId = "Tournament_TTTGame_638271101963747840";
         //const string continueTournamentId = "";
-        const int numberOfGamesToPlay = 500;
+        const int numberOfGamesToPlay = 1000;
         var filter = MatchupFilter.AllowAllMatchups;
         DoTournament<TTTGame>(
             continueId: continueTournamentId,
@@ -298,7 +299,7 @@ public class Program {
                 new MasterProject.TicTacToe.Agents.RandomAgentWithLookAhead(),
                 new MasterProject.TicTacToe.Agents.LineBuilder(),
                 new MasterProject.TicTacToe.Agents.ABWin(),
-                //new MasterProject.TicTacToe.Agents.ABLose(),
+                new MasterProject.TicTacToe.Agents.ABLose(),
                 new MasterProject.TicTacToe.Agents.ABWinFast(),
                 new MasterProject.TicTacToe.Agents.ABLoseFast(),
                 new DilutedAgent<TTTGame, TTTGameState, TTTMove>(new MasterProject.TicTacToe.Agents.ABWinFast(), 0.5f),
@@ -316,8 +317,9 @@ public class Program {
             },
             saveResult: true,
             onBeforeRun: (tournament) => {
-                tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = false;
-                tournament.AutosaveIntervalMinutes = 1;
+                tournament.PlayEachMatchupToCompletionBeforeMovingOntoNext = true;
+                tournament.AutosaveIntervalMinutes = 10;
+                tournament.MaxNumberOfGamesToRunInParallel = 128;
             }
         );
     }
