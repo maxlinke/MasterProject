@@ -24,7 +24,7 @@ public class Program {
     public static void Main (string[] args) {
         Logger.logToDisk = false;
 
-        TTTGameState.CalculateAndLogAllPossibleOutcomes();
+        //TTTGameState.CalculateAndLogAllPossibleOutcomes();
         //TTTGame.PlayAgainstBot(new MasterProject.TicTacToe.Agents.MinMaxer(), true);
 
         //TestGodfield();
@@ -43,6 +43,7 @@ public class Program {
         //var abc = WinLossDrawRecord.Merge(ab, c);
         //DataSaver.SaveInProject("abc.tournamentResult", abc.ToJsonBytes());
 
+        G44PGame.CalculateMoveStatistics(1000000);
         //TestG44P();
         //DoG44PTournament();
         //DoG44PBootCamp();
