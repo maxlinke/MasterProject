@@ -12,8 +12,16 @@ namespace MasterProject.Chess.Agents {
 
         public override bool IsTournamentEligible => true;
 
+        public override string Id => $"{base.Id}_{(deterministic ? "Det" : "NonDet")}";
+
+        bool deterministic;
+
         public override Agent Clone () {
-            return new CCCP();
+            return new CCCP(this.deterministic);
+        }
+
+        public CCCP (bool deterministic) {
+            this.deterministic = deterministic;
         }
 
         public override int GetMoveIndex (ChessGameState gameState, IReadOnlyList<ChessMove> moves) {
@@ -39,7 +47,7 @@ namespace MasterProject.Chess.Agents {
                 }
             }
 
-            return GetIndexOfMaximum(scores, false);
+            return GetIndexOfMaximum(scores, randomTieBreaker: !deterministic);
         }
 
         static int GetRelativePieceValue (ChessPiece piece) {

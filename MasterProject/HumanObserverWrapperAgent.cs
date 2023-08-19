@@ -7,6 +7,8 @@
 
         private readonly Agent<TGame, TGameState, TMove> innerAgent;
 
+        public override string Id => innerAgent.Id;
+
         public HumanObserverWrapperAgent (Agent<TGame, TGameState, TMove> innerAgent) {
             this.innerAgent = innerAgent;
         }
