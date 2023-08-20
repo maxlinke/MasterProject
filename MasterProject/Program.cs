@@ -155,11 +155,12 @@ public class Program {
 
     static void DoChessTournament () {
         DoTournament<ChessGame>(
-            //continueId: "Tournament_ChessGame_638280764441201566",
-            continueId: "",
+            continueId: "Tournament_ChessGame_638281521651724574",
+            //continueId: "",
             numberOfPlayersPerMatchup: ChessGameState.PLAYER_COUNT,
-            numberOfGamesToPlay: 100000,
-            filter: MatchupFilter.AllowAllMatchups,
+            numberOfGamesToPlay: 50000,
+            //filter: MatchupFilter.AllowAllMatchups,
+            filter: MatchupFilter.EnsureAgentIsContainedOncePerMatchup(new MasterProject.Chess.Agents.RandomAgent()),
             agents: new ChessAgent[]{
                 new MasterProject.Chess.Agents.RandomAgent(),
                 //new MasterProject.Chess.Agents.SuicideKing(),
@@ -167,8 +168,8 @@ public class Program {
                 //new MasterProject.Chess.Agents.OppositeColor(),
                 //new MasterProject.Chess.Agents.Huddle(),
                 //new MasterProject.Chess.Agents.Swarm(),
-                //new MasterProject.Chess.Agents.CCCP(false),
-                //new MasterProject.Chess.Agents.CCCP(true),
+                new MasterProject.Chess.Agents.CCCP(false),
+                new MasterProject.Chess.Agents.CCCP(true),
             },
             saveResult: true,
             onBeforeRun: (t) => {
