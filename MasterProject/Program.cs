@@ -30,8 +30,8 @@ public class Program {
         //TestGodfield();
         //DoGodfieldTournament();
 
-        //TestChess();
-        DoChessTournament();
+        TestChess();
+        //DoChessTournament();
 
         //DoTTTTournament();
         //DoTTTBootCamp();
