@@ -28,9 +28,9 @@ public class Program {
         //TTTGame.PlayAgainstBot(new MasterProject.TicTacToe.Agents.MinMaxer(), true);
 
         //TestGodfield();
-        //DoGodfieldTournament();
+        DoGodfieldTournament();
 
-        TestChess();
+        //TestChess();
         //DoChessTournament();
 
         //DoTTTTournament();
@@ -102,15 +102,15 @@ public class Program {
 
     static void DoGodfieldTournament () {
 
-        const string twoPlayerTournamentId = "Tournament_GodfieldGame_638250524388790415";
-        const string threePlayerTournamentId = "Tournament_GodfieldGame_638250525977960577";
-        const string fourPlayerTournamentId = "Tournament_GodfieldGame_638250527938684115";
+        const string twoPlayerTournamentId = "godfield/godfield_2p_1000";
+        const string threePlayerTournamentId = "godfield/godfield_3p_1000";
+        const string fourPlayerTournamentId = "godfield/godfield_4p_1000";
 
         DoTournament<GodfieldGame>(
             //continueId: "",
             continueId: fourPlayerTournamentId,
             numberOfPlayersPerMatchup: 4,
-            numberOfGamesToPlay: 500,
+            numberOfGamesToPlay: 1000,
             filter: MatchupFilter.AllowAllMatchups,
             agents: new Agent[]{
                 new MasterProject.GodfieldLight.Agents.RandomAgent(),
@@ -122,7 +122,8 @@ public class Program {
                 new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new AvoidHurtingOthers(), new SmartDefense()),
                 new MasterProject.GodfieldLight.Agents.ParametrizedAgent(new MaximizeDamageAgainstStrongest(), new SmartDefense()),
             },
-            saveResult: true
+            saveResult: true,
+            onBeforeRun: t => t.MaxNumberOfGamesToRunInParallel = 256
         );
     }
 
