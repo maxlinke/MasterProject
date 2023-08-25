@@ -376,9 +376,9 @@ function onTournamentResultFileLoaded (input) {
 //  ----- init -----
 
     initDropdown(rankingOptionsDropdown, rankingOptions, onRankingOptionChanged);
-    initDropdown(displayOptionDropdown, displayOptions, onMatrixOptionChanged);
+    initDropdown(displayOptionDropdown, displayOptions, onMatrixOptionChanged, 3);
     initDropdown(highlightOptionsDropdown, highlightOptions, onMatrixOptionChanged);
-    initDropdown(matchupOptionsDropdown, matchupOptions, onMatchupOptionChanged);
+    initDropdown(matchupOptionsDropdown, matchupOptions, onMatchupOptionChanged, 1);
 
     loadedData = processTournamentData(input);
     console.log(loadedData);

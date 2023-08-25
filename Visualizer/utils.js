@@ -25,14 +25,18 @@ function findCommonNamespacePrefix (input) {
     return commonPrefix;
 }
 
-function initDropdown (dropdown, options, onValueChanged) {
+function initDropdown (dropdown, options, onValueChanged, initIndex) {
     options.forEach((option) => {
         const newOption = document.createElement("option");
         dropdown.appendChild(newOption);
         newOption.value = option;
         newOption.innerHTML = option;
     });
-    dropdown.value = options[0];
+    if(initIndex != undefined){
+        dropdown.value = options[initIndex];
+    }else{
+        dropdown.value = options[0];
+    }
     if(onValueChanged != undefined){
         dropdown.addEventListener("change", () => onValueChanged());
     }
